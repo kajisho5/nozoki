@@ -18,11 +18,18 @@ final class PreviewProvider: QLPreviewProvider, QLPreviewingController {
             if ArchiveKind.isZip(url) {
                 listing = try ArchiveListing.load(url: url)
             } else {
-                guard let sevenZip = Self.sevenZip() else { throw SevenZipError.notFound }
+                guard let sevenZip = Self.sevenZip() else {
+                    let exe = Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/7zz").path
+                    NSLog("ZipPeekPreview: 7zz not usable. bundle=%@ exists=%d exec=%d aux=%@", Bundle.main.bundlePath,
+                          FileManager.default.fileExists(atPath: exe) ? 1 : 0, FileManager.default.isExecutableFile(atPath: exe) ? 1 : 0,
+                          Bundle.main.url(forAuxiliaryExecutable: "7zz")?.path ?? "nil")
+                    throw SevenZipError.notFound
+                }
                 listing = ArchiveListing.build(raw: try sevenZip.list(url, password: nil))
             }
             html = PreviewHTML.make(listing: listing, fileName: name, elapsed: Date().timeIntervalSince(start))
         } catch {
+            NSLog("ZipPeekPreview: %@", String(describing: error))
             html = PreviewHTML.errorPage(fileName: name, message: error.localizedDescription)
         }
         let data = Data(html.utf8)

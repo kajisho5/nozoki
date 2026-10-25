@@ -299,6 +299,20 @@ final class SevenZipIntegrationTests: XCTestCase {
         XCTAssertTrue(after.contains("new.txt"))
     }
 
+    /// Mac の「アーカイブユーティリティ」のzipのように、目印なしの UTF-8 の名前でも削除できる
+    func testDeleteFromUnflaggedUTF8Zip() throws {
+        let zip = dir.appendingPathComponent("mac.zip")
+        var b = ZipBuilder()
+        b.items = [.init(rawName: Data("撮影/メモ.txt".utf8), content: Data("m".utf8)),
+                   .init(rawName: Data("撮影/a.txt".utf8), content: Data("a".utf8))]
+        try b.build().write(to: zip)
+        let listing = try ArchiveListing.load(url: zip)
+        XCTAssertFalse(listing.namesNeedConversion)
+        try ArchiveEdit.delete(["撮影/メモ.txt"], from: zip, sevenZip: sevenZip)
+        XCTAssertEqual(try ArchiveListing.load(url: zip).allFiles.map(\.path), ["撮影/a.txt"])
+        XCTAssertThrowsError(try ArchiveEdit.delete(["無い.txt"], from: zip, sevenZip: sevenZip))
+    }
+
     func testEditChecks() throws {
         let zip = try ops.compress([src], options: CompressOptions())[0]
         XCTAssertNil(ArchiveEdit.check(zip, encrypted: false))

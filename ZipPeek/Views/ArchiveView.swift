@@ -253,7 +253,7 @@ private struct FileTable: View {
                     model.selection = Set(ids)
                     model.requestDelete()
                 }
-                .disabled(model.editBlocker != nil || (model.listing?.hasLegacyNames ?? false))
+                .disabled(model.editBlocker != nil || (model.listing?.namesNeedConversion ?? false))
             }
         } primaryAction: { ids in
             if ids.count == 1, let item = items.first(where: { ids.contains($0.id) }) { model.open(item) }

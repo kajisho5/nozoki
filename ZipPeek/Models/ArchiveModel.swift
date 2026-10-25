@@ -260,7 +260,7 @@ final class ArchiveModel {
     }
 
     var canDelete: Bool {
-        editBlocker == nil && !(listing?.hasLegacyNames ?? false) && !selectedItems.isEmpty && editing == nil && extraction == nil
+        editBlocker == nil && !(listing?.namesNeedConversion ?? false) && !selectedItems.isEmpty && editing == nil && extraction == nil
     }
 
     /// 外から落とされたファイルを、今見ているフォルダに足す（確認してから）
@@ -310,7 +310,7 @@ final class ArchiveModel {
     func requestDelete() {
         let items = selectedItems
         guard !items.isEmpty, editing == nil, extraction == nil else { return }
-        if let blocker = editBlocker ?? ((listing?.hasLegacyNames ?? false) ? .legacyNames : nil) {
+        if let blocker = editBlocker ?? ((listing?.namesNeedConversion ?? false) ? .legacyNames : nil) {
             errorTitle = String(localized: "Couldn’t Delete")
             errorMessage = blocker.localizedDescription
             return

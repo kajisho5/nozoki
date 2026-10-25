@@ -96,6 +96,9 @@ public struct ArchiveListing: Sendable {
     public let allFiles: [ArchiveItem]
     /// 文字コードの指定で名前が変わる（Windowsで作ったzipなど）かどうか
     public let hasLegacyNames: Bool
+    /// 名前を UTF-8 以外（Shift_JIS など）で読み替えて表示しているか。そのときは 7-Zip と名前が合わないので削除できない。
+    /// （Mac の「アーカイブユーティリティ」のzipのように、目印なしの UTF-8 の名前なら問題ない）
+    public var namesNeedConversion: Bool { hasLegacyNames && encoding != .utf8 }
 
     /// zipを開いて目次を読む。encoding が nil なら自動判定
     public static func load(url: URL, encoding: NameEncoding? = nil) throws -> ArchiveListing {

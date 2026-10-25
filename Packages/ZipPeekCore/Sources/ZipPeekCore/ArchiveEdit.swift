@@ -3,7 +3,7 @@ import Foundation
 /// 今ある圧縮ファイル（zip・7z）に、ファイルを足したり消したりする。中身の処理は7-Zipに任せる。
 public enum ArchiveEdit {
     public enum Failure: LocalizedError, Equatable {
-        case unsupportedFormat, splitArchive, encrypted, legacyNames, readOnly
+        case unsupportedFormat, splitArchive, encrypted, legacyNames, readOnly, nothingDeleted
         public var errorDescription: String? {
             switch self {
             case .unsupportedFormat: tr("足したり消したりできるのは zip と 7z だけです。", "Only ZIP and 7z archives can be changed.")
@@ -11,6 +11,7 @@ public enum ArchiveEdit {
             case .encrypted: tr("パスワード付きの圧縮ファイルは変更できません。", "Password-protected archives can’t be changed.")
             case .legacyNames: tr("Windowsで作られた名前のzipからは削除できません（追加はできます）。", "Items can’t be deleted from a ZIP with Windows-style names (adding works).")
             case .readOnly: tr("この圧縮ファイルは書き込みできない場所にあります。", "This archive is in a location you can’t write to.")
+            case .nothingDeleted: tr("選んだ項目が圧縮ファイルの中で見つからず、削除できませんでした。", "The selected items couldn’t be found in the archive, so nothing was deleted.")
             }
         }
     }
@@ -84,9 +85,12 @@ public enum ArchiveEdit {
         let lf = FileManager.default.temporaryDirectory.appendingPathComponent("zippeek-\(UUID().uuidString).txt")
         try paths.joined(separator: "\n").write(to: lf, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: lf) }
+        let before = try sevenZip.list(archive, password: nil).count
         // 「--」を付けると @リスト がファイル名扱いになるので付けない
         try sevenZip.run(["d", "-sccUTF-8", "-bsp1", "-bso0", "-bse2", "-spd", "-scsUTF-8",
                           archive.standardizedFileURL.path, "@" + lf.path], password: nil)
+        // 7-Zip は名前が合わなくても成功扱いで終わるので、本当に減ったか確かめる
+        if try sevenZip.list(archive, password: nil).count >= before { throw Failure.nothingDeleted }
     }
 
     /// Windows と同じ形（濁点などを1文字にまとめた形 = NFC）にする
