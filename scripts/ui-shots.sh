@@ -121,6 +121,45 @@ open -a "$APP" samples/sample-win.zip
 shot "en-light-6-openwith" 6
 quit
 
+# 8) 本物の操作で試す：Finder でダブルクリック／Finder から Dock のアイコンへドラッグ
+T="swift scripts/ui-test.swift"
+LOG="$OUT/ui-test.log"
+$T trusted | tee -a "$LOG"
+quit
+defaults delete $ID 2>/dev/null; defaults write $ID hasSeenWelcome -bool true
+rm -rf ~/Desktop/zp-click ~/Desktop/zp-drop; mkdir -p ~/Desktop/zp-click ~/Desktop/zp-drop
+cp samples/sample-mac.zip ~/Desktop/zp-click/; cp samples/sample-win.zip ~/Desktop/zp-drop/
+
+# 8a) Finder でダブルクリック → 中身を見る窓が開くはず
+open ~/Desktop/zp-click; sleep 4
+P=$($T pos com.apple.finder sample-mac.zip); echo "Finder の zip の位置: $P" | tee -a "$LOG"
+if [ -n "$P" ] && [ "$P" != "見つからない" ]; then
+  $T doubleclick $P; sleep 7
+  shot "test-1-finder-doubleclick" 1
+  $T windows com.kajisho5.zippeek | tee "$OUT/ui-test-windows-1.txt"
+  if grep -q "sample-mac.zip" "$OUT/ui-test-windows-1.txt"; then echo "合格: ダブルクリックで中身を見る窓が開いた" | tee -a "$LOG"
+  else echo "不合格: ダブルクリックで中身を見る窓が開かなかった" | tee -a "$LOG"; fi
+  test ! -e ~/Desktop/zp-click/sample-mac && echo "合格: ダブルクリックでは解凍していない" | tee -a "$LOG"
+fi
+quit
+
+# 8b) Finder から Dock のアイコンへドラッグ → すぐ解凍されるはず
+open -a "$APP"; sleep 5
+osascript -e 'tell application "Finder" to activate' 2>/dev/null || true
+open ~/Desktop/zp-drop; sleep 4
+F=$($T pos com.apple.finder sample-win.zip); D=$($T pos com.apple.dock ZipPeek)
+echo "Finder の zip: $F / Dock の ZipPeek: $D" | tee -a "$LOG"
+if [ -n "$F" ] && [ -n "$D" ] && [ "$F" != "見つからない" ] && [ "$D" != "見つからない" ]; then
+  $T drag $F $D; sleep 8
+  shot "test-2-dock-drop" 1
+  ls -la ~/Desktop/zp-drop | tee -a "$LOG"
+  if [ -d ~/Desktop/zp-drop/sample-win ]; then echo "合格: Dock へのドラッグで解凍した" | tee -a "$LOG"
+  else echo "不合格: Dock へのドラッグで解凍されなかった" | tee -a "$LOG"; fi
+  $T windows com.kajisho5.zippeek | tee "$OUT/ui-test-windows-2.txt"
+  grep -q "sample-win.zip" "$OUT/ui-test-windows-2.txt" && echo "注意: ドラッグで中身を見る窓が開いた" | tee -a "$LOG"
+fi
+quit
+
 # 6) アイコンの各見た目（Xcode付属の Icon Composer の道具で描く）
 ICTOOL="$(xcode-select -p)/../Applications/Icon Composer.app/Contents/Executables/ictool"
 if [ -x "$ICTOOL" ]; then
