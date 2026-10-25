@@ -6,7 +6,12 @@ name: release
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch:   # 手動でも試せる（その場合はリリースページには置かず、Artifacts にだけ出す）
+  workflow_dispatch:   # 手動でも動かせる（iPhone の GitHub アプリからも）
+    inputs:
+      publish_version:
+        description: "公開する版（例: 0.1.0）。空なら試しに作るだけで、リリースページには置かない"
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -16,6 +21,7 @@ jobs:
     uses: kajisho5/runway/.github/workflows/mac-notarize.yml@main
     with:
       name: ZipPeek
+      version: ${{ inputs.publish_version }}
       runner: macos-26
       build: >-
         bash scripts/fetch-7zip.sh
@@ -67,7 +73,7 @@ jobs:
 
   publish:
     needs: verify
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.publish_version != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -79,9 +85,13 @@ jobs:
       - name: リリースページに置く
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.publish_version }}
         run: |
           set -euo pipefail
+          # タグを付けて動いたときはタグの版、手動のときは入力の版（タグはこのとき作る）
+          if [ "$REF_TYPE" = "tag" ]; then TAG="$REF_NAME"; else TAG="v${INPUT_VERSION#v}"; fi
           ver="${TAG#v}"
           cat > notes.md <<EOF
           ## ZipPeek ${ver}
@@ -92,4 +102,4 @@ jobs:
 
           Compression is powered by 7-Zip 26.05 by Igor Pavlov (GNU LGPL).
           EOF
-          gh release create "$TAG" dist/*.dmg --repo "$GITHUB_REPOSITORY" --title "ZipPeek ${ver}" --notes-file notes.md
+          gh release create "$TAG" dist/*.dmg --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "ZipPeek ${ver}" --notes-file notes.md
