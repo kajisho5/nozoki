@@ -19,7 +19,7 @@ Macの標準機能では、zipを選んでスペースキーを押しても大�
 
 ## 入れ方
 
-1. [リリース](https://github.com/kajisho5/nozoki/releases) から `nozoki-*.dmg` をダウンロード
+1. [リリース](https://github.com/kajisho5/zippeek/releases) から `nozoki-*.dmg` をダウンロード
 2. dmgを開き、nozoki を「アプリケーション」フォルダへドラッグ
 3. nozoki を一度起動し、「はじめに」の画面で「設定を開く」→「クイックルック」の nozoki をオン
 

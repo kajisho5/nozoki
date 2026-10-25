@@ -16,7 +16,7 @@ struct NozokiApp: App {
             }
             CommandGroup(replacing: .help) {
                 Button("はじめにの画面を表示") { WindowManager.shared.showWelcome() }
-                Link("nozoki のページ（GitHub）", destination: URL(string: "https://github.com/kajisho5/nozoki")!)
+                Link("nozoki のページ（GitHub）", destination: URL(string: "https://github.com/kajisho5/zippeek")!)
             }
         }
     }
