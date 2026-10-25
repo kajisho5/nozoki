@@ -14,6 +14,21 @@ quit() { osascript -e 'tell application id "com.kajisho5.zippeek" to quit' 2>/de
 reset() { defaults delete $ID 2>/dev/null; defaults write $ID onArchiveDrop -string browse; }
 
 echo "== 画面の大きさ"; system_profiler SPDisplaysDataType | grep -i resolution || true
+# 高精細（Retina と同じ2倍）の表示にできれば切り替える。写真がくっきりする
+if brew install displayplacer > /dev/null 2>&1; then
+  displayplacer list > "$OUT/displays.txt" 2>&1 || true
+  SID=$(awk '/Persistent screen id:/ {print $4; exit}' "$OUT/displays.txt")
+  # 2倍表示のモードのうち、横 1280〜1440 のものを選ぶ
+  RES=$(grep -E 'scaling:on' "$OUT/displays.txt" | grep -oE 'res:[0-9]+x[0-9]+' | sed 's/res://' \
+        | awk -Fx '$1>=1280 && $1<=1440 {print $1*$2, $0}' | sort -n | tail -1 | cut -d' ' -f2)
+  if [ -n "$SID" ] && [ -n "$RES" ]; then
+    displayplacer "id:$SID res:$RES scaling:on" && echo "2倍表示に切り替え: $RES" || echo "切り替えに失敗"
+    sleep 3
+  else
+    echo "2倍表示のモードが無い"
+  fi
+  system_profiler SPDisplaysDataType | grep -iE "resolution|retina|ui looks like" || true
+fi
 
 for LANG_CODE in ja en; do
   for LOOK in light dark; do
