@@ -33,7 +33,7 @@ final class ArchiveFileSystem: FSUnaryFileSystem & FSUnaryFileSystemOperations {
         let scoped = r.url.startAccessingSecurityScopedResource()
         do {
             let volume = try ArchiveVolume(archive: r.url)
-            resource = r
+            self.resource = r
             containerStatus = .ready
             replyHandler(volume, nil)
         } catch {

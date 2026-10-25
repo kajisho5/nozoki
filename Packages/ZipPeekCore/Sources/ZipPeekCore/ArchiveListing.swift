@@ -248,7 +248,7 @@ public struct ArchiveListing: Sendable {
 
     // MARK: - 内部
 
-    static func normalize(_ raw: String) -> String {
+    public static func normalize(_ raw: String) -> String {
         var s = raw.replacingOccurrences(of: "\\", with: "/")
         while s.hasPrefix("/") || s.hasPrefix("./") { s.removeFirst(s.hasPrefix("/") ? 1 : 2) }
         let parts = s.split(separator: "/", omittingEmptySubsequences: true)
