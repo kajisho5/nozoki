@@ -53,7 +53,7 @@ public struct SevenZip: Sendable {
     /// アプリに同梱した 7zz を探す
     public static func bundled() -> SevenZip? {
         if let url = Bundle.main.url(forAuxiliaryExecutable: "7zz"),
-           FileManager.default.isExecutableFile(atPath: url.path) {
+           FileManager.default.fileExists(atPath: url.path) {
             return SevenZip(executable: url)
         }
         if let env = ProcessInfo.processInfo.environment["ZIPPEEK_7ZZ"],
@@ -183,7 +183,8 @@ public struct SevenZip: Sendable {
     public func run(_ args: [String], password: String?, cwd: URL? = nil,
                     onProgress: @escaping @Sendable (Double) -> Void = { _ in },
                     isCancelled: @escaping @Sendable () -> Bool = { false }) throws -> Output {
-        guard FileManager.default.isExecutableFile(atPath: executable.path) else { throw SevenZipError.notFound }
+        // サンドボックスの中では「実行できるか」の問い合わせだけ断られることがあるので、有無だけ確かめて実際に起動してみる
+        guard FileManager.default.fileExists(atPath: executable.path) else { throw SevenZipError.notFound }
         let p = Process()
         p.executableURL = executable
         p.arguments = args
