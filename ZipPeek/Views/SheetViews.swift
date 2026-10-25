@@ -27,8 +27,8 @@ struct CompressSheetView: View {
 
             Form {
                 Picker(String(localized: "Format"), selection: $options.format) {
-                    Text("zip").tag(CompressOptions.Format.zip)
-                    Text("7z").tag(CompressOptions.Format.sevenZip)
+                    Text(verbatim: "zip").tag(CompressOptions.Format.zip)
+                    Text(verbatim: "7z").tag(CompressOptions.Format.sevenZip)
                 }
                 .pickerStyle(.segmented)
 
@@ -54,7 +54,7 @@ struct CompressSheetView: View {
 
                 Picker(String(localized: "Split"), selection: $splitChoice) {
                     Text(String(localized: "Don’t split")).tag(SplitChoice.none)
-                    Text("2 GB").tag(SplitChoice.gb2)
+                    Text(verbatim: "2 GB").tag(SplitChoice.gb2)
                     Text(String(localized: "4.7 GB (DVD)")).tag(SplitChoice.dvd)
                     Text(String(localized: "Custom size")).tag(SplitChoice.custom)
                 }
@@ -62,7 +62,7 @@ struct CompressSheetView: View {
                 if splitChoice == .custom {
                     HStack {
                         TextField(String(localized: "Size of each part"), value: $customSplitMB, format: .number)
-                        Text("MB").foregroundStyle(.secondary)
+                        Text(verbatim: "MB").foregroundStyle(.secondary)
                     }
                 }
 
@@ -143,7 +143,7 @@ struct PasswordView: View {
             Text(wasWrong ? String(localized: "Incorrect password. Try again.") : String(localized: "Password Required"))
                 .font(.headline)
                 .multilineTextAlignment(.center)
-            Text("「\(fileName)」").font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+            Text(String(localized: "“\(fileName)”")).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
             SecureField(String(localized: "Password"), text: $password)
                 .textFieldStyle(.roundedBorder)
                 .focused($focused)

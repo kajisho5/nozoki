@@ -344,7 +344,7 @@ private struct StatusBar: View {
                     .foregroundStyle(.secondary)
             } else {
                 Text(String(localized: "\(model.selection.count) selected")).fontWeight(.semibold)
-                Text("・ \(ByteFormat.string(model.selectedSize))").foregroundStyle(.secondary)
+                Text(String(localized: "· \(ByteFormat.string(model.selectedSize))")).foregroundStyle(.secondary)
             }
             if let free = model.desktopFreeSpace {
                 Text(String(localized: "· Desktop free \(ByteFormat.string(UInt64(max(free, 0))))"))

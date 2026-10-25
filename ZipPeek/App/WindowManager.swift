@@ -168,7 +168,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
             let host = NSHostingController(rootView: JobsView())
             host.sizingOptions = .preferredContentSize
             let window = NSWindow(contentViewController: host)
-            window.title = String(localized: "ZipPeek — Working")
+            window.title = String(localized: "Activity")
             window.styleMask = [.titled, .closable, .fullSizeContentView]
             window.titlebarAppearsTransparent = true
             window.isReleasedWhenClosed = false

@@ -13,7 +13,7 @@ struct DropWindowView: View {
         VStack(spacing: 18) {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable().frame(width: 64, height: 64).accessibilityHidden(true)
-            Text("ZipPeek").font(.title2.bold())
+            Text(verbatim: "ZipPeek").font(.title2.bold())
 
             VStack(spacing: 8) {
                 Image(systemName: "arrow.down.doc").font(.system(size: 26, weight: .light))
@@ -66,6 +66,10 @@ struct DropWindowView: View {
         .padding(.bottom, 22)
         .frame(width: 420)
         .onAppear { preview.refresh() }
+        // オンになったら、次からは案内を出さない
+        .onChange(of: preview.state) { _, state in
+            if state == .enabled { Preferences.shared.hasSeenWelcome = true }
+        }
     }
 }
 
@@ -82,7 +86,7 @@ struct CompactDropView: View {
                 VStack(spacing: 10) {
                     ZStack {
                         ProgressRing(progress: active.progress, lineWidth: 9).frame(width: 96, height: 96)
-                        Text("\(Int((active.progress * 100).rounded()))%").font(.title2.bold()).monospacedDigit()
+                        Text(verbatim: "\(Int((active.progress * 100).rounded()))%").font(.title2.bold()).monospacedDigit()
                     }
                     Text(active.inputs.first?.lastPathComponent ?? "").font(.caption).lineLimit(1).truncationMode(.middle)
                         .foregroundStyle(.secondary)
@@ -189,7 +193,7 @@ private struct JobRow: View {
                 Text(job.title).lineLimit(1).truncationMode(.middle)
                 Group {
                     switch job.state {
-                    case .running: Text("\(Int((job.progress * 100).rounded()))%")
+                    case .running: Text(verbatim: "\(Int((job.progress * 100).rounded()))%")
                     case .waiting: Text(String(localized: "Starts after the current task"))
                     case .done: EmptyView()
                     case .failed(let m): Text(m).lineLimit(2)

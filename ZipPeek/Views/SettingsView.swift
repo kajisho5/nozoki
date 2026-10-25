@@ -101,6 +101,7 @@ private struct StyleChoice<Preview: View>: View {
                                                                          lineWidth: selected ? 2 : 1))
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -111,8 +112,8 @@ private struct CompressSettings: View {
         Form {
             Toggle(String(localized: "Ask for settings every time"), isOn: $prefs.askBeforeCompress)
             Picker(String(localized: "Format"), selection: $prefs.compressDefaults.format) {
-                Text("zip").tag(CompressOptions.Format.zip)
-                Text("7z").tag(CompressOptions.Format.sevenZip)
+                Text(verbatim: "zip").tag(CompressOptions.Format.zip)
+                Text(verbatim: "7z").tag(CompressOptions.Format.sevenZip)
             }
             Picker(String(localized: "Compression Level"), selection: $prefs.compressDefaults.level) {
                 Text(String(localized: "Faster")).tag(CompressOptions.Level.fast)
