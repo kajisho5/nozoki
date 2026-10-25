@@ -2,7 +2,29 @@ import Foundation
 
 /// 圧縮の設定
 public struct CompressOptions: Sendable, Equatable, Codable {
-    public enum Format: String, Sendable, Codable, CaseIterable { case zip, sevenZip }
+    public enum Format: String, Sendable, Codable, CaseIterable {
+        case zip, sevenZip, tarGz, tarXz, tarBz2, tarZst, tar, dmg
+
+        /// 画面に出す名前（拡張子そのまま）
+        public var label: String {
+            switch self {
+            case .zip: "zip"
+            case .sevenZip: "7z"
+            case .tarGz: "tar.gz"
+            case .tarXz: "tar.xz"
+            case .tarBz2: "tar.bz2"
+            case .tarZst: "tar.zst"
+            case .tar: "tar"
+            case .dmg: "dmg"
+            }
+        }
+        public var fileExtension: String { label }
+        /// パスワード・分割が使えるか（zip と 7z だけ）
+        public var supportsPassword: Bool { self == .zip || self == .sevenZip }
+        public var supportsSplit: Bool { self == .zip || self == .sevenZip }
+        /// Mac・Linux 向けの形式か（Windows でもたいてい開けるが、標準で開けるのは zip）
+        public var isTar: Bool { [.tarGz, .tarXz, .tarBz2, .tarZst, .tar].contains(self) }
+    }
     public enum Level: String, Sendable, Codable, CaseIterable { case fast, normal, max }
     public enum ZipCipher: String, Sendable, Codable, CaseIterable { case aes256, zipCrypto }
 
@@ -20,7 +42,7 @@ public struct CompressOptions: Sendable, Equatable, Codable {
 
     public init() {}
 
-    public var fileExtension: String { format == .zip ? "zip" : "7z" }
+    public var fileExtension: String { format.fileExtension }
 
     enum CodingKeys: String, CodingKey { case format, level, zipCipher, splitSize, windowsNames, excludeMacFiles }
 }

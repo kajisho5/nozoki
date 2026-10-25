@@ -4,6 +4,10 @@ import Foundation
 public enum NameEncoding: String, CaseIterable, Sendable, Identifiable {
     case utf8
     case shiftJIS
+    case gbk
+    case big5
+    case korean
+    case windowsLatin
     case cp437
 
     public var id: String { rawValue }
@@ -12,31 +16,57 @@ public enum NameEncoding: String, CaseIterable, Sendable, Identifiable {
     public var label: String {
         switch self {
         case .utf8: return "UTF-8"
-        case .shiftJIS: return "Shift_JIS"
-        case .cp437: return tr("CP437（英語版Windows）", "CP437 (Western DOS)")
+        case .shiftJIS: return tr("日本語（Shift_JIS）", "Japanese (Shift_JIS)")
+        case .gbk: return tr("中国語 簡体字（GBK）", "Chinese Simplified (GBK)")
+        case .big5: return tr("中国語 繁体字（Big5）", "Chinese Traditional (Big5)")
+        case .korean: return tr("韓国語（CP949）", "Korean (CP949)")
+        case .windowsLatin: return tr("西欧（Windows-1252）", "Western (Windows-1252)")
+        case .cp437: return tr("CP437（英語版の古いWindows）", "CP437 (Western DOS)")
         }
     }
 
-    /// Foundationで使う文字コード。Shift_JISはWindowsの拡張文字（①や㈱など）も読めるCP932を使う
+    /// Windows のコードページ（CFStringEncoding の値）。Mac では CoreFoundation の変換表を使う
+    private var cfEncoding: UInt32? {
+        switch self {
+        case .utf8, .cp437: return nil
+        case .shiftJIS: return 0x0420   // kCFStringEncodingDOSJapanese（CP932：①や㈱も読める）
+        case .gbk: return 0x0421        // kCFStringEncodingDOSChineseSimplif（CP936）
+        case .korean: return 0x0422     // kCFStringEncodingDOSKorean（CP949）
+        case .big5: return 0x0423       // kCFStringEncodingDOSChineseTrad（CP950）
+        case .windowsLatin: return 0x0500 // kCFStringEncodingWindowsLatin1（CP1252）
+        }
+    }
+
+    /// Foundationで使う文字コード
     public var stringEncoding: String.Encoding {
         switch self {
         case .utf8: return .utf8
-        case .shiftJIS:
-            #if canImport(Darwin)
-            // kCFStringEncodingDOSJapanese = 0x0420（0x0421 は簡体字中国語なので注意）
-            let cp932 = CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(0x0420))
-            return String.Encoding(rawValue: cp932)
-            #else
-            return .shiftJIS
-            #endif
         case .cp437:
             #if canImport(Darwin)
-            let dosLatinUS = CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(0x0400))
-            return String.Encoding(rawValue: dosLatinUS)
+            return String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(0x0400)))
             #else
             return .isoLatin1
             #endif
+        default:
+            #if canImport(Darwin)
+            return String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(cfEncoding!)))
+            #else
+            switch self {
+            case .shiftJIS: return .shiftJIS
+            case .windowsLatin: return .windowsCP1252
+            default: return .utf8 // Linux では変換表が無い（テストは Mac で行う）
+            }
+            #endif
         }
+    }
+
+    /// 自動判定で試す順番。使う人の言語を優先する（日本語・英語の人は日本語の zip が多いので Shift_JIS が先）
+    static var detectionOrder: [NameEncoding] {
+        let lang = Locale.preferredLanguages.first?.lowercased() ?? "ja"
+        if lang.hasPrefix("zh-hans") || lang == "zh-cn" || lang == "zh-sg" { return [.gbk, .big5, .shiftJIS, .korean] }
+        if lang.hasPrefix("zh") { return [.big5, .gbk, .shiftJIS, .korean] }
+        if lang.hasPrefix("ko") { return [.korean, .shiftJIS, .gbk, .big5] }
+        return [.shiftJIS, .gbk, .korean, .big5]
     }
 
     func decode(_ data: Data) -> String? {
@@ -49,13 +79,18 @@ public enum NameEncoding: String, CaseIterable, Sendable, Identifiable {
     /// zipの中の名前の決め方
     /// - 「UTF-8です」の印が付いた名前、Unicode名の拡張がある名前はそれに従う
     /// - 印のない名前がすべてUTF-8として正しければUTF-8（Macの標準圧縮は印なしのUTF-8で書く）
-    /// - そうでなくShift_JISとして全部読めればShift_JIS（日本語Windowsで作ったzip）
+    /// - そうでなく、使う人の言語に近い順（日本語・中国語・韓国語）に試して全部読めたものを使う
     /// - どれでもなければCP437
     public static func detect(_ entries: [ZipEntry]) -> NameEncoding {
         let legacy = entries.filter { !$0.isUTF8Flagged && $0.unicodeName == nil && !$0.rawName.isASCII }
         if legacy.isEmpty { return .utf8 }
         if legacy.allSatisfy({ String(data: $0.rawName, encoding: .utf8) != nil }) { return .utf8 }
-        if legacy.allSatisfy({ NameEncoding.shiftJIS.decode($0.rawName) != nil }) { return .shiftJIS }
+        for candidate in detectionOrder where legacy.allSatisfy({ candidate.decode($0.rawName) != nil }) {
+            #if !canImport(Darwin)
+            if candidate != .shiftJIS { continue } // Linux では日本語以外の変換表が無い
+            #endif
+            return candidate
+        }
         return .cp437
     }
 }

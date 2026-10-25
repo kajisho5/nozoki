@@ -19,7 +19,7 @@ final class PreviewProvider: QLPreviewProvider, QLPreviewingController {
                 listing = try ArchiveListing.load(url: url)
             } else {
                 // サンドボックスの中では 7zz を起動できないので、macOS の libarchive で目次だけ読む
-                listing = ArchiveListing.build(raw: try LibArchiveList.entries(url))
+                listing = ArchiveListing.build(raw: try LibArchive.entries(url, timeLimit: 4))
             }
             html = PreviewHTML.make(listing: listing, fileName: name, elapsed: Date().timeIntervalSince(start))
         } catch {

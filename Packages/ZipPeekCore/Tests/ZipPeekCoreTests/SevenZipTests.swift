@@ -320,4 +320,95 @@ final class SevenZipIntegrationTests: XCTestCase {
         XCTAssertEqual(ArchiveEdit.check(dir.appendingPathComponent("a.rar"), encrypted: false), .unsupportedFormat)
         XCTAssertEqual(ArchiveEdit.check(dir.appendingPathComponent("a.7z.001"), encrypted: false), .splitArchive)
     }
+
+    // MARK: - 0.4 の機能
+
+    /// tar 系の形式で作って、解凍すると元に戻る
+    func testTarFormatsRoundTrip() throws {
+        var formats: [CompressOptions.Format] = [.tar, .tarGz, .tarXz, .tarBz2]
+        if LibArchive.canWrite(.zstd) { formats.append(.tarZst) }
+        for format in formats {
+            var o = CompressOptions(); o.format = format
+            let out = try ops.compress([src], options: o)
+            XCTAssertEqual(out.count, 1)
+            XCTAssertTrue(out[0].lastPathComponent.hasSuffix("." + format.fileExtension), out[0].lastPathComponent)
+            let dest = dir.appendingPathComponent("out-\(format.rawValue)")
+            try FileManager.default.createDirectory(at: dest, withIntermediateDirectories: true)
+            let made = try ops.extractAll(out[0], into: dest, password: nil)
+            XCTAssertEqual(made.map(\.lastPathComponent), ["撮影素材_サンプル"], "\(format)")
+            XCTAssertEqual(try content(made[0].appendingPathComponent("撮影メモ.txt")), "これは架空のテスト用メモです。\n", "\(format)")
+            XCTAssertFalse(FileManager.default.fileExists(atPath: made[0].appendingPathComponent(".DS_Store").path), "\(format)")
+            XCTAssertEqual(try Data(contentsOf: made[0].appendingPathComponent("CAM_A/clip_0001.mov")),
+                           try Data(contentsOf: src.appendingPathComponent("CAM_A/clip_0001.mov")), "\(format)")
+        }
+    }
+
+    /// .tar.zst の一覧（窓とスペースキー用）と、一部だけ取り出し
+    func testZstdListAndExtractSelected() throws {
+        guard LibArchive.canWrite(.zstd) else { throw XCTSkip("この OS の libarchive は zstd を書けない") }
+        var o = CompressOptions(); o.format = .tarZst
+        let out = try ops.compress([src], options: o)[0]
+        let raw = try LibArchive.entries(out)
+        let listing = ArchiveListing.build(raw: raw)
+        XCTAssertEqual(Set(listing.allFiles.map(\.path)), ["撮影素材_サンプル/撮影メモ.txt", "撮影素材_サンプル/CAM_A/clip_0001.mov"])
+        let memo = try XCTUnwrap(listing.allFiles.first { $0.name == "撮影メモ.txt" })
+        let dest = dir.appendingPathComponent("sel")
+        try FileManager.default.createDirectory(at: dest, withIntermediateDirectories: true)
+        let got = try ops.extractSelected(out, files: [(memo, "撮影メモ.txt")], into: dest, password: nil)
+        XCTAssertEqual(got.map(\.lastPathComponent), ["撮影メモ.txt"])
+    }
+
+    /// 中で名前を変える（ファイルとフォルダ）
+    func testRename() throws {
+        for format in [CompressOptions.Format.zip, .sevenZip] {
+            var o = CompressOptions(); o.format = format
+            let archive = try ops.compress([src], options: o)[0]
+            try ArchiveEdit.rename("撮影素材_サンプル/撮影メモ.txt", to: "台本.txt", in: archive, sevenZip: sevenZip)
+            try ArchiveEdit.rename("撮影素材_サンプル/CAM_A", to: "CAM_B", in: archive, sevenZip: sevenZip)
+            let names = Set(try sevenZip.list(archive, password: nil).filter { !$0.isDirectory }.map { ArchiveEdit.nfc($0.path) })
+            XCTAssertEqual(names, ["撮影素材_サンプル/台本.txt", "撮影素材_サンプル/CAM_B/clip_0001.mov"], "\(format)")
+            XCTAssertThrowsError(try ArchiveEdit.rename("撮影素材_サンプル/台本.txt", to: "CAM_B", in: archive, sevenZip: sevenZip))
+            XCTAssertThrowsError(try ArchiveEdit.rename("撮影素材_サンプル/台本.txt", to: "a/b", in: archive, sevenZip: sevenZip))
+        }
+    }
+
+    /// 壊れていないかのテスト：正常なら ok、途中を壊すとエラー
+    func testIntegrityTest() throws {
+        var o = CompressOptions(); o.format = .sevenZip; o.level = .fast
+        let archive = try ops.compress([src], options: o)[0]
+        XCTAssertTrue(try ArchiveTest.run(archive, password: nil, sevenZip: sevenZip).ok)
+        var bytes = try Data(contentsOf: archive)
+        for i in stride(from: 2000, to: 60_000, by: 7) { bytes[i] ^= 0xFF }
+        try bytes.write(to: archive)
+        let r = try ArchiveTest.run(archive, password: nil, sevenZip: sevenZip)
+        XCTAssertFalse(r.ok)
+    }
+
+    #if os(macOS)
+    /// ネットから来た zip の印が、解凍したものにも付く
+    func testQuarantinePropagates() throws {
+        let zip = try ops.compress([src], options: CompressOptions())[0]
+        let value = Data("0083;65f00000;Safari;".utf8)
+        _ = value.withUnsafeBytes { setxattr(zip.path, "com.apple.quarantine", $0.baseAddress, value.count, 0, 0) }
+        let dest = dir.appendingPathComponent("q")
+        try FileManager.default.createDirectory(at: dest, withIntermediateDirectories: true)
+        let made = try ops.extractAll(zip, into: dest, password: nil)
+        XCTAssertEqual(Quarantine.read(made[0]), value)
+        XCTAssertEqual(Quarantine.read(made[0].appendingPathComponent("CAM_A/clip_0001.mov")), value)
+    }
+
+    /// 中国語・韓国語の Windows で作った zip の名前も読める
+    func testOtherEncodings() throws {
+        let cases: [(NameEncoding, String)] = [(.gbk, "测试文件.txt"), (.big5, "測試檔案.txt"), (.korean, "테스트.txt")]
+        for (enc, name) in cases {
+            let raw = try XCTUnwrap(name.data(using: enc.stringEncoding))
+            XCTAssertEqual(enc.decode(raw), name)
+            var b = ZipBuilder(); b.items = [.init(rawName: raw, content: Data("x".utf8))]
+            let zip = dir.appendingPathComponent("\(enc.rawValue).zip")
+            try b.build().write(to: zip)
+            XCTAssertEqual(try ArchiveListing.load(url: zip, encoding: enc).allFiles.map(\.path), [name])
+        }
+    }
+    #endif
 }
+

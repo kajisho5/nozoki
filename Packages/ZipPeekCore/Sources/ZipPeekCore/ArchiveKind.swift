@@ -5,7 +5,7 @@ public enum ArchiveKind {
     /// 解凍の対象として扱う拡張子（7-Zipが読めるもののうち、よく使うもの）
     public static let archiveExtensions: Set<String> = [
         "zip", "zipx", "7z", "rar", "tar", "gz", "tgz", "bz2", "tbz", "tbz2", "xz", "txz", "zst", "tzst",
-        "lz", "lzma", "z", "iso", "lzh", "lha", "cab", "arj", "cpio", "wim", "xar", "pkg", "rpm", "deb",
+        "lz", "tlz", "lzma", "z", "iso", "lzh", "lha", "cab", "arj", "cpio", "wim", "xar", "pkg", "rpm", "deb",
         "001", "z01", "zx01", "apfs"
     ]
 
@@ -54,7 +54,7 @@ public enum ArchiveKind {
     /// 解凍先のフォルダ名（拡張子を全部外す：名前.tar.gz → 名前、名前.7z.001 → 名前）
     public static func baseName(of url: URL) -> String {
         var name = url.lastPathComponent
-        let strip = ["001", "tar", "gz", "tgz", "bz2", "xz", "zst", "7z", "zip", "zipx", "rar"]
+        let strip = ["001", "tar", "gz", "tgz", "bz2", "tbz", "tbz2", "xz", "txz", "zst", "tzst", "lz", "tlz", "7z", "zip", "zipx", "rar"]
         var changed = true
         while changed {
             changed = false

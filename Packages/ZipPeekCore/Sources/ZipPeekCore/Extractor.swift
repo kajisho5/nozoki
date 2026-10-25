@@ -115,6 +115,7 @@ public struct Extractor: Sendable {
             }
         }
         onProgress(Progress(doneBytes: total, totalBytes: total, fileNumber: jobs.count, fileTotal: jobs.count, currentName: ""))
+        Quarantine.propagate(from: zipURL, to: written)
         return written
     }
 

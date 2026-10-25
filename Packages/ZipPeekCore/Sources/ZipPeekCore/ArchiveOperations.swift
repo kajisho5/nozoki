@@ -22,10 +22,15 @@ public struct ArchiveOperations: Sendable {
         var success = false
         defer { if !success { try? fm.removeItem(at: temp) } }
 
-        if try !extractZipNatively(archive, to: temp, onProgress: onProgress, isCancelled: isCancelled) {
+        if LibArchive.handles(archive) {
+            // 7-Zip が読めない zstd・lzip は OS の libarchive で
+            try LibArchive.extract(archive, to: temp, isCancelled: isCancelled)
+        } else if try !extractZipNatively(archive, to: temp, onProgress: onProgress, isCancelled: isCancelled) {
             guard let sevenZip else { throw SevenZipError.notFound }
             try sevenZip.extract(archive, to: temp, password: password, onProgress: onProgress, isCancelled: isCancelled)
         }
+        // .tar.gz などは、1回目で中の .tar が出てくるので、続けて開く
+        try unpackInnerTar(of: archive, in: temp, onProgress: onProgress, isCancelled: isCancelled)
         Self.removeMacJunk(in: temp)
 
         let items = try fm.contentsOfDirectory(at: temp, includingPropertiesForKeys: nil)
@@ -45,7 +50,27 @@ public struct ArchiveOperations: Sendable {
             results.append(target)
         }
         success = true
+        Quarantine.propagate(from: archive, to: results)
         return results
+    }
+
+    /// 「圧縮された tar」（.tar.gz・.tgz・.tar.zst など）を解凍して中から .tar が1つだけ出てきたら、その中身に置き換える
+    func unpackInnerTar(of archive: URL, in temp: URL, onProgress: @escaping @Sendable (Double) -> Void,
+                        isCancelled: @escaping @Sendable () -> Bool) throws {
+        let ext = archive.pathExtension.lowercased()
+        let stem = archive.deletingPathExtension().pathExtension.lowercased()
+        guard ["tgz", "tbz", "tbz2", "txz", "tzst", "tlz"].contains(ext) || stem == "tar" else { return }
+        let fm = FileManager.default
+        let inner = (try? fm.contentsOfDirectory(at: temp, includingPropertiesForKeys: nil)) ?? []
+        guard inner.count == 1, inner[0].pathExtension.lowercased() == "tar", let sevenZip else { return }
+        let tar = inner[0]
+        let unpacked = temp.appendingPathComponent(".tar-\(UUID().uuidString)")
+        try sevenZip.extract(tar, to: unpacked, password: nil, onProgress: onProgress, isCancelled: isCancelled)
+        try fm.removeItem(at: tar)
+        for item in try fm.contentsOfDirectory(at: unpacked, includingPropertiesForKeys: nil) {
+            try fm.moveItem(at: item, to: temp.appendingPathComponent(item.lastPathComponent))
+        }
+        try fm.removeItem(at: unpacked)
     }
 
     /// 暗号のない普通のzipは自前で解凍する（日本語Windowsの名前も正しく読めるため）。
@@ -91,13 +116,17 @@ public struct ArchiveOperations: Sendable {
                                 password: String?,
                                 onProgress: @escaping @Sendable (Double) -> Void = { _ in },
                                 isCancelled: @escaping @Sendable () -> Bool = { false }) throws -> [URL] {
-        guard let sevenZip else { throw SevenZipError.notFound }
         let fm = FileManager.default
         let temp = folder.appendingPathComponent(".zippeek-\(UUID().uuidString)", isDirectory: true)
         defer { try? fm.removeItem(at: temp) }
         let paths = files.compactMap { $0.item.archivePath }
-        try sevenZip.extract(ArchiveKind.firstVolume(of: archive), to: temp, password: password, only: paths,
-                             onProgress: onProgress, isCancelled: isCancelled)
+        if LibArchive.handles(archive) {
+            try LibArchive.extract(archive, to: temp, only: Set(paths.map(ArchiveListing.normalize)), isCancelled: isCancelled)
+        } else {
+            guard let sevenZip else { throw SevenZipError.notFound }
+            try sevenZip.extract(ArchiveKind.firstVolume(of: archive), to: temp, password: password, only: paths,
+                                 onProgress: onProgress, isCancelled: isCancelled)
+        }
         var results: [URL] = []
         for f in files {
             guard let ap = f.item.archivePath else { continue }
@@ -108,10 +137,81 @@ public struct ArchiveOperations: Sendable {
             try fm.moveItem(at: src, to: target)
             results.append(target)
         }
+        Quarantine.propagate(from: archive, to: results)
         return results
     }
 
     // MARK: - 圧縮
+
+    /// zip・7z 以外（tar 系と dmg）。書きかけは失敗したら消す
+    func compressOther(_ inputs: [URL], to output: URL, options: CompressOptions,
+                       onProgress: @escaping @Sendable (Double) -> Void,
+                       isCancelled: @escaping @Sendable () -> Bool) throws {
+        let fm = FileManager.default
+        let work = output.deletingLastPathComponent().appendingPathComponent(".zippeek-\(UUID().uuidString)")
+        try fm.createDirectory(at: work, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: work) }
+        let temp = work.appendingPathComponent(output.lastPathComponent)
+        switch options.format {
+        case .dmg:
+            try Self.makeDiskImage(inputs, to: temp, stage: work.appendingPathComponent("stage"),
+                                   excludeMacFiles: options.excludeMacFiles)
+        case .tarZst:
+            try LibArchive.writeTar(inputs, to: temp, filter: .zstd, excludeMacFiles: options.excludeMacFiles, isCancelled: isCancelled)
+        default:
+            guard let sevenZip else { throw SevenZipError.notFound }
+            // 1) tar にまとめる（名前は Windows と同じ形にそろえるため、並べ直した作業用フォルダから）
+            let stage = work.appendingPathComponent("stage")
+            try fm.createDirectory(at: stage, withIntermediateDirectories: true)
+            for input in inputs { try ArchiveEdit.mirror(input, to: stage.appendingPathComponent(ArchiveEdit.nfc(input.lastPathComponent))) }
+            let tar = options.format == .tar ? temp : work.appendingPathComponent(ArchiveKind.baseName(of: output) + ".tar")
+            var args = ["a", "-ttar", "-sccUTF-8", "-bsp1", "-bso0", "-bse2"]
+            if options.excludeMacFiles {
+                args += ["-xr!.DS_Store", "-xr!__MACOSX", "-xr!._*", "-xr!.Spotlight-V100", "-xr!.Trashes", "-xr!.fseventsd"]
+            }
+            args += ["--", tar.path] + inputs.map { ArchiveEdit.nfc($0.lastPathComponent) }
+            try sevenZip.run(args, password: nil, cwd: stage, onProgress: { onProgress($0 * 0.5) }, isCancelled: isCancelled)
+            // 2) 圧縮する
+            if options.format != .tar {
+                let type = ["tarGz": "gzip", "tarXz": "xz", "tarBz2": "bzip2"][options.format.rawValue]!
+                let level = ["fast": "-mx=1", "normal": "-mx=5", "max": "-mx=9"][options.level.rawValue]!
+                try sevenZip.run(["a", "-t" + type, level, "-sccUTF-8", "-bsp1", "-bso0", "-bse2", "--", temp.path, tar.path],
+                                 password: nil, onProgress: { onProgress(0.5 + $0 * 0.5) }, isCancelled: isCancelled)
+            }
+        }
+        try fm.moveItem(at: temp, to: output)
+        onProgress(1)
+    }
+
+    /// Mac のディスクイメージ（dmg）を作る。作ったあと確かめ、壊れていたら一度だけ作り直す
+    static func makeDiskImage(_ inputs: [URL], to output: URL, stage: URL, excludeMacFiles: Bool) throws {
+        #if os(macOS)
+        let fm = FileManager.default
+        try fm.createDirectory(at: stage, withIntermediateDirectories: true)
+        for input in inputs { try ArchiveEdit.mirror(input, to: stage.appendingPathComponent(input.lastPathComponent)) }
+        if excludeMacFiles { removeMacJunk(in: stage) }
+        let volume = inputs.count == 1 ? inputs[0].deletingPathExtension().lastPathComponent : tr("アーカイブ", "Archive")
+        func hdiutil(_ args: [String]) throws {
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/usr/bin/hdiutil")
+            p.arguments = args
+            let err = Pipe(); p.standardError = err; p.standardOutput = Pipe()
+            try p.run(); p.waitUntilExit()
+            guard p.terminationStatus == 0 else {
+                let m = String(decoding: err.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+                throw SevenZipError.failed(m.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
+        let create = ["create", "-volname", volume, "-srcfolder", stage.path, "-fs", "HFS+", "-format", "UDZO", "-ov", output.path]
+        try hdiutil(create)
+        if (try? hdiutil(["verify", "-quiet", output.path])) == nil {
+            try hdiutil(create)
+            try hdiutil(["verify", "-quiet", output.path])
+        }
+        #else
+        throw LibArchive.Failure.unavailable
+        #endif
+    }
 
     /// 圧縮後のファイル名。1つならその名前、複数なら「アーカイブ」
     public static func archiveName(for inputs: [URL], options: CompressOptions) -> String {
@@ -124,11 +224,16 @@ public struct ArchiveOperations: Sendable {
     public func compress(_ inputs: [URL], into folder: URL? = nil, options: CompressOptions,
                          onProgress: @escaping @Sendable (Double) -> Void = { _ in },
                          isCancelled: @escaping @Sendable () -> Bool = { false }) throws -> [URL] {
-        guard let sevenZip else { throw SevenZipError.notFound }
         guard let first = inputs.first else { return [] }
         let fm = FileManager.default
         let dir = folder ?? first.deletingLastPathComponent()
         let name = Self.archiveName(for: inputs, options: options)
+        if !options.format.supportsPassword {
+            let output = Extractor.uniqueURL(dir.appendingPathComponent(name))
+            try compressOther(inputs, to: output, options: options, onProgress: onProgress, isCancelled: isCancelled)
+            return [output]
+        }
+        guard let sevenZip else { throw SevenZipError.notFound }
         var output = Extractor.uniqueURL(dir.appendingPathComponent(name))
         let split = options.splitSize != nil && !(options.windowsNames && options.format == .zip)
         if split {

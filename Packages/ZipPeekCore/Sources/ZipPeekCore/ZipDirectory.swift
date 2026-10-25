@@ -18,6 +18,20 @@ public struct ZipEntry: Sendable, Hashable {
     /// 作成OSの情報と外部属性から判断したフォルダかどうか（名前末尾の / でも判断）
     public let externalAttributes: UInt32
     public let madeByOS: UInt8
+    /// この項目の本体（ローカルヘッダー）がzipの先頭から何バイト目にあるか
+    public var localHeaderOffset: UInt64 = 0
+    /// 目次の中で、この項目の記録が占める範囲（リンク先のzipから1件だけ取り出すときに使う）
+    public var centralRecordRange: Range<Int> = 0..<0
+    /// 本体の位置が ZIP64 の追加情報の中に書いてある場合の、記録の中での位置
+    public var localOffsetFieldInZip64: Int?
+    /// 本体の後ろに「データ記述子」が付くか（一般目的フラグの3ビット目）
+    public var hasDataDescriptor: Bool = false
+}
+
+/// zipの中身を読む元（手元のファイル、またはネットの先のファイル）
+public protocol ZipByteSource {
+    var size: UInt64 { get }
+    func bytes(at offset: UInt64, count: Int) throws -> Data
 }
 
 public enum ZipReadError: Error, Equatable, LocalizedError {
@@ -44,13 +58,14 @@ public enum ZipDirectory {
         defer { try? handle.close() }
         let fileSize = try handle.seekToEnd()
         let reader = Reader(handle: handle, fileSize: fileSize)
-        return try read(reader)
+        return try read(reader).entries
     }
 
-    static func read(_ r: Reader) throws -> [ZipEntry] {
+    /// 目次を読む。目次そのもの（cd）も返す
+    public static func read(_ r: ZipByteSource) throws -> (entries: [ZipEntry], cd: Data) {
         // 1) 末尾の「目次の終わり」記録（EOCD）を探す。後ろにコメントが最大65535バイト付くことがある
-        let tailLength = min(r.fileSize, UInt64(65_535 + 22))
-        let tailStart = r.fileSize - tailLength
+        let tailLength = min(r.size, UInt64(65_535 + 22))
+        let tailStart = r.size - tailLength
         let tail = try r.bytes(at: tailStart, count: Int(tailLength))
         guard tail.count >= 22 else { throw ZipReadError.notAZip }
         var eocdPos: Int?
@@ -83,7 +98,7 @@ public enum ZipDirectory {
             }
         }
 
-        guard cdOffset <= r.fileSize, cdSize <= r.fileSize - cdOffset else { throw ZipReadError.truncated }
+        guard cdOffset <= r.size, cdSize <= r.size - cdOffset else { throw ZipReadError.truncated }
         // 目次は件数が多くても数十MB程度なので一度に読む
         let cd = try r.bytes(at: cdOffset, count: Int(cdSize))
         var entries: [ZipEntry] = []
@@ -108,6 +123,8 @@ public enum ZipDirectory {
             let next = extraStart + extraLen + commentLen
             guard next <= cd.count else { throw ZipReadError.truncated }
             let rawName = cd.subdata(in: nameStart..<extraStart)
+            var localOffset = UInt64(cd.u32(p + 42))
+            var offsetField: Int?
 
             var unicodeName: String?
             var e = extraStart
@@ -122,6 +139,7 @@ public enum ZipDirectory {
                     var q = body
                     if size == 0xFFFF_FFFF, q + 8 <= body + len { size = cd.u64(q); q += 8 }
                     if packed == 0xFFFF_FFFF, q + 8 <= body + len { packed = cd.u64(q); q += 8 }
+                    if localOffset == 0xFFFF_FFFF, q + 8 <= body + len { localOffset = cd.u64(q); offsetField = q - p; q += 8 }
                 } else if tag == 0x7075, len >= 5 {
                     // Info-ZIPのUnicode名：版(1) + 元の名前のCRC(4) + UTF-8名
                     let utf8 = cd.subdata(in: (body + 5)..<(body + len))
@@ -144,18 +162,23 @@ public enum ZipDirectory {
                 packedSize: packed,
                 modified: DOSDate.date(date: dosDate, time: dosTime),
                 externalAttributes: extAttr,
-                madeByOS: UInt8(madeBy >> 8)
+                madeByOS: UInt8(madeBy >> 8),
+                localHeaderOffset: localOffset,
+                centralRecordRange: p..<next,
+                localOffsetFieldInZip64: offsetField,
+                hasDataDescriptor: flags & (1 << 3) != 0
             ))
             index += 1
             p = next
         }
         if entries.isEmpty && entryCount > 0 { throw ZipReadError.truncated }
-        return entries
+        return (entries, cd)
     }
 
-    struct Reader {
+    struct Reader: ZipByteSource {
         let handle: FileHandle
         let fileSize: UInt64
+        var size: UInt64 { fileSize }
 
         func bytes(at offset: UInt64, count: Int) throws -> Data {
             guard offset + UInt64(count) <= fileSize else { throw ZipReadError.truncated }

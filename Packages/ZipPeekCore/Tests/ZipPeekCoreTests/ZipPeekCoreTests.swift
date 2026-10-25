@@ -280,7 +280,7 @@ final class FormatTests: XCTestCase {
     func testPreviewRowLimit() throws {
         var b = ZipBuilder()
         b.items = (0..<(PreviewHTML.rowLimit + 50)).map { .init(rawName: Data("f\($0).txt".utf8)) }
-        let entries = try ZipDirectory.read(ZipDirectory.Reader.memory(b.build()))
+        let entries = try ZipDirectory.read(ZipDirectory.Reader.memory(b.build())).entries
         let html = PreviewHTML.make(listing: ArchiveListing.build(entries: entries), fileName: "many.zip")
         XCTAssertTrue(html.contains("ほか 50 件"))
     }
