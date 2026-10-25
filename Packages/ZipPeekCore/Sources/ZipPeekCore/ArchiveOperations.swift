@@ -141,14 +141,24 @@ public struct ArchiveOperations: Sendable {
             }
         }
 
-        let useRewrite = options.format == .zip && options.windowsNames
+        // Macの名前は濁点などが分かれた形（NFD）のことがあり、そのままだとWindowsで「か゛」のように崩れる。
+        // zipでは、Windowsと同じ形（NFC）にまとめ直す（分割するときは書き直せないのでそのまま）
+        let normalizeNames = options.format == .zip && !options.windowsNames && !split && ArchiveEdit.hasDecomposedNames(inputs)
+        let useRewrite = options.format == .zip && (options.windowsNames || normalizeNames)
         let workOutput = useRewrite ? dir.appendingPathComponent(".zippeek-\(UUID().uuidString).zip") : output
         do {
             try sevenZip.compress(inputs, to: workOutput, options: options, onProgress: { p in onProgress(p * (useRewrite ? 0.9 : 1)) },
                                   isCancelled: isCancelled)
             if useRewrite {
-                try ZipNameRewriter.rewrite(workOutput, to: output) { name in
-                    String(data: Data(name.utf8), encoding: .utf8)?.data(using: NameEncoding.shiftJIS.stringEncoding)
+                if options.windowsNames {
+                    try ZipNameRewriter.rewrite(workOutput, to: output) { name in
+                        ArchiveEdit.nfc(name).data(using: NameEncoding.shiftJIS.stringEncoding)
+                    }
+                } else {
+                    try ZipNameRewriter.rewrite(workOutput, to: output, keepUTF8: true) { name in
+                        let n = ArchiveEdit.nfc(name)
+                        return Array(n.utf8) == Array(name.utf8) ? nil : Data(n.utf8)
+                    }
                 }
                 try? fm.removeItem(at: workOutput)
                 onProgress(1)

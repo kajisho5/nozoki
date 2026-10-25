@@ -122,6 +122,72 @@
         }
       }
     },
+    "Add": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加"
+          }
+        }
+      }
+    },
+    "Add %lld items to “%@”?": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 個の項目を「%@」に追加しますか？"
+          }
+        }
+      }
+    },
+    "Add Files…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加…"
+          }
+        }
+      }
+    },
+    "Add files to the folder you’re viewing (or drag them into this window)": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "見ているフォルダにファイルを追加します（この窓にドラッグしても追加できます）"
+          }
+        }
+      }
+    },
+    "Add “%@” to “%@”?": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」を「%@」に追加しますか？"
+          }
+        }
+      }
+    },
+    "Adding…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加しています…"
+          }
+        }
+      }
+    },
     "All": {
       "extractionState": "manual",
       "localizations": {
@@ -272,6 +338,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "中身を見たい圧縮ファイルを選んでください"
+          }
+        }
+      }
+    },
+    "Choose files or folders to add to “%@”": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」に追加するファイルやフォルダを選んでください"
           }
         }
       }
@@ -452,6 +529,39 @@
         }
       }
     },
+    "Couldn’t Add": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加できませんでした"
+          }
+        }
+      }
+    },
+    "Couldn’t Change the Archive": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮ファイルを変更できませんでした"
+          }
+        }
+      }
+    },
+    "Couldn’t Delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "削除できませんでした"
+          }
+        }
+      }
+    },
     "Couldn’t Extract": {
       "extractionState": "manual",
       "localizations": {
@@ -514,6 +624,61 @@
           "stringUnit": {
             "state": "translated",
             "value": "大きさを指定"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "削除"
+          }
+        }
+      }
+    },
+    "Delete %lld items from “%@”?": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 個の項目を「%@」から削除しますか？"
+          }
+        }
+      }
+    },
+    "Delete from Archive…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮ファイルから削除…"
+          }
+        }
+      }
+    },
+    "Delete “%@” from “%@”?": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」を「%@」から削除しますか？"
+          }
+        }
+      }
+    },
+    "Deleting…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "削除しています…"
           }
         }
       }
@@ -1629,6 +1794,17 @@
         }
       }
     },
+    "The archive is changed directly. Your original files aren’t moved or changed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮ファイルそのものを書き換えます。元のファイルは動かしたり変えたりしません。"
+          }
+        }
+      }
+    },
     "The downloaded app isn’t signed by the ZipPeek developer, so it wasn’t installed.": {
       "extractionState": "manual",
       "localizations": {
@@ -1658,6 +1834,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "アップデートの情報を読み取れませんでした。"
+          }
+        }
+      }
+    },
+    "They’re removed from the archive itself. This can’t be undone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮ファイルの中から消します。元に戻せません。"
           }
         }
       }

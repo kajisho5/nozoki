@@ -45,6 +45,8 @@ final class ArchiveModel {
 
     var extraction: Extraction?
     var errorMessage: String?
+    /// errorMessage の見出し（nil なら「取り出せませんでした」）
+    var errorTitle: String?
     var previewURL: URL?
 
     /// この窓で入力されたパスワード（窓を閉じたら消える。保存しない）
@@ -245,6 +247,108 @@ final class ArchiveModel {
     }
 
     func cancelExtraction() { extraction?.cancel.cancel() }
+
+    // MARK: 足す・消す（zip と 7z）
+
+    /// 足したり消したりしている最中の表示（nil なら何もしていない）
+    var editing: String?
+
+    /// 変更できない理由（できるなら nil）
+    var editBlocker: ArchiveEdit.Failure? {
+        let encrypted = listing?.allFiles.contains(where: \.isEncrypted) ?? false
+        return ArchiveEdit.check(url, encrypted: encrypted || password != nil)
+    }
+
+    var canDelete: Bool {
+        editBlocker == nil && !(listing?.hasLegacyNames ?? false) && !selectedItems.isEmpty && editing == nil && extraction == nil
+    }
+
+    /// 外から落とされたファイルを、今見ているフォルダに足す（確認してから）
+    func requestAdd(_ urls: [URL]) -> Bool {
+        // この窓から取り出したもの（一時フォルダの中）を戻しただけなら何もしない
+        let items = urls.filter { !$0.standardizedFileURL.path.hasPrefix(TempFiles.root.standardizedFileURL.path) }
+        guard !items.isEmpty, editing == nil, extraction == nil else { return false }
+        if let blocker = editBlocker {
+            errorTitle = String(localized: "Couldn’t Add")
+            errorMessage = blocker.localizedDescription
+            return false
+        }
+        // ドラッグの受け取りを終えてから確認を出す
+        DispatchQueue.main.async { self.confirmAdd(items) }
+        return true
+    }
+
+    /// 「追加…」ボタン：ファイルを選んで足す
+    func chooseAndAdd() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = true
+        panel.prompt = String(localized: "Add")
+        panel.message = String(localized: "Choose files or folders to add to “\(url.lastPathComponent)”")
+        guard panel.runModal() == .OK else { return }
+        _ = requestAdd(panel.urls)
+    }
+
+    private func confirmAdd(_ items: [URL]) {
+        let folder = isSearching ? "" : currentFolder
+        let place = folder.isEmpty ? url.lastPathComponent : "\(url.lastPathComponent)/\(folder)"
+        let a = NSAlert()
+        a.messageText = items.count == 1
+            ? String(localized: "Add “\(items[0].lastPathComponent)” to “\(place)”?")
+            : String(localized: "Add \(items.count) items to “\(place)”?")
+        a.informativeText = String(localized: "The archive is changed directly. Your original files aren’t moved or changed.")
+        a.addButton(withTitle: String(localized: "Add"))
+        a.addButton(withTitle: String(localized: "Cancel"))
+        guard a.runModal() == .alertFirstButtonReturn else { return }
+        let archive = url
+        runEdit(label: String(localized: "Adding…")) { sevenZip in
+            try ArchiveEdit.add(items, to: archive, inFolder: folder, sevenZip: sevenZip)
+        }
+    }
+
+    /// 選んだものを圧縮ファイルの中から消す（確認してから。元に戻せない）
+    func requestDelete() {
+        let items = selectedItems
+        guard !items.isEmpty, editing == nil, extraction == nil else { return }
+        if let blocker = editBlocker ?? ((listing?.hasLegacyNames ?? false) ? .legacyNames : nil) {
+            errorTitle = String(localized: "Couldn’t Delete")
+            errorMessage = blocker.localizedDescription
+            return
+        }
+        let a = NSAlert()
+        a.alertStyle = .warning
+        a.messageText = items.count == 1
+            ? String(localized: "Delete “\(items[0].name)” from “\(url.lastPathComponent)”?")
+            : String(localized: "Delete \(items.count) items from “\(url.lastPathComponent)”?")
+        a.informativeText = String(localized: "They’re removed from the archive itself. This can’t be undone.")
+        // 取り消せない操作なので、return キーで押されるのは「キャンセル」
+        a.addButton(withTitle: String(localized: "Cancel"))
+        let del = a.addButton(withTitle: String(localized: "Delete"))
+        del.hasDestructiveAction = true
+        guard a.runModal() == .alertSecondButtonReturn else { return }
+        let paths = items.map(\.path)
+        let archive = url
+        runEdit(label: String(localized: "Deleting…")) { sevenZip in
+            try ArchiveEdit.delete(paths, from: archive, sevenZip: sevenZip)
+        }
+    }
+
+    private func runEdit(label: String, _ work: @escaping @Sendable (SevenZip) throws -> Void) {
+        guard let sevenZip = SevenZip.bundled() else { return }
+        editing = label
+        Task {
+            let result: Error? = await Task.detached(priority: .userInitiated) {
+                do { try work(sevenZip); return nil } catch { return error }
+            }.value
+            editing = nil
+            selection.removeAll()
+            if let result {
+                errorTitle = String(localized: "Couldn’t Change the Archive")
+                errorMessage = result.localizedDescription
+            }
+            load()
+        }
+    }
 
     func close() {
         extraction?.cancel.cancel()

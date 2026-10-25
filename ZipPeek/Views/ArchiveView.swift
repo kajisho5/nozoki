@@ -30,9 +30,9 @@ struct ArchiveView: View {
         .frame(minWidth: 760, minHeight: 460)
         .navigationTitle(model.url.lastPathComponent)
         .quickLookPreview($model.previewURL)
-        .alert(String(localized: "Couldn’t Extract"),
-               isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
-            Button("OK", role: .cancel) { model.errorMessage = nil }
+        .alert(model.errorTitle ?? String(localized: "Couldn’t Extract"),
+               isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil; model.errorTitle = nil } })) {
+            Button("OK", role: .cancel) { model.errorMessage = nil; model.errorTitle = nil }
         } message: {
             Text(model.errorMessage ?? "")
         }
@@ -54,6 +54,13 @@ private struct LoadedView: View {
                 StatusBar(model: model, listing: listing)
             }
             .overlay(alignment: .bottom) {
+                if let label = model.editing {
+                    GlassCapsule {
+                        ProgressView().controlSize(.small)
+                        Text(label)
+                    }
+                    .padding(.bottom, 44)
+                }
                 if let e = model.extraction, !(e.isForPreview && e.totalBytes < 200_000_000) {
                     ExtractionCapsule(model: model, extraction: e)
                         .padding(.bottom, 44)
@@ -136,6 +143,12 @@ private struct ArchiveToolbar: ToolbarContent {
             if listing.hasLegacyNames {
                 EncodingMenu(model: model, listing: listing)
             }
+            Button { model.chooseAndAdd() } label: {
+                Label(String(localized: "Add Files…"), systemImage: "plus")
+            }
+            .help(model.editBlocker?.localizedDescription
+                  ?? String(localized: "Add files to the folder you’re viewing (or drag them into this window)"))
+            .disabled(model.editBlocker != nil || model.editing != nil)
             Button {
                 if let item = model.selectedItems.first(where: { !$0.isFolder }) { model.preview(item) }
             } label: {
@@ -235,9 +248,20 @@ private struct FileTable: View {
                     model.selection = Set(ids)
                     model.extractSelection()
                 }
+                Divider()
+                Button(String(localized: "Delete from Archive…"), role: .destructive) {
+                    model.selection = Set(ids)
+                    model.requestDelete()
+                }
+                .disabled(model.editBlocker != nil || (model.listing?.hasLegacyNames ?? false))
             }
         } primaryAction: { ids in
             if ids.count == 1, let item = items.first(where: { ids.contains($0.id) }) { model.open(item) }
+        }
+        .onDeleteCommand { model.requestDelete() }
+        // Finder などから落とされたファイルを、今見ているフォルダに足す
+        .dropDestination(for: URL.self) { urls, _ in
+            model.requestAdd(urls)
         }
         .onKeyPress(.space) {
             if let item = model.selectedItems.first(where: { !$0.isFolder }) {

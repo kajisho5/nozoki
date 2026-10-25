@@ -160,6 +160,57 @@ if [ -n "$F" ] && [ -n "$D" ] && [ "$F" != "見つからない" ] && [ "$D" != "
 fi
 quit
 
+# 9) 0.3.0 の機能：7z のスペースキー表示、窓へのドラッグで追加、選んで削除
+Z="$APP/Contents/MacOS/7zz"
+rm -rf ~/Desktop/zp-7z && mkdir -p ~/Desktop/zp-7z/架空の撮影/RAW
+echo "架空の台本です" > ~/Desktop/zp-7z/架空の撮影/台本.txt
+head -c 300000 /dev/urandom > ~/Desktop/zp-7z/架空の撮影/RAW/clip_0101.mov
+(cd ~/Desktop/zp-7z && LC_ALL=en_US.UTF-8 "$Z" a -bso0 -bsp0 sample.7z 架空の撮影)
+qlmanage -r > /dev/null 2>&1
+( qlmanage -p ~/Desktop/zp-7z/sample.7z > "$OUT/qlmanage-7z.log" 2>&1 & )
+shot "quicklook-7z" 6
+pkill -x qlmanage
+
+quit
+defaults delete $ID 2>/dev/null; defaults write $ID hasSeenWelcome -bool true
+rm -rf ~/Desktop/zp-edit ~/Desktop/zp-src && mkdir -p ~/Desktop/zp-edit ~/Desktop/zp-src
+cp samples/sample-mac.zip ~/Desktop/zp-edit/edit.zip
+echo "追加のテスト" > ~/Desktop/zp-src/追加テスト.txt
+open -a "$APP" ~/Desktop/zp-edit/edit.zip; sleep 5
+$T move com.kajisho5.zippeek 0 40 760 560
+open ~/Desktop/zp-src; sleep 3
+$T move com.apple.finder 790 120 480 360; sleep 1
+F=$($T pos com.apple.finder 追加テスト.txt)
+echo "追加するファイルの位置: $F" | tee -a "$LOG"
+if [ -n "$F" ] && [ "$F" != "見つからない" ]; then
+  # shellcheck disable=SC2086
+  $T drag $F 380 330; sleep 3
+  shot "test-3-add-confirm" 1
+  A=$($T pos com.kajisho5.zippeek Add); echo "「追加」ボタン: $A" | tee -a "$LOG"
+  # shellcheck disable=SC2086
+  [ -n "$A" ] && [ "$A" != "見つからない" ] && $T click $A
+  sleep 6
+  shot "test-4-added" 1
+  if LC_ALL=en_US.UTF-8 "$Z" l -ba ~/Desktop/zp-edit/edit.zip | grep -q "追加テスト.txt"; then echo "合格: 窓へのドラッグで zip に追加できた" | tee -a "$LOG"
+  else echo "不合格: 窓へのドラッグで zip に追加できなかった" | tee -a "$LOG"; fi
+fi
+R=$($T pos com.kajisho5.zippeek 撮影メモ.txt); echo "削除する行: $R" | tee -a "$LOG"
+if [ -n "$R" ] && [ "$R" != "見つからない" ]; then
+  # shellcheck disable=SC2086
+  $T click $R; sleep 1
+  $T key 51; sleep 2
+  shot "test-5-delete-confirm" 1
+  B=$($T pos com.kajisho5.zippeek Delete); echo "「削除」ボタン: $B" | tee -a "$LOG"
+  # shellcheck disable=SC2086
+  [ -n "$B" ] && [ "$B" != "見つからない" ] && $T click $B
+  sleep 6
+  shot "test-6-deleted" 1
+  if LC_ALL=en_US.UTF-8 "$Z" l -ba ~/Desktop/zp-edit/edit.zip | grep -q "撮影メモ.txt"; then echo "不合格: 削除できなかった" | tee -a "$LOG"
+  else echo "合格: 選んで削除できた" | tee -a "$LOG"; fi
+  LC_ALL=en_US.UTF-8 "$Z" l -ba ~/Desktop/zp-edit/edit.zip | tee -a "$LOG"
+fi
+quit
+
 # 6) アイコンの各見た目（Xcode付属の Icon Composer の道具で描く）
 ICTOOL="$(xcode-select -p)/../Applications/Icon Composer.app/Contents/Executables/ictool"
 if [ -x "$ICTOOL" ]; then

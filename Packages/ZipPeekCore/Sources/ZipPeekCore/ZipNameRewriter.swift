@@ -7,9 +7,10 @@ public enum ZipNameRewriter {
     public enum Failure: Error { case unsupported(String) }
 
     /// - Parameter encode: 名前を新しい文字コードのバイト列にする。nil を返した名前はUTF-8のまま残す
+    /// - Parameter keepUTF8: true なら新しい名前もUTF-8として書く（形だけ整えるとき。UTF-8の印を残し、Unicode名は添えない）
     /// - Returns: 書き直した件数
     @discardableResult
-    public static func rewrite(_ input: URL, to output: URL, encode: (String) -> Data?) throws -> Int {
+    public static func rewrite(_ input: URL, to output: URL, keepUTF8: Bool = false, encode: (String) -> Data?) throws -> Int {
         let inHandle = try FileHandle(forReadingFrom: input)
         defer { try? inHandle.close() }
         let fileSize = try inHandle.seekToEnd()
@@ -104,7 +105,7 @@ public enum ZipNameRewriter {
             var clearFlag = false
             if isUTF8, let s = utf8Name, !r.name.allSatisfy({ $0 < 0x80 }), let enc = encode(s) {
                 newName = enc
-                clearFlag = true
+                clearFlag = !keepUTF8
                 changed += 1
             }
             // ローカルヘッダ
@@ -137,7 +138,9 @@ public enum ZipNameRewriter {
             let isUTF8 = r.header.u16(8) & (1 << 11) != 0
             var name = r.name
             var extra = r.extra
-            if isUTF8, let s = String(data: r.name, encoding: .utf8), !r.name.allSatisfy({ $0 < 0x80 }), let enc = encode(s) {
+            if isUTF8, let s = String(data: r.name, encoding: .utf8), !r.name.allSatisfy({ $0 < 0x80 }), let enc = encode(s), keepUTF8 {
+                name = enc
+            } else if isUTF8, let s = String(data: r.name, encoding: .utf8), !r.name.allSatisfy({ $0 < 0x80 }), let enc = encode(s) {
                 name = enc
                 r.header.put16(8, r.header.u16(8) & ~UInt16(1 << 11))
                 // 新しい道具向けに、UTF-8の名前も「Unicode名」として添えておく

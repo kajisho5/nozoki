@@ -6,6 +6,8 @@
 //   swift scripts/ui-test.swift doubleclick <x> <y>
 //   swift scripts/ui-test.swift drag <x1> <y1> <x2> <y2>
 //   swift scripts/ui-test.swift windows <bundle id>         窓の題名の一覧
+//   swift scripts/ui-test.swift move <bundle id> <x> <y> <幅> <高さ>   いちばん手前の窓の位置と大きさを変える
+//   swift scripts/ui-test.swift key <キー番号> [cmd]          キーを押す（51 = delete）
 import AppKit
 import ApplicationServices
 
@@ -70,6 +72,20 @@ case "drag":
     }
     usleep(800_000)  // Dock のアイコンの上で少し止まる
     mouse(.leftMouseUp, b)
+case "move":
+    guard let a = app(args[2]), let w = (attr(a, kAXWindowsAttribute) as? [AXUIElement])?.first else { print("窓が無い"); exit(1) }
+    var p = CGPoint(x: Double(args[3])!, y: Double(args[4])!), s = CGSize(width: Double(args[5])!, height: Double(args[6])!)
+    AXUIElementSetAttributeValue(w, kAXPositionAttribute as CFString, AXValueCreate(.cgPoint, &p)!)
+    AXUIElementSetAttributeValue(w, kAXSizeAttribute as CFString, AXValueCreate(.cgSize, &s)!)
+case "key":
+    let code = CGKeyCode(Int(args[2])!)
+    let flags: CGEventFlags = args.count > 3 && args[3] == "cmd" ? .maskCommand : []
+    for down in [true, false] {
+        let e = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down)
+        e?.flags = flags
+        e?.post(tap: .cghidEventTap)
+        usleep(80_000)
+    }
 case "windows":
     guard let a = app(args[2]) else { print("起動していない"); exit(1) }
     for w in (attr(a, kAXWindowsAttribute) as? [AXUIElement]) ?? [] { print(attr(w, kAXTitleAttribute) as? String ?? "(題名なし)") }

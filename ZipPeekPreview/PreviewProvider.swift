@@ -3,8 +3,9 @@ import ZipPeekCore
 import QuickLookUI
 import UniformTypeIdentifiers
 
-/// Finderでzipを選んでスペースキーを押したときに、中身の一覧を返す（デザイン①）。
-/// 読むのはzipの末尾の目次だけ。ファイルの書き出しはしない
+/// Finderで圧縮ファイルを選んでスペースキーを押したときに、中身の一覧を返す（デザイン①）。
+/// zip は末尾の目次だけを自前で読む。7z・rar・tar などは、アプリに同梱の 7-Zip に一覧だけを頼む。
+/// どちらもファイルの書き出しはしない
 final class PreviewProvider: QLPreviewProvider, QLPreviewingController {
 
     func providePreview(for request: QLFilePreviewRequest) async throws -> QLPreviewReply {
@@ -13,7 +14,13 @@ final class PreviewProvider: QLPreviewProvider, QLPreviewingController {
         let start = Date()
         let html: String
         do {
-            let listing = try ArchiveListing.load(url: url)
+            let listing: ArchiveListing
+            if ArchiveKind.isZip(url) {
+                listing = try ArchiveListing.load(url: url)
+            } else {
+                guard let sevenZip = Self.sevenZip() else { throw SevenZipError.notFound }
+                listing = ArchiveListing.build(raw: try sevenZip.list(url, password: nil))
+            }
             html = PreviewHTML.make(listing: listing, fileName: name, elapsed: Date().timeIntervalSince(start))
         } catch {
             html = PreviewHTML.errorPage(fileName: name, message: error.localizedDescription)
@@ -25,5 +32,12 @@ final class PreviewProvider: QLPreviewProvider, QLPreviewingController {
         reply.stringEncoding = .utf8
         reply.title = name
         return reply
+    }
+
+    /// アプリ本体に同梱の 7zz（ZipPeek.app/Contents/MacOS/7zz）。この拡張は ZipPeek.app/Contents/PlugIns/ の中にある
+    static func sevenZip() -> SevenZip? {
+        let contents = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
+        let exe = contents.appendingPathComponent("MacOS/7zz")
+        return FileManager.default.isExecutableFile(atPath: exe.path) ? SevenZip(executable: exe) : SevenZip.bundled()
     }
 }

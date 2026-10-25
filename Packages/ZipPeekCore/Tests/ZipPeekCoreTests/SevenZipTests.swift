@@ -226,4 +226,80 @@ final class SevenZipIntegrationTests: XCTestCase {
         let left = try FileManager.default.contentsOfDirectory(atPath: dir.path).filter { $0.hasSuffix(".7z") || $0.hasPrefix(".zippeek") }
         XCTAssertTrue(left.isEmpty, "残っていたもの: \(left)")
     }
+
+    var sevenZip: SevenZip { SevenZip(executable: URL(fileURLWithPath: ProcessInfo.processInfo.environment["ZIPPEEK_7ZZ"]!)) }
+
+    /// 濁点が分かれた形（NFD）の名前は、zip ではWindowsと同じ形（NFC）にまとめて入る
+    func testCompressNormalizesDecomposedNames() throws {
+        let nfd = "ガイド".decomposedStringWithCanonicalMapping + ".txt"
+        XCTAssertNotEqual(Array(nfd.utf8), Array("ガイド.txt".utf8))
+        let folder = dir.appendingPathComponent("濁点テスト")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try Data("x".utf8).write(to: folder.appendingPathComponent(nfd))
+        XCTAssertTrue(ArchiveEdit.hasDecomposedNames([folder]))
+        let out = try ops.compress([folder], options: CompressOptions())
+        let names = try ArchiveListing.load(url: out[0]).allFiles.map(\.name)
+        XCTAssertEqual(names.map { Array($0.utf8) }, [Array("ガイド.txt".utf8)])
+        // 作業用のファイルが残っていない
+        XCTAssertFalse(try FileManager.default.contentsOfDirectory(atPath: dir.path).contains { $0.hasPrefix(".zippeek") })
+    }
+
+    /// 今あるzipの一番上とフォルダの中へ足す。名前はNFCで入り、作業用フォルダは残らない
+    func testAddToZip() throws {
+        let zip = try ops.compress([src], options: CompressOptions())[0]
+        let extra = dir.appendingPathComponent("追加分")
+        try FileManager.default.createDirectory(at: extra, withIntermediateDirectories: true)
+        let nfd = "バックアップ".decomposedStringWithCanonicalMapping + ".txt"
+        try Data("add".utf8).write(to: extra.appendingPathComponent(nfd))
+        try Data("b".utf8).write(to: extra.appendingPathComponent(".DS_Store"))
+        try ArchiveEdit.add([extra.appendingPathComponent(nfd)], to: zip, inFolder: "撮影素材_サンプル/CAM_A", sevenZip: sevenZip)
+        try ArchiveEdit.add([extra], to: zip, inFolder: "", sevenZip: sevenZip)
+        let listing = try ArchiveListing.load(url: zip)
+        let paths = listing.allFiles.map(\.path)
+        XCTAssertTrue(paths.contains { Array($0.utf8) == Array("撮影素材_サンプル/CAM_A/バックアップ.txt".utf8) }, "\(paths)")
+        XCTAssertTrue(paths.contains { Array($0.utf8) == Array("追加分/バックアップ.txt".utf8) }, "\(paths)")
+        XCTAssertFalse(paths.contains { $0.hasSuffix(".DS_Store") })
+        XCTAssertEqual(listing.summary.fileCount, 4)
+        let left = try FileManager.default.contentsOfDirectory(atPath: dir.path).filter { $0.hasPrefix(".zippeek") }
+        XCTAssertTrue(left.isEmpty, "残っていたもの: \(left)")
+        // 元のファイルはそのまま
+        XCTAssertEqual(try content(extra.appendingPathComponent(nfd)), "add")
+    }
+
+    /// ファイルとフォルダ（中身ごと）を消す。7z でも
+    func testDeleteFromZipAnd7z() throws {
+        for format in [CompressOptions.Format.zip, .sevenZip] {
+            var o = CompressOptions(); o.format = format
+            let archive = try ops.compress([src], options: o)[0]
+            try ArchiveEdit.delete(["撮影素材_サンプル/撮影メモ.txt"], from: archive, sevenZip: sevenZip)
+            var names = try sevenZip.list(archive, password: nil).map(\.path)
+            XCTAssertFalse(names.contains("撮影素材_サンプル/撮影メモ.txt"), "\(format) \(names)")
+            XCTAssertTrue(names.contains("撮影素材_サンプル/CAM_A/clip_0001.mov"))
+            try ArchiveEdit.delete(["撮影素材_サンプル/CAM_A"], from: archive, sevenZip: sevenZip)
+            names = try sevenZip.list(archive, password: nil).map(\.path)
+            XCTAssertFalse(names.contains { $0.hasPrefix("撮影素材_サンプル/CAM_A") }, "\(format) \(names)")
+        }
+    }
+
+    /// Windowsで作ったzip（Shift_JIS）に足しても、元の名前は壊れない
+    func testAddKeepsShiftJISNames() throws {
+        let zip = dir.appendingPathComponent("win.zip")
+        var b = ZipBuilder()
+        b.items = [.init(rawName: Sample.sjisMemo, content: Data("memo".utf8))]
+        try b.build().write(to: zip)
+        let before = try ArchiveListing.load(url: zip).allFiles.map(\.path)
+        let extra = dir.appendingPathComponent("new.txt"); try Data("n".utf8).write(to: extra)
+        try ArchiveEdit.add([extra], to: zip, inFolder: "", sevenZip: sevenZip)
+        let after = try ArchiveListing.load(url: zip).allFiles.map(\.path)
+        for name in before { XCTAssertTrue(after.contains(name), "\(name) が消えた: \(after)") }
+        XCTAssertTrue(after.contains("new.txt"))
+    }
+
+    func testEditChecks() throws {
+        let zip = try ops.compress([src], options: CompressOptions())[0]
+        XCTAssertNil(ArchiveEdit.check(zip, encrypted: false))
+        XCTAssertEqual(ArchiveEdit.check(zip, encrypted: true), .encrypted)
+        XCTAssertEqual(ArchiveEdit.check(dir.appendingPathComponent("a.rar"), encrypted: false), .unsupportedFormat)
+        XCTAssertEqual(ArchiveEdit.check(dir.appendingPathComponent("a.7z.001"), encrypted: false), .splitArchive)
+    }
 }
