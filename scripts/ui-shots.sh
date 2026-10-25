@@ -34,19 +34,26 @@ for LANG_CODE in ja en; do
 done
 
 defaults delete -g AppleInterfaceStyle 2>/dev/null
-# 4) 小窓（ガラス）
-reset
-defaults write $ID dropStyle -string compactGlass
-"$BIN" -AppleLanguages "(ja)" &
-shot "ja-light-4-compact" 6
-quit
+# 4) 小窓（ガラス）— 英語と日本語
+for LANG_CODE in en ja; do
+  reset
+  defaults write $ID dropStyle -string compactGlass
+  "$BIN" -AppleLanguages "($LANG_CODE)" &
+  shot "$LANG_CODE-light-4-compact" 6
+  quit
+done
 
-# 5) Finderのスペースキー（クイックルック）
+# 5) Finderのスペースキー（クイックルック）— Mac全体の言語を切り替えて英語・日本語で撮る
 pluginkit -a "$APP/Contents/PlugIns/ZipPeekPreview.appex" 2>/dev/null
-qlmanage -r > /dev/null 2>&1
-( qlmanage -p samples/sample-win.zip > "$OUT/qlmanage.log" 2>&1 & )
-shot "quicklook" 6
-pkill -x qlmanage
+for LANG_CODE in en ja; do
+  defaults write -g AppleLanguages -array "$LANG_CODE"
+  killall cfprefsd 2>/dev/null || true
+  qlmanage -r > /dev/null 2>&1
+  ( qlmanage -p samples/sample-win.zip > "$OUT/qlmanage-$LANG_CODE.log" 2>&1 & )
+  shot "quicklook-$LANG_CODE" 6
+  pkill -x qlmanage
+done
+defaults delete -g AppleLanguages 2>/dev/null || true
 
 # 6) アイコンの各見た目（Xcode付属の Icon Composer の道具で描く）
 ICTOOL="$(xcode-select -p)/../Applications/Icon Composer.app/Contents/Executables/ictool"
