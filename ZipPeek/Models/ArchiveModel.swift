@@ -244,7 +244,11 @@ final class ArchiveModel {
         let native = listing.source == .zip && !files.contains { $0.item.isEncrypted } && !isRemote
         let remote = self.remote
         let progress: @Sendable (Double) -> Void = { p in
-            Task { @MainActor in self.extraction?.progress = max(self.extraction?.progress ?? 0, p) }
+            Task { @MainActor in
+                // 読むのと書くのを同時にすると Swift の決まり（同時アクセスの禁止）で止まるので、分けて行う
+                let current = self.extraction?.progress ?? 0
+                self.extraction?.progress = max(current, p)
+            }
         }
 
         Task {

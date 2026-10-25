@@ -149,14 +149,6 @@ private struct ArchiveToolbar: ToolbarContent {
             .help(model.editBlocker?.localizedDescription
                   ?? String(localized: "Add files to the folder you’re viewing (or drag them into this window)"))
             .disabled(model.editBlocker != nil || model.editing != nil)
-            Button {
-                if let item = model.selectedItems.first(where: { !$0.isFolder }) { model.preview(item) }
-            } label: {
-                Label(String(localized: "Preview"), systemImage: "eye")
-            }
-            .help(String(localized: "Temporarily extract and show the selected file (or press Space)"))
-            .disabled(!model.selectedItems.contains { !$0.isFolder } || model.extraction != nil)
-
             MoreMenu(model: model)
 
             Button {
@@ -180,6 +172,8 @@ private struct MoreMenu: View {
     var body: some View {
         Menu {
             let one = model.selectedItems.count == 1 ? model.selectedItems.first : nil
+            Button(String(localized: "Preview")) { if let one { model.preview(one) } }
+                .disabled(one == nil || one?.isFolder == true || model.extraction != nil)
             Button(String(localized: "Open in Default App")) { if let one { model.openInDefaultApp(one) } }
                 .disabled(one == nil || one?.isFolder == true || model.extraction != nil)
             Button(String(localized: "Rename…")) { model.requestRename() }
@@ -190,6 +184,7 @@ private struct MoreMenu: View {
         } label: {
             Label(String(localized: "More"), systemImage: "ellipsis.circle")
         }
+        .accessibilityLabel(String(localized: "More"))
         .help(String(localized: "Rename, open in another app, or check the archive for damage"))
     }
 }
@@ -212,6 +207,7 @@ private struct EncodingMenu: View {
         } label: {
             Label(String(localized: "File Name Encoding"), systemImage: "character.book.closed")
         }
+        .accessibilityLabel(String(localized: "File Name Encoding"))
         .help(String(localized: "If file names look garbled, change the encoding here (now: \(listing.encoding.label))"))
     }
 }
