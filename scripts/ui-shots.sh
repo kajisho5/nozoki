@@ -113,28 +113,8 @@ print("zip を開くアプリ（押した後）: " + (NSWorkspace.shared.urlForA
 SWIFT
 swift /tmp/getdef.swift 2>&1 | tee -a "$OUT/default-app.log"
 shot "default-app-after" 1
-# Finder でダブルクリックしたのと同じ「開く」を Finder から送る
-osascript -e "tell application \"Finder\" to open (POSIX file \"$PWD/samples/sample-mac.zip\")" 2>&1 | tee -a "$OUT/default-app.log"
-shot "en-light-5-doubleclick" 6
-quit
-osascript -e 'tell application "System Events" to keystroke return' 2>/dev/null || true
-# 調べ：Finder からの「開く」そのものが動くか（ふつうのテキストを開く）
-osascript -e 'tell application "System Events" to keystroke return' 2>/dev/null || true
-echo "test" > /tmp/zp-check.txt
-osascript -e 'tell application "Finder" to open (POSIX file "/tmp/zp-check.txt")' 2>&1 | tee -a "$OUT/default-app.log"
-shot "diag-finder-txt" 4
-osascript -e 'tell application "TextEdit" to quit' 2>/dev/null || true
-# 調べ：公証済みの正式版（v0.1.0）を入れて、Finder から zip を開く
-if curl -fsSL -o /tmp/zp.dmg https://github.com/kajisho5/zippeek/releases/download/v0.1.0/ZipPeek-0.1.0.dmg; then
-  MNT=$(mktemp -d); hdiutil attach -nobrowse -readonly -mountpoint "$MNT" /tmp/zp.dmg > /dev/null
-  quit; sudo rm -rf /Applications/ZipPeek.app && sudo ditto "$MNT/ZipPeek.app" /Applications/ZipPeek.app
-  hdiutil detach "$MNT" > /dev/null
-  "$LSREG" -f /Applications/ZipPeek.app
-  swift /tmp/getdef.swift 2>&1 | tee -a "$OUT/default-app.log"
-  osascript -e "tell application \"Finder\" to open (POSIX file \"$PWD/samples/sample-win.zip\")" 2>&1 | tee -a "$OUT/default-app.log"
-  shot "diag-finder-notarized" 8
-  quit
-fi
+# 注：この Mac ではスクリプトから Finder に「開く」をさせられない（ふつうのテキストでも失敗する）ため、
+# Finder のダブルクリックそのものは試せない。下で「Dock 以外からの開く」を確かめる
 # 「このアプリケーションで開く」と同じ開き方（送り主は Dock 以外）でも、中身を見る窓が開くか
 defaults delete $ID 2>/dev/null
 open -a "$APP" samples/sample-win.zip

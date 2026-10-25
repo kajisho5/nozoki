@@ -79,7 +79,7 @@ It also covers the everyday side: drop files on the Dock icon to compress, drop 
 
 Requirements: macOS 14 Sonoma or later, Apple silicon or Intel.
 
-Double-clicking a ZIP still opens it with the Mac's built-in Archive Utility. To use ZipPeek instead, right-click the file and choose **Open With → ZipPeek**, or drop it on the Dock icon.
+**Double-click to look inside:** the first window has an **Open with ZipPeek** button. After you confirm in the Mac's dialog, double-clicking a ZIP, 7z or rar opens it in ZipPeek's window — like on Windows. Dropping an archive on the Dock icon still extracts it right away. You can change both, or go back to Archive Utility, in **Settings → General**.
 
 ## How to use
 
@@ -117,7 +117,7 @@ Open **ZipPeek → Settings…** (⌘,).
 
 | Tab | What you can change |
 |---|---|
-| General | What happens when you give ZipPeek an archive (extract right away, or open it to look inside), where to extract, putting multiple items in a folder, showing results in Finder, moving the archive to the Trash afterwards |
+| General | Double-click to open in ZipPeek; what double-clicking and Dock drops do (look inside, or extract right away); where to extract, putting multiple items in a folder, showing results in Finder, moving the archive to the Trash afterwards |
 | Appearance | Standard drop window, or a compact glass drop target |
 | Compression | Default format and level, Windows-friendly names, leaving out Mac-only files |
 | Quick Look | Turning on the Space-key preview |
@@ -146,7 +146,7 @@ ZipPeek detects Shift_JIS names automatically. If the guess is wrong, switch it 
 Yes. For Japanese names, turn on **Japanese Windows–friendly names** in the compression sheet.
 
 **Can ZipPeek open ZIPs when I double-click them?**
-Yes: in Finder, choose **Get Info** on a ZIP, pick ZipPeek under **Open with**, and click **Change All…**.
+Yes. Click **Open with ZipPeek** in the first window or in Settings → General, then confirm in the Mac's dialog. You can also do it in Finder: **Get Info** on a ZIP, pick ZipPeek under **Open with**, and click **Change All…**.
 
 ## Development
 

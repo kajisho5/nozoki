@@ -35,7 +35,7 @@ const en = {
   features: {
     title: 'Everything an archiver should do',
     items: [
-      { icon: 'extract', title: 'Take out one file', body: 'Pick files and click Extract, or drag them straight to the Desktop.' },
+      { icon: 'extract', title: 'Double-click to look inside', body: 'Like on Windows: double-click a ZIP and its contents open. Pick files and click Extract, or drag them out.' },
       { icon: 'drop', title: 'Drop to go', body: 'Drop on the Dock icon: files are compressed, archives are extracted.' },
       { icon: 'menu', title: 'Right-click in Finder', body: 'Compress, Extract and Look Inside — no window needed.' },
       { icon: 'kana', title: 'No garbled names', body: 'Shift_JIS names from Windows are detected. Make ZIPs that open cleanly on Japanese Windows.' },
@@ -74,7 +74,7 @@ const en = {
     steps: [
       { title: 'Download the dmg', body: 'From the latest release on GitHub.' },
       { title: 'Drag to Applications', body: 'Like any other Mac app.' },
-      { title: 'Turn on Space-to-peek', body: 'Launch ZipPeek once; it guides you to the one switch.' },
+      { title: 'Turn on double-click & Space', body: 'Launch ZipPeek once and press the buttons in the first window.' },
     ],
   },
   faq: {
@@ -131,7 +131,7 @@ const ja: Text = {
   features: {
     title: '圧縮・解凍に必要なことは、ぜんぶ',
     items: [
-      { icon: 'extract', title: '1ファイルだけ取り出す', body: '選んで「取り出す」。デスクトップへのドラッグでも書き出せます。' },
+      { icon: 'extract', title: 'ダブルクリックで中身を見る', body: 'Windowsと同じように、zipをダブルクリックすれば中身が開きます。選んで「取り出す」、ドラッグでも書き出せます。' },
       { icon: 'drop', title: 'ドラッグで、すぐ', body: 'Dockのアイコンに落とすだけ。ファイルは圧縮、圧縮ファイルは解凍。' },
       { icon: 'menu', title: 'Finderの右クリック', body: '「圧縮」「解凍」「中身を見る」。窓を開かずに使えます。' },
       { icon: 'kana', title: '文字化けしない', body: 'Windowsで作ったzip（Shift_JIS）を自動で判定。Windowsで化けないzipも作れます。' },
@@ -170,7 +170,7 @@ const ja: Text = {
     steps: [
       { title: 'dmgをダウンロード', body: 'GitHubの最新リリースから。' },
       { title: '「アプリケーション」へドラッグ', body: 'ほかのMacアプリと同じです。' },
-      { title: 'スペースキー機能をオン', body: '一度起動すれば、案内に沿ってスイッチを1つ入れるだけ。' },
+      { title: 'ダブルクリックとスペースキーをオン', body: '一度起動して、最初の窓のボタンを押すだけ。' },
     ],
   },
   faq: {
