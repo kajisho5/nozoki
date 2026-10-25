@@ -5,9 +5,9 @@ export const site = 'https://kajisho5.github.io/zippeek';
 export const sponsors = 'https://github.com/sponsors/kajisho5';
 
 export const extractFormats = ['zip', '7z', 'rar', 'tar', 'gz', 'bz2', 'xz', 'zst', 'iso', 'lzh', 'cab', 'arj', 'cpio', 'wim', 'xar', 'rpm', 'deb'];
-export const createFormats = ['zip', '7z'];
+export const createFormats = ['zip', '7z', 'tar.gz', 'tar.xz', 'tar.bz2', 'tar', 'dmg'];
 
-export type IconName = 'extract' | 'drop' | 'menu' | 'kana' | 'stack' | 'lock';
+export type IconName = 'extract' | 'drop' | 'menu' | 'kana' | 'stack' | 'lock' | 'link' | 'shield' | 'shortcut';
 
 const en = {
   lang: 'en',
@@ -41,6 +41,9 @@ const en = {
       { icon: 'kana', title: 'No garbled names', body: 'Shift_JIS names from Windows are detected. Make ZIPs that open cleanly on Japanese Windows.' },
       { icon: 'stack', title: 'Many formats', body: 'zip, 7z, rar, tar, iso, lzh and more, powered by the bundled 7-Zip. The Space key works for 7z, rar and tar too.' },
       { icon: 'lock', title: 'Passwords & split', body: 'AES-256, hidden file names in 7z, and splitting into 2 GB or DVD-sized parts.' },
+      { icon: 'link', title: 'Peek at a link', body: 'Paste a link to a ZIP on the web. See what’s inside and download only the files you need — not the whole archive.' },
+      { icon: 'shield', title: 'Check for damage', body: 'Test every file without extracting, and get the SHA-256 to compare. Apps you extract keep the Mac’s download safety check.' },
+      { icon: 'shortcut', title: 'Shortcuts', body: 'Compress, extract, list and check archives from the Shortcuts app. Open a ZIP inside a ZIP, rename items, and edit files in place.' },
     ] as { icon: IconName; title: string; body: string }[],
   },
   how: {
@@ -68,7 +71,7 @@ const en = {
     styleTitle: 'Choose your style',
     styleBody: 'A standard window, or a tiny glass target that stays out of the way.',
   },
-  formats: { title: 'Formats', extract: 'Extract', create: 'Create', note: 'Creating rar isn’t possible (only its developer may make rar archives); extracting works.' },
+  formats: { title: 'Formats', extract: 'Extract', create: 'Create', note: 'Creating rar isn’t possible (only its developer may make rar archives); extracting works. tar.zst can be created only where the Mac’s built-in library supports it.' },
   install: {
     title: 'Install in a minute',
     steps: [
@@ -84,6 +87,8 @@ const en = {
       { q: 'Does it update itself?', a: 'Yes, from version 0.2. ZipPeek checks once a day, asks before updating, and installs only updates signed by the same developer. Version 0.1.0 can’t do this, so please download the latest version once.' },
       { q: 'Why do I need to turn on the Space-key preview?', a: 'macOS asks you to approve new Quick Look extensions once. ZipPeek shows whether it’s on and opens System Settings for you.' },
       { q: 'Does the Space key work for 7z and rar?', a: 'Yes, from version 0.3: zip, 7z, rar and tar (including .tar.gz). Other formats open in the ZipPeek window: right-click → Look Inside with ZipPeek.' },
+      { q: 'Can I look inside a ZIP on the web without downloading it?', a: 'Yes, from version 0.4. Choose File → Look Inside a Link… and paste the link. ZipPeek reads only the table of contents and downloads just the files you take out. It works with servers that allow reading part of a file, which most do.' },
+      { q: 'Can I use ZipPeek in Shortcuts?', a: 'Yes, from version 0.4: Compress Files, Extract Archive, Get Contents of Archive and Check Archive for Damage.' },
       { q: 'Can I add or remove files inside a ZIP?', a: 'Yes, from version 0.3, for zip and 7z. Drag files into the ZipPeek window (or click Add Files…) to add them; select items and press Delete to remove them. ZipPeek asks before changing the archive. Password-protected and split archives can’t be changed.' },
       { q: 'My ZIP came from Windows and the names look broken.', a: 'ZipPeek detects Shift_JIS names automatically. If the guess is wrong, switch it with File Name Encoding in the toolbar.' },
       { q: 'Will ZIPs I make open on Windows?', a: 'Yes. For Japanese names, turn on “Japanese Windows–friendly names” when compressing.' },
@@ -139,6 +144,9 @@ const ja: Text = {
       { icon: 'kana', title: '文字化けしない', body: 'Windowsで作ったzip（Shift_JIS）を自動で判定。Windowsで化けないzipも作れます。' },
       { icon: 'stack', title: 'たくさんの形式', body: 'zip・7z・rar・tar・iso・lzh など。中身の処理に 7-Zip を同梱。7z・rar・tarもスペースキーでのぞけます。' },
       { icon: 'lock', title: 'パスワードと分割', body: 'AES-256。7zならファイル名も隠せます。2GBやDVDの大きさに分割も。' },
+      { icon: 'link', title: 'リンクのままのぞく', body: 'ネットにある zip のリンクを貼るだけ。中身を見て、必要なファイルだけをダウンロード。全部を落とす必要はありません。' },
+      { icon: 'shield', title: '壊れていないか確認', body: '解凍せずに全ファイルを確かめ、SHA-256 も出します。解凍したアプリにも Mac の安全確認がきちんと働きます。' },
+      { icon: 'shortcut', title: 'ショートカット対応', body: '圧縮・解凍・一覧・確認をショートカット App から。zip の中の zip を開く、中で名前変更、開いて直したら書き戻しも。' },
     ],
   },
   how: {
@@ -166,7 +174,7 @@ const ja: Text = {
     styleTitle: '好きな形で',
     styleBody: '標準の窓か、じゃまにならない小さなガラスの窓か、設定で選べます。',
   },
-  formats: { title: '対応形式', extract: '解凍', create: '作成', note: 'rar形式での圧縮はできません（rarの作成は開発元にしか許されていないため）。解凍はできます。' },
+  formats: { title: '対応形式', extract: '解凍', create: '作成', note: 'rar形式での圧縮はできません（rarの作成は開発元にしか許されていないため）。解凍はできます。tar.zst の作成は、Mac に入っている部品が対応している場合だけです。' },
   install: {
     title: '1分で使えます',
     steps: [
@@ -182,6 +190,8 @@ const ja: Text = {
       { q: 'アップデートは自動？', a: '0.2 からは自動で知らせます。1日に1回確認し、入れる前に聞き、同じ開発者の署名があるときだけ入れ替えます。0.1.0 にはこの機能がないので、一度だけ最新版を入れ直してください。' },
       { q: 'スペースキーの機能をオンにする必要があるのはなぜ？', a: '新しいクイックルックの部品は、最初に1回だけMacの設定で許可が必要です。ZipPeekが状態を表示し、設定画面も開きます。' },
       { q: '7zやrarもスペースキーで見られる？', a: '0.3から見られます。zip・7z・rar・tar（.tar.gzなども）に対応。ほかの形式はZipPeekの窓で開けます（右クリック →「ZipPeekで中身を見る」）。' },
+      { q: 'ネットにある zip を、ダウンロードせずにのぞける？', a: '0.4 からできます。「ファイル」→「リンクのままのぞく…」でリンクを貼るだけ。目次だけを読み、取り出したファイルの分だけダウンロードします。ファイルの一部だけを読む仕組みに対応したサーバーで使えます（たいていは対応しています）。' },
+      { q: 'ショートカット App で使える？', a: '0.4 から使えます。「ファイルを圧縮」「圧縮ファイルを解凍」「圧縮ファイルの中身を取得」「圧縮ファイルが壊れていないか確かめる」があります。' },
       { q: 'zipの中にファイルを足したり消したりできる？', a: '0.3から、zipと7zでできます。ZipPeekの窓にファイルをドラッグする（または「追加…」）と追加、選んでdeleteキーで削除。変更の前に必ず確認します。パスワード付きや分割された圧縮ファイルは変更できません。' },
       { q: 'Windowsから来たzipの名前が化けている', a: '自動で判定しますが、外れたときはツールバーの「ファイル名の文字コード」で切り替えてください。' },
       { q: '作ったzipはWindowsで開ける？', a: '開けます。日本語の名前があるときは、圧縮の設定で「Windowsで文字化けしない名前にする」をオンにしてください。' },

@@ -57,6 +57,10 @@ It also covers the everyday side: drop files on the Dock icon to compress, drop 
 | **Right-click in Finder** | *Compress with ZipPeek*, *Extract with ZipPeek* and *Look Inside with ZipPeek*. |
 | **No garbled names** | Japanese file names in ZIPs made on Windows (Shift_JIS) are detected and shown correctly. ZIPs you make store names the way Windows expects (accented and kana characters stay whole, not split into parts), and you can also make ZIPs for older Japanese Windows. |
 | **Many formats** | Extract zip, 7z, rar, tar, gz, bz2, xz, zst, iso, lzh, cab and more. Create zip and 7z. Powered by the bundled 7-Zip. |
+| **Peek at a link** | Paste a link to a ZIP on the web (**File → Look Inside a Link…**). ZipPeek reads only the table of contents and downloads just the files you take out. |
+| **Check for damage** | **More → Check for Damage** reads every file without extracting and shows the archive's SHA-256. Apps you extract from a downloaded archive keep the Mac's download safety check. |
+| **Work inside archives** | Open a ZIP inside a ZIP, rename items, or open a file in its app and save it back into the archive. |
+| **Shortcuts** | Compress Files, Extract Archive, Get Contents of Archive and Check Archive for Damage actions for the Shortcuts app. |
 | **Compression options** | AES-256 passwords (7z can hide file names too), split archives, compression level, and leaving out Mac-only files such as `.DS_Store`. |
 | **Feels like a Mac app** | Standard toolbar, menus and shortcuts, VoiceOver labels, Reduce Motion support, and Liquid Glass on macOS 26. Light and dark follow your Mac's setting. |
 | **English and Japanese** | Follows your Mac's language. |
@@ -92,6 +96,13 @@ Requirements: macOS 14 Sonoma or later, Apple silicon or Intel.
 - Drag files into the ZipPeek window, or click **Add Files…**. They go into the folder you're viewing.
 - Select items and press **Delete**, or right-click → **Delete from Archive…**.
 
+**Look inside a ZIP on the web**
+- **File → Look Inside a Link…** (⇧⌘L), paste the link, and click **Look Inside**. Extract or drag files out as usual — only those files are downloaded.
+
+**Rename, open in an app, check for damage**
+- Select an item and use **More** in the toolbar (or right-click): **Rename…**, **Open in Default App** (save it, and ZipPeek offers to put it back into the archive), **Check for Damage**.
+- Double-click a ZIP inside the archive to look inside it.
+
 **Take out some files**
 1. In the ZipPeek window, select files or folders. Use the search field at the top right to find them.
 2. Click **Extract**, or drag them to the Desktop or any Finder window.
@@ -112,9 +123,9 @@ Requirements: macOS 14 Sonoma or later, Apple silicon or Intel.
 
 | | |
 |---|---|
-| **Extract** | zip, 7z, rar, tar, gz, bz2, xz, zst, iso, lzh, cab, arj, cpio, wim, xar, rpm, deb and more |
-| **Create** | zip, 7z |
-| **Add / remove inside** | zip, 7z (not password-protected or split archives) |
+| **Extract** | zip, 7z, rar, tar, gz, bz2, xz, zst, lz, iso, lzh, cab, arj, cpio, wim, xar, rpm, deb and more |
+| **Create** | zip, 7z, tar.gz, tar.xz, tar.bz2, tar, dmg (tar.zst where the Mac's built-in library supports it) |
+| **Add / remove / rename inside** | zip, 7z (not password-protected or split archives) |
 | **Not supported** | Creating rar (only its developer may make rar archives; extracting works). |
 
 ## Settings
@@ -125,7 +136,7 @@ Open **ZipPeek → Settings…** (⌘,).
 |---|---|
 | General | Double-click to open in ZipPeek; what double-clicking and Dock drops do (look inside, or extract right away); where to extract, putting multiple items in a folder, showing results in Finder, moving the archive to the Trash afterwards |
 | Appearance | Standard drop window, or a compact glass drop target |
-| Compression | Default format and level, Windows-friendly names, leaving out Mac-only files |
+| Compression | Default format (zip, 7z, tar.gz, tar.xz, tar.bz2, tar, dmg) and level, Windows-friendly names, leaving out Mac-only files |
 | Quick Look | Turning on the Space-key preview |
 
 Passwords are never saved.
@@ -147,6 +158,15 @@ macOS asks you to approve new Quick Look extensions once. ZipPeek's settings sho
 
 **Does the Space-key preview work for 7z and rar?**
 Yes, from version 0.3: zip, 7z, rar and tar (including .tar.gz). Other formats open in the ZipPeek window (right-click → Look Inside with ZipPeek).
+
+**Can I look inside a ZIP on the web without downloading it?**
+Yes, from version 0.4. Use **File → Look Inside a Link…**. ZipPeek reads only the table of contents and downloads just the files you take out. This works when the server allows reading part of a file (most do); otherwise ZipPeek tells you.
+
+**Can I use ZipPeek in Shortcuts?**
+Yes, from version 0.4: **Compress Files**, **Extract Archive**, **Get Contents of Archive** and **Check Archive for Damage**.
+
+**Why do apps I extract still show the “downloaded from the internet” warning?**
+On purpose. If the archive came from the internet, ZipPeek passes that mark on to what it extracts, so the Mac can check apps before they first open.
 
 **Can I add or remove files inside a ZIP?**
 Yes, from version 0.3, for zip and 7z. Drag files into the ZipPeek window (or use **Add Files…** in the toolbar) to add them to the folder you're viewing. Select items and press Delete to remove them. ZipPeek asks before changing the archive. Password-protected and split archives can't be changed, and items can't be deleted from a ZIP with Windows (Shift_JIS) names.

@@ -13,6 +13,9 @@ shot() { sleep "${2:-4}"; screencapture -x -m "$OUT/$1.png" && echo "撮影: $1"
 quit() { osascript -e 'tell application id "com.kajisho5.zippeek" to quit' 2>/dev/null; sleep 1; pkill -x ZipPeek; sleep 1; }
 reset() { defaults delete $ID 2>/dev/null; defaults write $ID onArchiveDrop -string browse; }
 
+# 先の試験（python の試験用サーバー）が出した「ローカルネットワーク」の確認が残っていると写真に写るので閉じる
+swift scripts/ui-test.swift allow || true
+
 echo "== 画面の大きさ"; system_profiler SPDisplaysDataType | grep -i resolution || true
 # 高精細（2倍表示）の仮想ディスプレイを作り、そこを主画面にして撮る。写真がくっきりする
 brew install displayplacer > /dev/null 2>&1 || true
@@ -125,6 +128,7 @@ quit
 T="swift scripts/ui-test.swift"
 LOG="$OUT/ui-test.log"
 $T trusted | tee -a "$LOG"
+$T allow | tee -a "$LOG"   # 先の試験（python のサーバー）が出した確認が残っていたら閉じる
 quit
 defaults delete $ID 2>/dev/null; defaults write $ID hasSeenWelcome -bool true
 rm -rf ~/Desktop/zp-click ~/Desktop/zp-drop; mkdir -p ~/Desktop/zp-click ~/Desktop/zp-drop
@@ -227,7 +231,8 @@ osascript -e 'tell application "Finder" to close every window' 2>/dev/null || tr
 rm -rf ~/zp-web && mkdir -p ~/zp-web && cp samples/sample-mac.zip ~/zp-web/web-sample.zip
 python3 scripts/range-server.py ~/zp-web 8765 > /dev/null 2>&1 &
 SERVER=$!
-sleep 1
+sleep 3
+$T allow | tee -a "$LOG"
 printf 'http://127.0.0.1:8765/web-sample.zip' | pbcopy
 open -a "$APP"; sleep 5
 $T press $ID "Look Inside a Link…" "リンクのままのぞく…" | tee -a "$LOG"

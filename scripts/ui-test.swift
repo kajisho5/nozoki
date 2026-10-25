@@ -11,6 +11,7 @@
 //   swift scripts/ui-test.swift press <bundle id> <名前>…    ボタンやメニュー項目を押す（名前はどれか1つが合えばよい）
 //   swift scripts/ui-test.swift type <文字>                  文字を打つ
 //   swift scripts/ui-test.swift has <bundle id> <文字>…      窓のどこかにその文字を含む表示があるか
+//   swift scripts/ui-test.swift allow                       ほかのアプリの確認（ローカルネットワーク等）で「許可」を押す
 import AppKit
 import ApplicationServices
 
@@ -126,6 +127,23 @@ case "has":
     let found = args[3...].contains { t in wins.contains { contains($0, t) } }
     print(found ? "ある" : "ない")
     exit(found ? 0 : 1)
+case "allow":
+    // 試験用サーバー（python）が出させる「ローカルネットワークの許可」などの確認を閉じる
+    var pressed = 0
+    for running in NSWorkspace.shared.runningApplications {
+        let a = AXUIElementCreateApplication(running.processIdentifier)
+        for w in (attr(a, kAXWindowsAttribute) as? [AXUIElement]) ?? [] {
+            for name in ["Allow", "許可"] {
+                if let b = find(w, name) {
+                    if AXUIElementPerformAction(b, kAXPressAction as CFString) == .success {
+                        pressed += 1
+                        print("許可を押した: \(running.localizedName ?? "?")")
+                    }
+                }
+            }
+        }
+    }
+    if pressed == 0 { print("確認は出ていない") }
 case "windows":
     guard let a = app(args[2]) else { print("起動していない"); exit(1) }
     for w in (attr(a, kAXWindowsAttribute) as? [AXUIElement]) ?? [] { print(attr(w, kAXTitleAttribute) as? String ?? "(題名なし)") }
