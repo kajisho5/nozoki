@@ -291,6 +291,25 @@ if [ -n "$R" ] && [ "$R" != "見つからない" ]; then
 fi
 quit
 
+# 11) 試し：圧縮ファイルをドライブとしてつなぐ（FSKit。macOS 26 以降）
+F="$OUT/fskit.txt"
+{
+  echo "== 部品の登録"
+  pluginkit -m -A -v -p com.apple.fskit.fsmodule 2>&1
+  pluginkit -e use -i com.kajisho5.zippeek.mount 2>&1 && echo "有効にした"
+  pluginkit -m -A -v -i com.kajisho5.zippeek.mount 2>&1
+  codesign -d --entitlements - "$APP/Contents/Extensions/ZipPeekMount.appex" 2>&1
+  echo "== つなぐ"
+  rm -rf ~/zp-mnt && mkdir -p ~/zp-mnt && cp samples/sample-mac.zip ~/zp-mount-src.zip
+  mount -t zippeek ~/zp-mount-src.zip ~/zp-mnt 2>&1; echo "終了コード $?"
+  mount | grep -i zippeek
+  ls -laR ~/zp-mnt 2>&1 | head -40
+  cat ~/zp-mnt/撮影メモ.txt 2>&1 | head -5
+  umount ~/zp-mnt 2>&1
+} > "$F" 2>&1
+if grep -q "架空" "$F"; then echo "合格: ドライブとしてつないで中身を読めた" | tee -a "$LOG"; else echo "未達: ドライブとしてつなげなかった（記録は fskit.txt）" | tee -a "$LOG"; fi
+log show --last 4m --style compact --predicate 'process CONTAINS "ZipPeekMount" OR process == "fskitd" OR process == "fskit_agent" OR eventMessage CONTAINS "zippeek.mount"' > "$OUT/fskit-log.txt" 2>&1 || true
+
 # 落ちたときの記録（あれば）
 mkdir -p "$OUT/crash"
 cp ~/Library/Logs/DiagnosticReports/ZipPeek* "$OUT/crash/" 2>/dev/null || true

@@ -49,6 +49,9 @@ targets:
       - package: ZipPeekCore
       - target: ZipPeekPreview
         embed: true
+      # 圧縮ファイルをドライブとしてつなぐ部品（macOS 26 以降で使える）
+      - target: ZipPeekMount
+        embed: true
     settings:
       base:
         PRODUCT_NAME: ZipPeek
@@ -160,3 +163,38 @@ targets:
               - com.rarlab.rar-archive
               - public.tar-archive
               - org.gnu.gnu-zip-tar-archive
+
+  ZipPeekMount:
+    type: extensionkit-extension
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: ZipPeekMount
+    dependencies:
+      - package: ZipPeekCore
+      - sdk: FSKit.framework
+    settings:
+      base:
+        PRODUCT_NAME: ZipPeekMount
+        PRODUCT_BUNDLE_IDENTIFIER: com.kajisho5.zippeek.mount
+        CODE_SIGN_ENTITLEMENTS: ZipPeekMount/ZipPeekMount.entitlements
+        SKIP_INSTALL: YES
+    info:
+      path: ZipPeekMount/Info.plist
+      properties:
+        CFBundleDisplayName: ZipPeek
+        CFBundleName: ZipPeekMount
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: en
+        LSMinimumSystemVersion: "26.0"
+        EXAppExtensionAttributes:
+          EXExtensionPointIdentifier: com.apple.fskit.fsmodule
+          FSShortName: zippeek
+          FSSupportsBlockResources: false
+          FSSupportsPathURLs: true
+          FSRequiresSecurityScopedPathURLResources: true
+          FSMediaTypes: {}
+          FSPersonalities: {}
+          FSActivateOptionSyntax:
+            shortOptions: "o:"
