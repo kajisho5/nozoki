@@ -118,12 +118,18 @@ public enum ArchiveEdit {
         guard !pairs.isEmpty else { throw Failure.itemMissing }
         func names() throws -> [String] { try sevenZip.list(archive, password: nil).compactMap { $0.archivePath }.sorted() }
         let before = try names()
-        try sevenZip.run(["rn", "-sccUTF-8", "-bsp1", "-bso0", "-bse2", archive.standardizedFileURL.path] + pairs, password: nil)
-        // 7-Zip は名前が合わないと何もせず成功で終わる。Mac では名前の形（濁点が分かれた NFD）の違いで合わないことがあるので、
-        // 変わっていなければ、分けた形でもう一度試す
+        // 削除と同じく、名前の組は UTF-8 のリストファイルで渡す（Mac ではコマンドの引数だと日本語の名前が合わないことがある）
+        func run(_ list: [String]) throws {
+            let lf = FileManager.default.temporaryDirectory.appendingPathComponent("zippeek-\(UUID().uuidString).txt")
+            try list.joined(separator: "\n").write(to: lf, atomically: true, encoding: .utf8)
+            defer { try? FileManager.default.removeItem(at: lf) }
+            try sevenZip.run(["rn", "-sccUTF-8", "-bsp1", "-bso0", "-bse2", "-scsUTF-8", archive.standardizedFileURL.path, "@" + lf.path],
+                             password: nil)
+        }
+        try run(pairs)
+        // 7-Zip は名前が合わないと何もせず成功で終わる。名前の形（濁点が分かれた NFD）の違いもあり得るので、もう一度試す
         if try names() == before {
-            let nfd = pairs.map { $0.decomposedStringWithCanonicalMapping }
-            try sevenZip.run(["rn", "-sccUTF-8", "-bsp1", "-bso0", "-bse2", archive.standardizedFileURL.path] + nfd, password: nil)
+            try run(pairs.map { $0.decomposedStringWithCanonicalMapping })
             if try names() == before { throw Failure.itemMissing }
         }
         if archive.pathExtension.lowercased() == "zip" { try normalizeZipNames(archive) }
