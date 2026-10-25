@@ -50,11 +50,12 @@ It also covers the everyday side: drop files on the Dock icon to compress, drop 
 
 | | |
 |---|---|
-| **Peek with the Space key** | Select a ZIP in Finder and press Space. A Quick Look preview lists every file, folder and size without extracting anything. |
+| **Peek with the Space key** | Select a ZIP, 7z, rar or tar in Finder and press Space. A Quick Look preview lists every file, folder and size without extracting anything. |
 | **Take out just one file** | Open the archive in ZipPeek, pick files or folders, and click **Extract**, or drag them straight to the Desktop. Press Space on a file to preview it. |
+| **Add and remove files** | Drag files into the ZipPeek window to add them to a ZIP or 7z, or select items and press Delete to remove them — no extracting and re-compressing. ZipPeek asks before it changes anything. |
 | **Drop to go** | Drop files on the Dock icon or the drop window to compress them. Drop an archive to extract it. Hold Option for the other action. |
 | **Right-click in Finder** | *Compress with ZipPeek*, *Extract with ZipPeek* and *Look Inside with ZipPeek*. |
-| **No garbled names** | Japanese file names in ZIPs made on Windows (Shift_JIS) are detected and shown correctly. You can also create ZIPs whose names open cleanly on Japanese Windows. |
+| **No garbled names** | Japanese file names in ZIPs made on Windows (Shift_JIS) are detected and shown correctly. ZIPs you make store names the way Windows expects (accented and kana characters stay whole, not split into parts), and you can also make ZIPs for older Japanese Windows. |
 | **Many formats** | Extract zip, 7z, rar, tar, gz, bz2, xz, zst, iso, lzh, cab and more. Create zip and 7z. Powered by the bundled 7-Zip. |
 | **Compression options** | AES-256 passwords (7z can hide file names too), split archives, compression level, and leaving out Mac-only files such as `.DS_Store`. |
 | **Feels like a Mac app** | Standard toolbar, menus and shortcuts, VoiceOver labels, Reduce Motion support, and Liquid Glass on macOS 26. Light and dark follow your Mac's setting. |
@@ -87,6 +88,10 @@ Requirements: macOS 14 Sonoma or later, Apple silicon or Intel.
 - In Finder, select the archive and press **Space**.
 - For the full window: right-click → **Look Inside with ZipPeek**, or **File → Look Inside…** (⇧⌘O).
 
+**Add or remove files** (zip and 7z)
+- Drag files into the ZipPeek window, or click **Add Files…**. They go into the folder you're viewing.
+- Select items and press **Delete**, or right-click → **Delete from Archive…**.
+
 **Take out some files**
 1. In the ZipPeek window, select files or folders. Use the search field at the top right to find them.
 2. Click **Extract**, or drag them to the Desktop or any Finder window.
@@ -109,7 +114,8 @@ Requirements: macOS 14 Sonoma or later, Apple silicon or Intel.
 |---|---|
 | **Extract** | zip, 7z, rar, tar, gz, bz2, xz, zst, iso, lzh, cab, arj, cpio, wim, xar, rpm, deb and more |
 | **Create** | zip, 7z |
-| **Not supported** | Creating rar (only its developer may make rar archives; extracting works). Editing the contents of an existing archive. |
+| **Add / remove inside** | zip, 7z (not password-protected or split archives) |
+| **Not supported** | Creating rar (only its developer may make rar archives; extracting works). |
 
 ## Settings
 
@@ -140,7 +146,10 @@ Yes. ZipPeek is open source under the MIT License.
 macOS asks you to approve new Quick Look extensions once. ZipPeek's settings show whether it's on and open System Settings for you.
 
 **Does the Space-key preview work for 7z and rar?**
-The Space-key preview reads ZIP archives. Other formats open in the ZipPeek window (right-click → Look Inside with ZipPeek).
+Yes, from version 0.3: zip, 7z, rar and tar (including .tar.gz). Other formats open in the ZipPeek window (right-click → Look Inside with ZipPeek).
+
+**Can I add or remove files inside a ZIP?**
+Yes, from version 0.3, for zip and 7z. Drag files into the ZipPeek window (or use **Add Files…** in the toolbar) to add them to the folder you're viewing. Select items and press Delete to remove them. ZipPeek asks before changing the archive. Password-protected and split archives can't be changed, and items can't be deleted from a ZIP with Windows (Shift_JIS) names.
 
 **My ZIP came from Windows and the names look broken.**
 ZipPeek detects Shift_JIS names automatically. If the guess is wrong, switch it with **File Name Encoding** in the toolbar.

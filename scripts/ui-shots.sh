@@ -166,16 +166,23 @@ rm -rf ~/Desktop/zp-7z && mkdir -p ~/Desktop/zp-7z/架空の撮影/RAW
 echo "架空の台本です" > ~/Desktop/zp-7z/架空の撮影/台本.txt
 head -c 300000 /dev/urandom > ~/Desktop/zp-7z/架空の撮影/RAW/clip_0101.mov
 (cd ~/Desktop/zp-7z && LC_ALL=en_US.UTF-8 "$Z" a -bso0 -bsp0 sample.7z 架空の撮影)
+quit
+osascript -e 'tell application "Finder" to close every window' 2>/dev/null || true
 qlmanage -r > /dev/null 2>&1
 ( qlmanage -p ~/Desktop/zp-7z/sample.7z > "$OUT/qlmanage-7z.log" 2>&1 & )
 shot "quicklook-7z" 6
+shot "quicklook-7z-later" 10
 pkill -x qlmanage
+# うまく出ないときの手がかり（スペースキーの部品と 7-Zip の記録）
+log show --last 2m --style compact --predicate 'process CONTAINS "ZipPeekPreview" OR process == "7zz" OR (process == "kernel" AND eventMessage CONTAINS "7zz") OR eventMessage CONTAINS "ZipPeekPreview"' \
+  > "$OUT/quicklook-7z-log.txt" 2>&1 || true
 
 quit
 defaults delete $ID 2>/dev/null; defaults write $ID hasSeenWelcome -bool true
 rm -rf ~/Desktop/zp-edit ~/Desktop/zp-src && mkdir -p ~/Desktop/zp-edit ~/Desktop/zp-src
 cp samples/sample-mac.zip ~/Desktop/zp-edit/edit.zip
 echo "追加のテスト" > ~/Desktop/zp-src/追加テスト.txt
+osascript -e 'tell application "Finder" to close every window' 2>/dev/null || true
 open -a "$APP" ~/Desktop/zp-edit/edit.zip; sleep 5
 $T move com.kajisho5.zippeek 0 40 760 560
 open ~/Desktop/zp-src; sleep 3
@@ -186,7 +193,7 @@ if [ -n "$F" ] && [ "$F" != "見つからない" ]; then
   # shellcheck disable=SC2086
   $T drag $F 380 330; sleep 3
   shot "test-3-add-confirm" 1
-  A=$($T pos com.kajisho5.zippeek Add); echo "「追加」ボタン: $A" | tee -a "$LOG"
+  A=$($T pos com.kajisho5.zippeek Add); [ "$A" = "見つからない" ] && A=$($T pos com.kajisho5.zippeek 追加); echo "「追加」ボタン: $A" | tee -a "$LOG"
   # shellcheck disable=SC2086
   [ -n "$A" ] && [ "$A" != "見つからない" ] && $T click $A
   sleep 6
@@ -200,7 +207,7 @@ if [ -n "$R" ] && [ "$R" != "見つからない" ]; then
   $T click $R; sleep 1
   $T key 51; sleep 2
   shot "test-5-delete-confirm" 1
-  B=$($T pos com.kajisho5.zippeek Delete); echo "「削除」ボタン: $B" | tee -a "$LOG"
+  B=$($T pos com.kajisho5.zippeek Delete); [ "$B" = "見つからない" ] && B=$($T pos com.kajisho5.zippeek 削除); echo "「削除」ボタン: $B" | tee -a "$LOG"
   # shellcheck disable=SC2086
   [ -n "$B" ] && [ "$B" != "見つからない" ] && $T click $B
   sleep 6
