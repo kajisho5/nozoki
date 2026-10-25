@@ -282,9 +282,9 @@ if [ -n "$R" ] && [ "$R" != "見つからない" ]; then
   $T dump $ID > "$OUT/ax-more-menu.txt" 2>&1
   $T press $ID "Rename…" "名前を変更…" | tee -a "$LOG"; sleep 2
   $T dump $ID > "$OUT/ax-rename.txt" 2>&1
-  $T key 0 cmd; $T type "台本.txt"; sleep 1
+  $T set $ID "台本.txt" "New name" "新しい名前" | tee -a "$LOG"; sleep 1
   shot "test-11-rename" 1
-  $T key 36; sleep 6
+  $T press $ID "Rename" "名前を変更" | tee -a "$LOG"; sleep 6
   if LC_ALL=en_US.UTF-8 "$Z" l -ba ~/Desktop/zp-tool/tool.zip | grep -q "台本.txt"; then echo "合格: 中で名前を変えられた" | tee -a "$LOG"
   else echo "不合格: 名前が変わらなかった" | tee -a "$LOG"; fi
   LC_ALL=en_US.UTF-8 "$Z" l -ba ~/Desktop/zp-tool/tool.zip | tee -a "$LOG"

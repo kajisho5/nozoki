@@ -12,6 +12,7 @@
 //   swift scripts/ui-test.swift type <文字>                  文字を打つ
 //   swift scripts/ui-test.swift has <bundle id> <文字>…      窓のどこかにその文字を含む表示があるか
 //   swift scripts/ui-test.swift dump <bundle id>              手前の窓の部品の一覧（調べる用）
+//   swift scripts/ui-test.swift set <bundle id> <文字> <名前>…  入力欄（名前のどれか）に文字を入れる
 //   swift scripts/ui-test.swift allow                       ほかのアプリの確認（ローカルネットワーク等）で「許可」を押す
 import AppKit
 import ApplicationServices
@@ -130,6 +131,15 @@ case "has":
     let found = args[3...].contains { t in wins.contains { contains($0, t) } }
     print(found ? "ある" : "ない")
     exit(found ? 0 : 1)
+case "set":
+    guard let a = app(args[2]) else { print("起動していない"); exit(1) }
+    let wins = (attr(a, kAXWindowsAttribute) as? [AXUIElement]) ?? []
+    var hit: AXUIElement?
+    for name in args[4...] { hit = wins.lazy.compactMap { find($0, name) }.first; if hit != nil { break } }
+    guard let e = hit else { print("見つからない"); exit(1) }
+    AXUIElementSetAttributeValue(e, kAXFocusedAttribute as CFString, kCFBooleanTrue)
+    let r = AXUIElementSetAttributeValue(e, kAXValueAttribute as CFString, args[3] as CFString)
+    print(r == .success ? "入れた" : "入れられなかった")
 case "dump":
     guard let a = app(args[2]), let w = (attr(a, kAXWindowsAttribute) as? [AXUIElement])?.first else { print("窓が無い"); exit(1) }
     func walk(_ e: AXUIElement, _ depth: Int) {
