@@ -19,6 +19,9 @@ export const text = {
       'ライト／ダーク、ガラスの小窓にも切り替え',
       '日本語・英語',
     ],
+    shot: 'screen-ja.png',
+    shotDark: 'screen-ja-dark.png',
+    shotAlt: '中身を見る窓。Windowsで作ったzipの日本語のファイル名が正しく表示されている',
     formatsTitle: '解凍できる形式',
     createTitle: '作れる形式',
     install: [
@@ -52,6 +55,9 @@ export const text = {
       'Light / dark, or a compact glass drop target',
       'Japanese and English',
     ],
+    shot: 'screen-en.png',
+    shotDark: 'screen-en-dark.png',
+    shotAlt: 'The browser window showing a ZIP made on Japanese Windows, with its file names displayed correctly',
     formatsTitle: 'Extracts',
     createTitle: 'Creates',
     install: [

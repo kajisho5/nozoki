@@ -42,6 +42,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <p class="meta">{t.meta1}<br />{t.meta2}</p>
     </section>
 
+    <figure class="shot">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset={`${base}/${t.shotDark}`} />
+        <img src={`${base}/${t.shot}`} width="1000" height="642" alt={t.shotAlt} loading="lazy" decoding="async" />
+      </picture>
+    </figure>
+
     <section class="features">
       {t.features.map((f) => (
         <article class="card">
@@ -143,6 +150,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     }
     .button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -10px var(--accent); }
     .meta { margin: 0; color: var(--muted); font-size: 14px; }
+    .shot { margin: 0; }
+    .shot img { width: 100%; height: auto; display: block; filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.18)); }
     .features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     @media (max-width: 720px) { .features { grid-template-columns: 1fr; } }
     .card {

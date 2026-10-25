@@ -9,6 +9,8 @@ Compress and extract on your Mac — and peek inside without extracting.
 
 <p align="center"><a href="#日本語">日本語</a> ・ <a href="#english">English</a></p>
 
+<p align="center"><img src="docs/screen-ja.png" width="720" alt="中身を見る窓 / The browser window"></p>
+
 ---
 
 ## 日本語

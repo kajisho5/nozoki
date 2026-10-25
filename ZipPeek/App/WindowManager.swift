@@ -121,7 +121,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
         window.delegate = self
-        window.center()
+        Self.centerAfterLayout(window)
         dropWindow = window
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -152,6 +152,20 @@ final class WindowManager: NSObject, NSWindowDelegate {
     }
 
     func closeCompactWindow() { compactWindow?.close() }
+
+    /// SwiftUI の中身の大きさが決まってから中央に置く（先に置くと下に伸びて Dock に隠れるため）。
+    /// 画面に収まらないときは、画面の上端に合わせる
+    static func centerAfterLayout(_ window: NSWindow) {
+        if let view = window.contentViewController?.view {
+            view.layoutSubtreeIfNeeded()
+            let size = view.fittingSize
+            if size.width > 0, size.height > 0 { window.setContentSize(size) }
+        }
+        window.center()
+        if let visible = (window.screen ?? NSScreen.main)?.visibleFrame, window.frame.maxY > visible.maxY || window.frame.minY < visible.minY {
+            window.setFrameTopLeftPoint(NSPoint(x: window.frame.minX, y: visible.maxY))
+        }
+    }
 
     // MARK: 作業中の表示
 
@@ -214,7 +228,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
         window.title = String(localized: "Compress")
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false
-        window.center()
+        Self.centerAfterLayout(window)
         compressWindows.append(window)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -240,7 +254,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
             window.titlebarAppearsTransparent = true
             window.isReleasedWhenClosed = false
             window.level = .floating
-            window.center()
+            Self.centerAfterLayout(window)
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
         }
