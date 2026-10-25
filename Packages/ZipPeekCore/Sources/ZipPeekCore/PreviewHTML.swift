@@ -43,7 +43,7 @@ public enum PreviewHTML {
         <style>\(css)</style></head><body>
         <header>
           <h1>\(tr("\(s.fileCount.formatted()) ファイル", "\(s.fileCount.formatted()) files"))<small>・ \(tr("\(s.folderCount.formatted()) フォルダ", "\(s.folderCount.formatted()) folders"))</small></h1>
-          <p class="sub">\(tr("展開後", "Expanded")) \(ByteFormat.string(s.totalSize)) \(tr("／ 圧縮後", "/ packed")) \(ByteFormat.string(s.packedSize))\(timing)</p>
+          <p class="sub">\(tr("展開後", "Expanded")) \(ByteFormat.string(s.totalSize))\(s.packedSize > 0 ? " " + tr("／ 圧縮後", "/ packed") + " " + ByteFormat.string(s.packedSize) : "")\(timing)</p>
         </header>
         <div class="head"><span>\(tr("名前", "Name"))</span><span>\(tr("サイズ", "Size"))</span><span>\(tr("圧縮後", "Packed"))</span><span>\(tr("更新日", "Modified"))</span></div>
         <main>\(body)\(empty)\(more)</main>
@@ -72,7 +72,7 @@ public enum PreviewHTML {
         return """
         <span class="n" style="padding-left:\(indent)px">\(icon)<b>\(esc(item.name))</b>\(lock)</span>\
         <span class="s">\(ByteFormat.string(item.size))</span>\
-        <span class="p">\(ByteFormat.string(item.packedSize))</span>\
+        <span class="p">\(item.packedSize > 0 ? ByteFormat.string(item.packedSize) : "–")</span>\
         <span class="d">\(date)</span>
         """
     }

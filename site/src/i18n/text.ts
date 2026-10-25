@@ -28,7 +28,7 @@ const en = {
   peek: {
     eyebrow: 'Space to peek',
     title: 'See inside without extracting anything.',
-    body: 'Select a ZIP in Finder and press Space. Folders, file names and sizes appear in a Quick Look preview, with no temporary files.',
+    body: 'Select a ZIP, 7z, rar or tar in Finder and press Space. Folders, file names and sizes appear in a Quick Look preview, with no temporary files.',
     chip: 'Built into Finder',
     shotAlt: 'Quick Look preview of a ZIP in Finder, listing two folders and their files with sizes and dates.',
   },
@@ -126,7 +126,7 @@ const ja: Text = {
   peek: {
     eyebrow: 'スペースキーでのぞく',
     title: '何も展開せずに、中が見える。',
-    body: 'Finderでzipを選んでスペースキー。フォルダ・ファイル名・大きさがクイックルックで一覧になります。一時ファイルも作りません。',
+    body: 'Finderでzip・7z・rar・tarを選んでスペースキー。フォルダ・ファイル名・大きさがクイックルックで一覧になります。一時ファイルも作りません。',
     chip: 'Finderにそのまま',
     shotAlt: 'Finderでzipを選んでスペースキーを押したときの表示。2つのフォルダと中のファイルが、大きさと日付つきで並んでいる。',
   },

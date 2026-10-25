@@ -74,6 +74,9 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 20
     steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: release-notes
       - uses: actions/download-artifact@v7
         with:
           name: ZipPeek-notarized
@@ -167,6 +170,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: release-notes
       - uses: actions/download-artifact@v7
         with:
           name: ZipPeek-notarized
@@ -187,4 +193,8 @@ jobs:
 
           Compression is powered by 7-Zip 26.05 by Igor Pavlov (GNU LGPL).
           EOF
+          # 版ごとの「新しくなったこと」があれば先頭に入れる
+          if [ -f "release-notes/${ver}.md" ]; then
+            { head -n 2 notes.md; cat "release-notes/${ver}.md"; tail -n +3 notes.md; } > notes2.md && mv notes2.md notes.md
+          fi
           gh release create "$TAG" dist/*.dmg --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "ZipPeek ${ver}" --notes-file notes.md
