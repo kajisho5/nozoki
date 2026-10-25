@@ -33,7 +33,7 @@ export const text = {
     footerLicense: '7-Zip のライセンス',
     credit: '圧縮・解凍の中身に 7-Zip（Igor Pavlov 作、GNU LGPL）を使っています。',
     switchLabel: 'English',
-    switchHref: '/zippeek/en/',
+    switchHref: '/zippeek/',
   },
   en: {
     lang: 'en',
@@ -68,7 +68,7 @@ export const text = {
     footerLicense: '7-Zip license',
     credit: 'Compression is powered by 7-Zip by Igor Pavlov (GNU LGPL).',
     switchLabel: '日本語',
-    switchHref: '/zippeek/',
+    switchHref: '/zippeek/ja/',
   },
 } as const;
 

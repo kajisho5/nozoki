@@ -3,13 +3,38 @@
 <h1 align="center">ZipPeek</h1>
 
 <p align="center">
-Macの圧縮・解凍。そして、展開せずにのぞく。<br>
-Compress and extract on your Mac — and peek inside without extracting.
+Compress and extract on your Mac — and peek inside without extracting.<br>
+Macの圧縮・解凍。そして、展開せずにのぞく。
 </p>
 
-<p align="center"><a href="#日本語">日本語</a> ・ <a href="#english">English</a></p>
+<p align="center"><a href="#english">English</a> ・ <a href="#日本語">日本語</a></p>
 
-<p align="center"><img src="docs/screen-ja.png" width="720" alt="中身を見る窓 / The browser window"></p>
+<p align="center"><img src="docs/screen-en.png" width="720" alt="The browser window"></p>
+
+---
+
+## English
+
+### Features
+
+- **Drop to go**: drop files on the Dock icon or the window to compress, drop archives to extract. Also available from Finder's right-click menu (Compress / Extract / Look Inside with ZipPeek).
+- **Peek without extracting**: select a ZIP in Finder and press Space to see what's inside. Only the archive's table of contents is read, so even 30 GB archives open instantly.
+- **Take out just one file**: pick files in the browser window and extract them, or drag them to the Desktop.
+- **Many formats**: zip, 7z, rar, tar, gz, bz2, xz, zst, iso, lzh, cab and more (powered by the bundled [7-Zip](https://www.7-zip.org/)).
+- **Compression options**: zip or 7z, AES-256 passwords, splitting, compression level, leave out Mac-only hidden files.
+- **No garbled names**: Japanese file names from Windows (Shift_JIS) are detected automatically, and you can create ZIPs that open cleanly on Japanese Windows.
+- **Your look**: follows your Mac’s light or dark setting; choose a standard window or a compact glass drop target (Liquid Glass on macOS 26+).
+- **Japanese and English**, following your Mac's language.
+
+### Install
+
+1. Download `ZipPeek-*.dmg` from [Releases](https://github.com/kajisho5/zippeek/releases)
+2. Open it and drag ZipPeek into Applications
+3. Launch ZipPeek once and follow the prompt to turn on "Press Space to look inside"
+
+### Requirements
+
+macOS 14 (Sonoma) or later, Apple silicon or Intel.
 
 ---
 
@@ -45,60 +70,38 @@ macOS 14（Sonoma）以降、Apple シリコン / Intel
 
 ---
 
-## English
+## Development / 開発
 
-### Features
+The UI follows Apple's [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines). When they conflict with implementation convenience, the HIG wins; any exception is documented here.
+画面は Apple の HIG に従います。ぶつかったときは HIG を優先し、例外にする場合は理由をここに書きます。
 
-- **Drop to go**: drop files on the Dock icon or the window to compress, drop archives to extract. Also available from Finder's right-click menu (Compress / Extract / Look Inside with ZipPeek).
-- **Peek without extracting**: select a ZIP in Finder and press Space to see what's inside. Only the archive's table of contents is read, so even 30 GB archives open instantly.
-- **Take out just one file**: pick files in the browser window and extract them, or drag them to the Desktop.
-- **Many formats**: zip, 7z, rar, tar, gz, bz2, xz, zst, iso, lzh, cab and more (powered by the bundled [7-Zip](https://www.7-zip.org/)).
-- **Compression options**: zip or 7z, AES-256 passwords, splitting, compression level, leave out Mac-only hidden files.
-- **No garbled names**: Japanese file names from Windows (Shift_JIS) are detected automatically, and you can create ZIPs that open cleanly on Japanese Windows.
-- **Your look**: follows your Mac’s light or dark setting; choose a standard window or a compact glass drop target (Liquid Glass on macOS 26+).
-- **Japanese and English**, following your Mac's language.
+UI text lives in `ZipPeek/Resources/Localizable.xcstrings` (English source, Japanese translation).
+画面の文言は文字列カタログで管理します（英語が元、日本語が訳）。
 
-### Install
-
-1. Download `ZipPeek-*.dmg` from [Releases](https://github.com/kajisho5/zippeek/releases)
-2. Open it and drag ZipPeek into Applications
-3. Launch ZipPeek once and follow the prompt to turn on "Press Space to look inside"
-
-### Requirements
-
-macOS 14 (Sonoma) or later, Apple silicon or Intel.
-
----
-
-## 開発 / Development
-
-画面は Apple の [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines)（HIG）に従います。HIGと実装の都合がぶつかったときはHIGを優先し、例外にする場合は理由をここに書きます。
-UI follows Apple's Human Interface Guidelines; where they conflict with implementation convenience, the HIG wins.
-
-画面の文言は `ZipPeek/Resources/Localizable.xcstrings`（英語が元、日本語が訳）で管理します。
-
-Macが無くても開発できるよう、Xcodeのプロジェクトは `project.yml` から [XcodeGen](https://github.com/yonaskolb/XcodeGen) で作ります。
+The Xcode project is generated from `project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen), so it can be built on GitHub Actions without a local Mac.
+Macが無くても GitHub 上でビルドできるよう、Xcode のプロジェクトは `project.yml` から作ります。
 
 ```sh
-bash scripts/fetch-7zip.sh   # 7-Zip 26.05 を取得（版と指紋は固定）
+bash scripts/fetch-7zip.sh   # fetch 7-Zip 26.05 (version and checksum pinned)
 brew install xcodegen
 xcodegen generate
 open ZipPeek.xcodeproj
 ```
 
-| 場所 / Path | 中身 / Contents |
+| Path | Contents / 中身 |
 | --- | --- |
-| `Packages/ZipPeekCore` | 目次の読み取り・文字コード判定・圧縮・解凍（テスト付き） / archive engine with tests |
-| `ZipPeek/` | アプリ本体（SwiftUI） / the app |
-| `ZipPeekPreview/` | Finderのスペースキー用の拡張 / Quick Look extension |
-| `site/` | 配布ページ / website |
+| `Packages/ZipPeekCore` | archive engine with tests / 目次の読み取り・文字コード判定・圧縮・解凍（テスト付き） |
+| `ZipPeek/` | the app (SwiftUI) / アプリ本体 |
+| `ZipPeekPreview/` | Quick Look extension / Finderのスペースキー用の拡張 |
+| `design/icon/` | app icon sources / アプリアイコンの原版 |
+| `site/` | website / 配布ページ |
 
-テスト / Tests: `cd Packages/ZipPeekCore && ZIPPEEK_7ZZ=../../Vendor/7zip/7zz swift test`
+Tests / テスト: `cd Packages/ZipPeekCore && ZIPPEEK_7ZZ=../../Vendor/7zip/7zz swift test`
 
-## ライセンス / License
+## License / ライセンス
 
 ZipPeek: MIT License
 
-同梱 / Bundled:
+Bundled / 同梱:
 - [7-Zip](https://www.7-zip.org/) 26.05 by Igor Pavlov — GNU LGPL + BSD 3-clause + unRAR restriction（[Vendor/7zip/License.txt](Vendor/7zip/License.txt)）
 - [ZIPFoundation](https://github.com/weichsel/ZIPFoundation) 0.9.20 — MIT
