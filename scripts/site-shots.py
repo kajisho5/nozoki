@@ -34,8 +34,10 @@ def cut(name, box, dst, radius, top=0):
     radius, top = radius * k, top * k
     box = (box[0], box[1] + top, box[2], box[3])
     im = img.crop(box)
-    mask = Image.new('L', im.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle([0, 0, im.width - 1, im.height - 1], radius, fill=255)
+    # 角の丸みは4倍で描いてから縮め、縁を滑らかにする
+    big = Image.new('L', (im.width * 4, im.height * 4), 0)
+    ImageDraw.Draw(big).rounded_rectangle([0, 0, big.width - 1, big.height - 1], radius * 4, fill=255)
+    mask = big.resize(im.size, Image.LANCZOS)
     im.putalpha(mask)
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     im.save(dst, optimize=True)
