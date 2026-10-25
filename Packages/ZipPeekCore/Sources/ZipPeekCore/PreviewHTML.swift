@@ -111,8 +111,8 @@ public enum PreviewHTML {
     }
 
     static let css = """
-    :root{--bg:#ffffff;--fg:#1d2420;--mut:#6b746f;--line:#e3e7e4;--hov:#f3f6f4;--acc:#1f7a5a;--note:#e2f0e9;--notefg:#185c44;--warn:#fbeedd;--warnfg:#8a4a0e}
-    @media (prefers-color-scheme:dark){:root{--bg:#1e1f22;--fg:#e8e8ea;--mut:#8d9096;--line:#34363a;--hov:#26272b;--acc:#5cc79d;--note:#20322a;--notefg:#bfe3d2;--warn:#3a2a17;--warnfg:#f0c08a}}
+    :root{--bg:#ffffff;--fg:#1d2420;--mut:#6b746f;--line:#e3e7e4;--hov:#f3f6f4;--acc:#2f5bea;--note:#e6ecff;--notefg:#1f3fa8;--warn:#fbeedd;--warnfg:#8a4a0e}
+    @media (prefers-color-scheme:dark){:root{--bg:#1e1f22;--fg:#e8e8ea;--mut:#8d9096;--line:#34363a;--hov:#26272b;--acc:#7c9bff;--note:#1b2340;--notefg:#c3d0ff;--warn:#3a2a17;--warnfg:#f0c08a}}
     *{box-sizing:border-box}
     body{margin:0;padding:20px 24px;background:var(--bg);color:var(--fg);font:13px/1.5 -apple-system,"Hiragino Sans",sans-serif}
     h1{font-size:22px;margin:0;font-weight:700}h1 small{font-size:14px;font-weight:400;color:var(--mut);margin-left:8px}

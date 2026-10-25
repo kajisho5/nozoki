@@ -1,21 +1,51 @@
 {
-  "background": "gradient:#2B966E,#16624A",
-  "darkBackground": "gradient:#1C3D31,#0C1F18",
+  "background": "gradient:#EEF2FF,#C7D2FE",
+  "darkBackground": "gradient:#141A33,#080B17",
   "groups": [
     {
-      "name": "Magnifier",
+      "name": "Front",
+      "props": {},
       "layers": [
-        { "file": "src/ring.svg", "name": "Ring", "props": { "glass": true } },
-        { "file": "src/handle.svg", "name": "Handle", "props": { "glass": true } },
-        { "file": "src/pupil.svg", "name": "Pupil", "props": { "glass": true } },
-        { "file": "src/lens.svg", "name": "Lens", "props": { "glass": true } }
+        {
+          "file": "src/front.svg",
+          "name": "front",
+          "props": {
+            "glass": true
+          }
+        }
       ]
     },
     {
-      "name": "Document",
+      "name": "Sheets",
+      "props": {},
       "layers": [
-        { "file": "src/zipper.svg", "name": "Zipper", "props": { "glass": true } },
-        { "file": "src/paper.svg", "name": "Paper", "props": { "glass": true } }
+        {
+          "file": "src/sheet2.svg",
+          "name": "sheet2",
+          "props": {
+            "glass": true
+          }
+        },
+        {
+          "file": "src/sheet.svg",
+          "name": "sheet",
+          "props": {
+            "glass": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Back",
+      "props": {},
+      "layers": [
+        {
+          "file": "src/back.svg",
+          "name": "back",
+          "props": {
+            "glass": true
+          }
+        }
       ]
     }
   ]

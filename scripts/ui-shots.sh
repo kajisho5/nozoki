@@ -18,10 +18,10 @@ echo "== 画面の大きさ"; system_profiler SPDisplaysDataType | grep -i resol
 for LANG_CODE in ja en; do
   for LOOK in light dark; do
     reset
-    # ライト／ダークはMacの設定に合わせる作りなので、起動時にだけダークを指定して撮る
-    if [ $LOOK = dark ]; then STYLE=(-AppleInterfaceStyle Dark); else STYLE=(); fi
+    # ライト／ダークはMacの設定に合わせる作りなので、撮影用にMac全体の設定を切り替える
+    if [ $LOOK = dark ]; then defaults write -g AppleInterfaceStyle -string Dark; else defaults delete -g AppleInterfaceStyle 2>/dev/null; fi
     # 1) 最初の窓（スペースキー機能の案内つき）
-    "$BIN" -AppleLanguages "($LANG_CODE)" ${STYLE[@]+"${STYLE[@]}"} &
+    "$BIN" -AppleLanguages "($LANG_CODE)" &
     shot "$LANG_CODE-$LOOK-1-drop" 6
     # 2) 中身を見る窓（Windowsで作った日本語名のzip）
     open -a "$APP" samples/sample-win.zip
@@ -33,6 +33,7 @@ for LANG_CODE in ja en; do
   done
 done
 
+defaults delete -g AppleInterfaceStyle 2>/dev/null
 # 4) 小窓（ガラス）
 reset
 defaults write $ID dropStyle -string compactGlass
