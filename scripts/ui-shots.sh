@@ -74,9 +74,12 @@ for LANG_CODE in en ja; do
 done
 defaults delete -g AppleLanguages 2>/dev/null || true
 
-# 7) ダブルクリックで開く：zip の既定のアプリを ZipPeek にして、Finder と同じように開く
+# 7) ダブルクリックで開く：利用者と同じく「アプリケーション」に入れ、zip の既定のアプリを ZipPeek にして、Finder から開く
 defaults delete $ID 2>/dev/null
-/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP"
+LSREG=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+sudo rm -rf /Applications/ZipPeek.app && sudo ditto "$APP" /Applications/ZipPeek.app
+"$LSREG" -u "$APP" 2>/dev/null; "$LSREG" -f /Applications/ZipPeek.app
+APP=/Applications/ZipPeek.app
 cat > /tmp/setdef.swift <<'SWIFT'
 import AppKit
 import UniformTypeIdentifiers
@@ -114,6 +117,7 @@ shot "default-app-after" 1
 osascript -e "tell application \"Finder\" to open (POSIX file \"$PWD/samples/sample-mac.zip\")" 2>&1 | tee -a "$OUT/default-app.log"
 shot "en-light-5-doubleclick" 6
 quit
+osascript -e 'tell application "System Events" to keystroke return' 2>/dev/null || true
 # 「このアプリケーションで開く」と同じ開き方（送り主は Dock 以外）でも、中身を見る窓が開くか
 defaults delete $ID 2>/dev/null
 open -a "$APP" samples/sample-win.zip
