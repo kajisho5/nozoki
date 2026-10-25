@@ -22,7 +22,8 @@ for z in sample-mac sample-win; do
   echo "== $z.zip"
   mkdir -p "$WORK/out/$z"
   # Macには timeout 命令がないので、perl で60秒の時間切れを付ける
-  perl -e 'alarm shift; exec @ARGV' 60 qlmanage -p -o "$WORK/out/$z" "$WORK/zips/$z.zip" 2>&1 | tail -5
+  perl -e 'alarm shift; exec @ARGV' 60 qlmanage -p -o "$WORK/out/$z" "$WORK/zips/$z.zip" > "$WORK/ql-$z.log" 2>&1
+  grep -v -E "^\s+[0-9]+\s+\S+\s+0x" "$WORK/ql-$z.log" | head -25
   html=$(find "$WORK/out/$z" -name "*.html" | head -1)
   if [ -n "$html" ] && grep -q "撮影メモ.txt" "$html" && grep -q "4 ファイル" "$html"; then
     echo "OK: 日本語名が正しく出ています"
