@@ -15,8 +15,10 @@ final class Preferences {
 
     private let d = UserDefaults.standard
 
-    /// 圧縮ファイルを渡されたとき（標準：すぐ解凍）
+    /// Dockのアイコンや窓に圧縮ファイルをドラッグしたとき（標準：すぐ解凍）
     var onArchiveDrop: ArchiveDropAction { didSet { d.set(onArchiveDrop.rawValue, forKey: "onArchiveDrop") } }
+    /// Finderでダブルクリック・「このアプリケーションで開く」のとき（標準：中身を見る窓）
+    var onArchiveOpen: ArchiveDropAction { didSet { d.set(onArchiveOpen.rawValue, forKey: "onArchiveOpen") } }
     var extractTo: ExtractDestination { didSet { d.set(extractTo.rawValue, forKey: "extractTo") } }
     /// 中身が複数ならフォルダにまとめる
     var groupIntoFolder: Bool { didSet { d.set(groupIntoFolder, forKey: "groupIntoFolder") } }
@@ -34,6 +36,7 @@ final class Preferences {
 
     private init() {
         onArchiveDrop = ArchiveDropAction(rawValue: d.string(forKey: "onArchiveDrop") ?? "") ?? .extract
+        onArchiveOpen = ArchiveDropAction(rawValue: d.string(forKey: "onArchiveOpen") ?? "") ?? .browse
         extractTo = ExtractDestination(rawValue: d.string(forKey: "extractTo") ?? "") ?? .sameFolder
         groupIntoFolder = d.object(forKey: "groupIntoFolder") as? Bool ?? true
         revealWhenDone = d.object(forKey: "revealWhenDone") as? Bool ?? true

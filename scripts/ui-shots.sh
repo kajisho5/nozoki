@@ -74,6 +74,28 @@ for LANG_CODE in en ja; do
 done
 defaults delete -g AppleLanguages 2>/dev/null || true
 
+# 7) ダブルクリックで開く：zip の既定のアプリを ZipPeek にして、Finder と同じように開く
+defaults delete $ID 2>/dev/null
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP"
+cat > /tmp/setdef.swift <<'SWIFT'
+import AppKit
+import UniformTypeIdentifiers
+let app = URL(fileURLWithPath: CommandLine.arguments[1])
+let done = DispatchSemaphore(value: 0)
+NSWorkspace.shared.setDefaultApplication(at: app, toOpen: .zip) { error in
+    print(error.map { "既定のアプリの変更に失敗: \($0)" } ?? "既定のアプリを変更した")
+    done.signal()
+}
+if done.wait(timeout: .now() + 30) == .timedOut { print("時間切れ（Mac の確認の画面が出ている可能性）") }
+print("zip を開くアプリ: " + (NSWorkspace.shared.urlForApplication(toOpen: .zip)?.path ?? "なし"))
+SWIFT
+swift /tmp/setdef.swift "$APP" 2>&1 | tee "$OUT/default-app.log"
+shot "default-app-prompt" 1
+osascript -e "tell application \"Finder\" to open (POSIX file \"$PWD/samples/sample-mac.zip\")" 2>&1 | tee -a "$OUT/default-app.log" \
+  || open samples/sample-mac.zip
+shot "en-light-5-doubleclick" 6
+quit
+
 # 6) アイコンの各見た目（Xcode付属の Icon Composer の道具で描く）
 ICTOOL="$(xcode-select -p)/../Applications/Icon Composer.app/Contents/Executables/ictool"
 if [ -x "$ICTOOL" ]; then

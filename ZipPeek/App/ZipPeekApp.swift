@@ -51,7 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         receivedFilesAtLaunch = true
-        DropRouter.handle(urls)
+        DropRouter.handle(urls, source: DropRouter.sourceOfCurrentOpenEvent())
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

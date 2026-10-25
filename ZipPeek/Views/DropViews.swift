@@ -8,6 +8,7 @@ struct DropWindowView: View {
     @State private var isTargeted = false
     @State private var showSetup = !Preferences.shared.hasSeenWelcome
     @State private var preview = PreviewExtensionStatus()
+    @State private var defaultApp = DefaultAppStatus()
 
     var body: some View {
         VStack(spacing: 18) {
@@ -51,6 +52,8 @@ struct DropWindowView: View {
             }
 
             if showSetup {
+                Divider()
+                DefaultAppSection(status: defaultApp)
                 Divider()
                 PreviewSetupSection(status: preview)
                 Button(String(localized: "Later")) {

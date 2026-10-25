@@ -21,16 +21,27 @@ struct SettingsView: View {
 
 private struct GeneralSettings: View {
     @Bindable private var prefs = Preferences.shared
+    @State private var defaultApp = DefaultAppStatus()
 
     var body: some View {
         Form {
-            Picker(String(localized: "When given an archive"), selection: $prefs.onArchiveDrop) {
-                Text(String(localized: "Extract right away")).tag(Preferences.ArchiveDropAction.extract)
-                Text(String(localized: "Open it to look inside")).tag(Preferences.ArchiveDropAction.browse)
+            Section {
+                DefaultAppSection(status: defaultApp, showRestore: true)
             }
-            .pickerStyle(.radioGroup)
-            Text(String(localized: "Applies to Dock drops, double-clicks and Open With. Hold Option for the other action."))
-                .font(.caption).foregroundStyle(.secondary)
+            Section {
+                Picker(String(localized: "When you double-click an archive"), selection: $prefs.onArchiveOpen) {
+                    Text(String(localized: "Open it to look inside")).tag(Preferences.ArchiveDropAction.browse)
+                    Text(String(localized: "Extract right away")).tag(Preferences.ArchiveDropAction.extract)
+                }
+                .pickerStyle(.radioGroup)
+                Picker(String(localized: "When you drop an archive on the Dock icon"), selection: $prefs.onArchiveDrop) {
+                    Text(String(localized: "Extract right away")).tag(Preferences.ArchiveDropAction.extract)
+                    Text(String(localized: "Open it to look inside")).tag(Preferences.ArchiveDropAction.browse)
+                }
+                .pickerStyle(.radioGroup)
+                Text(String(localized: "Double-click also covers Open With. Hold Option for the other action."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
 
             Picker(String(localized: "Extract to"), selection: $prefs.extractTo) {
                 Text(String(localized: "Same folder as the archive")).tag(Preferences.ExtractDestination.sameFolder)

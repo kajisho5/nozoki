@@ -144,17 +144,6 @@
         }
       }
     },
-    "Applies to Dock drops, double-clicks and Open With. Hold Option for the other action.": {
-      "extractionState": "manual",
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dockへのドラッグ、ダブルクリック、「このアプリケーションで開く」のとき。optionキーを押しながらだと逆の動きになります。"
-          }
-        }
-      }
-    },
     "Archives → extract": {
       "extractionState": "manual",
       "localizations": {
@@ -441,6 +430,17 @@
         }
       }
     },
+    "Couldn’t change it. In Finder, select a ZIP, choose File → Get Info, pick ZipPeek under “Open with”, then click “Change All…”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切り替えられませんでした。Finderでzipを選び、「ファイル」→「情報を見る」→「このアプリケーションで開く」で ZipPeek を選んで「すべてを変更…」を押してください。"
+          }
+        }
+      }
+    },
     "Couldn’t open “%@”": {
       "extractionState": "manual",
       "localizations": {
@@ -514,6 +514,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "分割しない"
+          }
+        }
+      }
+    },
+    "Double-click a ZIP to look inside": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダブルクリックで中身を見る"
+          }
+        }
+      }
+    },
+    "Double-click also covers Open With. Hold Option for the other action.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダブルクリックには「このアプリケーションで開く」も含みます。optionキーを押しながらだと逆の動きになります。"
+          }
+        }
+      }
+    },
+    "Double-clicking opens ZipPeek": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダブルクリックで ZipPeek が開きます"
           }
         }
       }
@@ -1002,6 +1035,17 @@
         }
       }
     },
+    "Now: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今：%@"
+          }
+        }
+      }
+    },
     "OK": {
       "extractionState": "manual",
       "localizations": {
@@ -1068,6 +1112,17 @@
         }
       }
     },
+    "Open ZIP, 7z and rar files in ZipPeek when you double-click them. If your Mac asks to confirm, allow it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "zip・7z・rar をダブルクリックしたとき、ZipPeek で開くようにします。Mac が確認を出したら許可してください。"
+          }
+        }
+      }
+    },
     "Open it to look inside": {
       "extractionState": "manual",
       "localizations": {
@@ -1075,6 +1130,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "中身を見る窓を開く"
+          }
+        }
+      }
+    },
+    "Open with ZipPeek": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZipPeek で開くようにする"
           }
         }
       }
@@ -1240,6 +1306,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "目次を読んでいます…"
+          }
+        }
+      }
+    },
+    "Restore Archive Utility": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac標準に戻す"
           }
         }
       }
@@ -1552,13 +1629,24 @@
         }
       }
     },
-    "When given an archive": {
+    "When you double-click an archive": {
       "extractionState": "manual",
       "localizations": {
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "圧縮ファイルを渡されたとき"
+            "value": "圧縮ファイルをダブルクリックしたとき"
+          }
+        }
+      }
+    },
+    "When you drop an archive on the Dock icon": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dockのアイコンに圧縮ファイルをドラッグしたとき"
           }
         }
       }
