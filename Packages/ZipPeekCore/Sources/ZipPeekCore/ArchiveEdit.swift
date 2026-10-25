@@ -59,7 +59,23 @@ public enum ArchiveEdit {
         var args = ["a", "-sccUTF-8", "-bsp1", "-bso0", "-bse2", "-spd"]
         args += ["-xr!.DS_Store", "-xr!__MACOSX", "-xr!._*", "-xr!.Spotlight-V100", "-xr!.Trashes", "-xr!.fseventsd"]
         args += ["--", archive.standardizedFileURL.path] + tops
-        try sevenZip.run(args, password: nil, cwd: stage, onProgress: onProgress, isCancelled: isCancelled)
+        try sevenZip.run(args, password: nil, cwd: stage, onProgress: { onProgress($0 * 0.95) }, isCancelled: isCancelled)
+        // Mac はファイル名を保存するとき濁点を分けた形（NFD）に戻してしまうので、zip の中の名前を後からまとめ直す
+        if archive.pathExtension.lowercased() == "zip" { try normalizeZipNames(archive) }
+        onProgress(1)
+    }
+
+    /// zip の中の UTF-8 の名前を NFC にそろえる（変える必要が無ければ何もしない）。Windows形式（Shift_JIS）の名前は触らない
+    public static func normalizeZipNames(_ archive: URL) throws {
+        let fm = FileManager.default
+        let tmp = archive.deletingLastPathComponent().appendingPathComponent(".zippeek-\(UUID().uuidString).zip")
+        defer { try? fm.removeItem(at: tmp) }
+        let changed = try ZipNameRewriter.rewrite(archive, to: tmp, keepUTF8: true) { name in
+            let n = nfc(name)
+            return Array(n.utf8) == Array(name.utf8) ? nil : Data(n.utf8)
+        }
+        guard changed > 0 else { return }
+        _ = try fm.replaceItemAt(archive, withItemAt: tmp)
     }
 
     /// archive の中の paths（ファイルやフォルダ。フォルダは中身ごと）を消す

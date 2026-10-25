@@ -271,13 +271,17 @@ final class SevenZipIntegrationTests: XCTestCase {
         for format in [CompressOptions.Format.zip, .sevenZip] {
             var o = CompressOptions(); o.format = format
             let archive = try ops.compress([src], options: o)[0]
-            try ArchiveEdit.delete(["撮影素材_サンプル/撮影メモ.txt"], from: archive, sevenZip: sevenZip)
+            // アプリと同じく、一覧に出た名前（Macで作った7zは濁点が分かれた形のこともある）をそのまま渡す
             var names = try sevenZip.list(archive, password: nil).map(\.path)
-            XCTAssertFalse(names.contains("撮影素材_サンプル/撮影メモ.txt"), "\(format) \(names)")
-            XCTAssertTrue(names.contains("撮影素材_サンプル/CAM_A/clip_0001.mov"))
-            try ArchiveEdit.delete(["撮影素材_サンプル/CAM_A"], from: archive, sevenZip: sevenZip)
+            let memo = try XCTUnwrap(names.first { ArchiveEdit.nfc($0) == "撮影素材_サンプル/撮影メモ.txt" })
+            try ArchiveEdit.delete([memo], from: archive, sevenZip: sevenZip)
             names = try sevenZip.list(archive, password: nil).map(\.path)
-            XCTAssertFalse(names.contains { $0.hasPrefix("撮影素材_サンプル/CAM_A") }, "\(format) \(names)")
+            XCTAssertFalse(names.contains { ArchiveEdit.nfc($0) == "撮影素材_サンプル/撮影メモ.txt" }, "\(format) \(names)")
+            XCTAssertTrue(names.contains { ArchiveEdit.nfc($0) == "撮影素材_サンプル/CAM_A/clip_0001.mov" })
+            let camA = try XCTUnwrap(names.first { ArchiveEdit.nfc($0) == "撮影素材_サンプル/CAM_A/clip_0001.mov" })
+            try ArchiveEdit.delete([(camA as NSString).deletingLastPathComponent], from: archive, sevenZip: sevenZip)
+            names = try sevenZip.list(archive, password: nil).map(\.path)
+            XCTAssertFalse(names.contains { ArchiveEdit.nfc($0).hasPrefix("撮影素材_サンプル/CAM_A") }, "\(format) \(names)")
         }
     }
 
