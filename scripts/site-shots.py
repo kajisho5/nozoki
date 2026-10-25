@@ -9,11 +9,18 @@ src = sys.argv[1]
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def scale_of(img):
+    # 画面の見た目の高さは 768（等倍の画面）か 800（2倍の仮想ディスプレイ）。画素の倍率を求める
+    return 2 if img.height >= 1500 else 1
+
+
 def bbox(img):
     # 黒い壁紙・上のメニューバー・下のDockを除いて、窓のある範囲を探す
-    reg = img.crop((0, 31, img.width, 700)).convert('L').point(lambda v: 255 if v > 8 else 0)
+    k = scale_of(img)
+    top, bottom = 31 * k, img.height - 90 * k
+    reg = img.crop((0, top, img.width, bottom)).convert('L').point(lambda v: 255 if v > 8 else 0)
     b = reg.getbbox()
-    return (b[0], b[1] + 31, b[2], b[3] + 31)
+    return (b[0], b[1] + top, b[2], b[3] + top)
 
 
 def cut(name, box, dst, radius, top=0):
@@ -22,7 +29,9 @@ def cut(name, box, dst, radius, top=0):
         print('なし:', name)
         return
     img = Image.open(path).convert('RGBA')
+    k = scale_of(img)
     box = box or bbox(img)
+    radius, top = radius * k, top * k
     box = (box[0], box[1] + top, box[2], box[3])
     im = img.crop(box)
     mask = Image.new('L', im.size, 0)
@@ -35,7 +44,7 @@ def cut(name, box, dst, radius, top=0):
 
 for lang in ('en', 'ja'):
     out = os.path.join(root, 'site/public/shots', lang)
-    cut(f'{lang}-light-2-browse', (12, 41, 1012, 681), f'{out}/browse.png', 26)
+    cut(f'{lang}-light-2-browse', None, f'{out}/browse.png', 26)
     cut(f'{lang}-light-1-drop', None, f'{out}/drop.png', 22)
     cut(f'{lang}-light-4-compact', None, f'{out}/compact.png', 60)
     # クイックルックは上の帯（qlmanage の確認用の表示）を除く
