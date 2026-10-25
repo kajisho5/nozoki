@@ -7,13 +7,13 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             GeneralSettings()
-                .tabItem { Label(tr("一般", "General"), systemImage: "gearshape") }
+                .tabItem { Label(String(localized: "General"), systemImage: "gearshape") }
             AppearanceSettings()
-                .tabItem { Label(tr("見た目", "Appearance"), systemImage: "circle.lefthalf.filled") }
+                .tabItem { Label(String(localized: "Appearance"), systemImage: "circle.lefthalf.filled") }
             CompressSettings()
-                .tabItem { Label(tr("圧縮", "Compression"), systemImage: "archivebox") }
+                .tabItem { Label(String(localized: "Compression"), systemImage: "archivebox") }
             PreviewSettings()
-                .tabItem { Label(tr("スペースキー", "Quick Look"), systemImage: "space") }
+                .tabItem { Label(String(localized: "Quick Look"), systemImage: "space") }
         }
         .frame(width: 520)
     }
@@ -24,25 +24,24 @@ private struct GeneralSettings: View {
 
     var body: some View {
         Form {
-            Picker(tr("圧縮ファイルを渡されたとき", "When given an archive"), selection: $prefs.onArchiveDrop) {
-                Text(tr("すぐ解凍する", "Extract right away")).tag(Preferences.ArchiveDropAction.extract)
-                Text(tr("中身を見る窓を開く", "Open it to look inside")).tag(Preferences.ArchiveDropAction.browse)
+            Picker(String(localized: "When given an archive"), selection: $prefs.onArchiveDrop) {
+                Text(String(localized: "Extract right away")).tag(Preferences.ArchiveDropAction.extract)
+                Text(String(localized: "Open it to look inside")).tag(Preferences.ArchiveDropAction.browse)
             }
             .pickerStyle(.radioGroup)
-            Text(tr("Dockへのドラッグ、ダブルクリック、「このアプリケーションで開く」のとき。optionキーを押しながらだと逆の動きになります。",
-                    "Applies to Dock drops, double-clicks and Open With. Hold Option for the other action."))
+            Text(String(localized: "Applies to Dock drops, double-clicks and Open With. Hold Option for the other action."))
                 .font(.caption).foregroundStyle(.secondary)
 
-            Picker(tr("解凍先", "Extract to"), selection: $prefs.extractTo) {
-                Text(tr("元のファイルと同じ場所", "Same folder as the archive")).tag(Preferences.ExtractDestination.sameFolder)
-                Text(tr("毎回選ぶ", "Ask every time")).tag(Preferences.ExtractDestination.ask)
+            Picker(String(localized: "Extract to"), selection: $prefs.extractTo) {
+                Text(String(localized: "Same folder as the archive")).tag(Preferences.ExtractDestination.sameFolder)
+                Text(String(localized: "Ask every time")).tag(Preferences.ExtractDestination.ask)
             }
-            Toggle(tr("中身が複数のときはフォルダにまとめる", "Put multiple items in a folder"), isOn: $prefs.groupIntoFolder)
-            Toggle(tr("終わったらFinderで表示する", "Show in Finder when done"), isOn: $prefs.revealWhenDone)
+            Toggle(String(localized: "Put multiple items in a folder"), isOn: $prefs.groupIntoFolder)
+            Toggle(String(localized: "Show in Finder when done"), isOn: $prefs.revealWhenDone)
             Toggle(isOn: $prefs.trashAfterExtract) {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(tr("解凍したら元の圧縮ファイルをゴミ箱に入れる", "Move the archive to the Trash after extracting"))
-                    Text(tr("ゴミ箱に入れるだけで、完全には消しません", "It’s only moved to the Trash, not deleted"))
+                    Text(String(localized: "Move the archive to the Trash after extracting"))
+                    Text(String(localized: "It’s only moved to the Trash, not deleted"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -57,24 +56,24 @@ private struct AppearanceSettings: View {
 
     var body: some View {
         Form {
-            Picker(tr("外観", "Appearance"), selection: $prefs.appearance) {
-                Text(tr("Macに合わせる", "Match System")).tag(Preferences.Appearance.system)
-                Text(tr("ライト", "Light")).tag(Preferences.Appearance.light)
-                Text(tr("ダーク", "Dark")).tag(Preferences.Appearance.dark)
+            Picker(String(localized: "Light or Dark"), selection: $prefs.appearance) {
+                Text(String(localized: "Match System")).tag(Preferences.Appearance.system)
+                Text(String(localized: "Light")).tag(Preferences.Appearance.light)
+                Text(String(localized: "Dark")).tag(Preferences.Appearance.dark)
             }
             .pickerStyle(.segmented)
 
-            Section(tr("ドラッグ先と作業中の表示", "Drop target and progress")) {
+            Section(String(localized: "Drop target and progress")) {
                 HStack(spacing: 16) {
-                    StyleChoice(title: tr("標準（窓）", "Standard (window)"), selected: prefs.dropStyle == .window) {
+                    StyleChoice(title: String(localized: "Standard (window)"), selected: prefs.dropStyle == .window) {
                         RoundedRectangle(cornerRadius: 6).strokeBorder(.secondary.opacity(0.5)).frame(width: 90, height: 50)
                             .overlay(alignment: .bottom) { Capsule().fill(.secondary.opacity(0.3)).frame(width: 36, height: 10).padding(6) }
                     } action: { prefs.dropStyle = .window; WindowManager.shared.showDropTarget() }
-                    StyleChoice(title: tr("小窓（ガラス）", "Compact (glass)"), selected: prefs.dropStyle == .compactGlass) {
+                    StyleChoice(title: String(localized: "Compact (glass)"), selected: prefs.dropStyle == .compactGlass) {
                         RoundedRectangle(cornerRadius: 18).fill(Color.accentColor.opacity(0.25)).frame(width: 56, height: 56)
                     } action: { prefs.dropStyle = .compactGlass; WindowManager.shared.showDropTarget() }
                 }
-                Text(tr("macOS 14・15では、ガラスの代わりに従来の半透明になります。", "On macOS 14 and 15, a classic translucent material is used instead of glass."))
+                Text(String(localized: "On macOS 14 and 15, a classic translucent material is used instead of glass."))
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -110,20 +109,19 @@ private struct CompressSettings: View {
 
     var body: some View {
         Form {
-            Toggle(tr("圧縮のたびに設定を確認する", "Ask for settings every time"), isOn: $prefs.askBeforeCompress)
-            Picker(tr("形式", "Format"), selection: $prefs.compressDefaults.format) {
+            Toggle(String(localized: "Ask for settings every time"), isOn: $prefs.askBeforeCompress)
+            Picker(String(localized: "Format"), selection: $prefs.compressDefaults.format) {
                 Text("zip").tag(CompressOptions.Format.zip)
                 Text("7z").tag(CompressOptions.Format.sevenZip)
             }
-            Picker(tr("圧縮率", "Compression"), selection: $prefs.compressDefaults.level) {
-                Text(tr("速さ優先", "Faster")).tag(CompressOptions.Level.fast)
-                Text(tr("標準", "Normal")).tag(CompressOptions.Level.normal)
-                Text(tr("最小サイズ", "Smallest")).tag(CompressOptions.Level.max)
+            Picker(String(localized: "Compression Level"), selection: $prefs.compressDefaults.level) {
+                Text(String(localized: "Faster")).tag(CompressOptions.Level.fast)
+                Text(String(localized: "Normal")).tag(CompressOptions.Level.normal)
+                Text(String(localized: "Smallest")).tag(CompressOptions.Level.max)
             }
-            Toggle(tr("Windowsで文字化けしない名前にする（zip）", "Japanese Windows–friendly names (zip)"), isOn: $prefs.compressDefaults.windowsNames)
-            Toggle(tr("Mac専用の隠しファイルを入れない", "Leave out Mac-only hidden files"), isOn: $prefs.compressDefaults.excludeMacFiles)
-            Text(tr("パスワードと分割は、圧縮のたびに設定シートで決めます（保存しません）。",
-                    "Password and splitting are chosen each time in the compression sheet (never saved)."))
+            Toggle(String(localized: "Japanese Windows–friendly names (zip)"), isOn: $prefs.compressDefaults.windowsNames)
+            Toggle(String(localized: "Leave out Mac-only hidden files"), isOn: $prefs.compressDefaults.excludeMacFiles)
+            Text(String(localized: "Password and splitting are chosen each time in the compression sheet (never saved)."))
                 .font(.caption).foregroundStyle(.secondary)
         }
         .formStyle(.grouped)
@@ -149,19 +147,18 @@ struct PreviewSetupSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(tr("Finderでスペースキーを押して中身を見る", "Press Space in Finder to look inside")).font(.headline)
+                Text(String(localized: "Press Space in Finder to look inside")).font(.headline)
                 Spacer()
                 StatusChip(state: status.state)
             }
-            Text(tr("最初に1回だけ、Macの設定でこの機能をオンにします。ZipPeek を「アプリケーション」フォルダに入れてから行ってください。",
-                    "Turn this on once in System Settings. Move ZipPeek to the Applications folder first."))
+            Text(String(localized: "Turn this on once in System Settings. Move ZipPeek to the Applications folder first."))
                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             HStack {
-                Button(tr("設定を開く", "Open System Settings")) { status.openSystemSettings() }
+                Button(String(localized: "Open System Settings")) { status.openSystemSettings() }
                     .buttonStyle(.borderedProminent)
-                Button(tr("自動でオンにしてみる", "Try to Turn On")) { status.tryEnable() }
+                Button(String(localized: "Try to Turn On")) { status.tryEnable() }
                 Spacer()
-                Button(tr("状態を確認", "Check")) { status.refresh() }.buttonStyle(.borderless)
+                Button(String(localized: "Check")) { status.refresh() }.buttonStyle(.borderless)
             }
             if let note = status.note {
                 Text(note).font(.caption).foregroundStyle(.secondary)
@@ -175,10 +172,10 @@ private struct StatusChip: View {
 
     var body: some View {
         let (label, color): (String, Color) = switch state {
-        case .enabled: (tr("オン", "On"), .green)
-        case .disabled: (tr("オフ", "Off"), .orange)
-        case .unknown: (tr("確認中", "Checking"), .secondary)
-        case .notRegistered: (tr("未登録", "Not registered"), .orange)
+        case .enabled: (String(localized: "On"), .green)
+        case .disabled: (String(localized: "Off"), .orange)
+        case .unknown: (String(localized: "Checking"), .secondary)
+        case .notRegistered: (String(localized: "Not registered"), .orange)
         }
         Text(label)
             .font(.caption.bold())
@@ -220,8 +217,7 @@ final class PreviewExtensionStatus {
             _ = Self.run("/usr/bin/qlmanage", ["-r"])
             await MainActor.run {
                 self.refresh()
-                self.note = tr("Finderで圧縮ファイルを選んでスペースキーを押して確かめてください。変わらなければ「設定を開く」から手動でオンにしてください。",
-                               "Select an archive in Finder and press Space. If nothing changes, turn it on manually in System Settings.")
+                self.note = String(localized: "Select an archive in Finder and press Space. If nothing changes, turn it on manually in System Settings.")
             }
         }
     }

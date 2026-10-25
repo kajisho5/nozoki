@@ -12,18 +12,25 @@ struct ZipPeekApp: App {
         }
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button(tr("圧縮・解凍するものを選ぶ…", "Compress or Extract…")) { WindowManager.shared.showOpenPanel() }
+                Button(String(localized: "Compress or Extract…")) { WindowManager.shared.showOpenPanel() }
                     .keyboardShortcut("o")
-                Button(tr("中身を見る…", "Look Inside…")) { WindowManager.shared.showBrowsePanel() }
+                Button(String(localized: "Look Inside…")) { WindowManager.shared.showBrowsePanel() }
                     .keyboardShortcut("o", modifiers: [.command, .shift])
+            }
+            // 「表示」メニュー（サイドバー・ツールバーの表示切り替え）
+            SidebarCommands()
+            ToolbarCommands()
+            // 「ウインドウ」メニュー：ドラッグ先の窓（このアプリの主な窓）
+            CommandGroup(before: .windowList) {
+                Button(String(localized: "Drop Target")) { WindowManager.shared.showDropTarget() }
+                    .keyboardShortcut("0")
+                Button(String(localized: "Activity")) { WindowManager.shared.showProgress() }
                 Divider()
-                Button(tr("ドラッグ先を表示", "Show Drop Target")) { WindowManager.shared.showDropTarget() }
-                    .keyboardShortcut("n")
             }
             CommandGroup(replacing: .help) {
-                Link(tr("ZipPeek のページ（GitHub）", "ZipPeek on GitHub"),
+                Link(String(localized: "ZipPeek on GitHub"),
                      destination: URL(string: "https://github.com/kajisho5/zippeek")!)
-                Link(tr("7-Zip のライセンス", "7-Zip License"),
+                Link(String(localized: "7-Zip License"),
                      destination: URL(string: "https://www.7-zip.org/license.txt")!)
             }
         }
@@ -49,7 +56,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Dockへのドラッグなどで起動した場合は、ドラッグ先の窓を出さない
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            if !self.receivedFilesAtLaunch && WindowManager.shared.archiveWindowCount == 0 {
+            guard !self.receivedFilesAtLaunch else { return }
+            // 前回開いていた「中身を見る窓」を戻す（Macの設定「アプリを終了するときにウインドウを閉じる」がオフのとき）
+            WindowManager.shared.restoreArchiveWindows()
+            if WindowManager.shared.archiveWindowCount == 0 {
                 WindowManager.shared.showDropTarget()
             }
         }
@@ -67,11 +77,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard JobQueue.shared.hasActiveJobs else { return .terminateNow }
         let alert = NSAlert()
-        alert.messageText = tr("作業中です。終了しますか？", "ZipPeek is still working. Quit anyway?")
-        alert.informativeText = tr("終了すると、作業中の圧縮・解凍は中止されます。", "Compressing or extracting in progress will be cancelled.")
-        alert.addButton(withTitle: tr("終了する", "Quit"))
-        alert.addButton(withTitle: tr("続ける", "Keep Working"))
-        if alert.runModal() == .alertFirstButtonReturn {
+        alert.messageText = String(localized: "ZipPeek is still working. Quit anyway?")
+        alert.informativeText = String(localized: "Compressing or extracting in progress will be cancelled.")
+        alert.alertStyle = .warning
+        // 取り消せない操作なので、標準の（returnキーで押される）ボタンは「作業を続ける」にする
+        alert.addButton(withTitle: String(localized: "Keep Working"))
+        let quit = alert.addButton(withTitle: String(localized: "Quit"))
+        quit.hasDestructiveAction = true
+        if alert.runModal() == .alertSecondButtonReturn {
             for job in JobQueue.shared.jobs { JobQueue.shared.cancel(job.id) }
             return .terminateNow
         }
@@ -79,6 +92,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        WindowManager.shared.saveOpenArchiveWindows()
         TempFiles.removeAll()
     }
 }

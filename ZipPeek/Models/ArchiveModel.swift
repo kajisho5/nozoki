@@ -129,9 +129,9 @@ final class ArchiveModel {
     }
 
     var folderTitle: String {
-        if isSearching { return tr("「\(search)」の検索結果", "Results for “\(search)”") }
+        if isSearching { return String(localized: "Results for “\(search)”") }
         let path = currentFolder
-        return path.isEmpty ? tr("すべて", "All") : String(path.split(separator: "/").last ?? "")
+        return path.isEmpty ? String(localized: "All") : String(path.split(separator: "/").last ?? "")
     }
 
     func open(_ item: ArchiveItem) {
@@ -160,10 +160,10 @@ final class ArchiveModel {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
-        panel.prompt = tr("ここに取り出す", "Extract Here")
+        panel.prompt = String(localized: "Save Here")
         panel.message = items.count == 1
-            ? tr("「\(items[0].name)」の保存先を選んでください", "Choose where to save “\(items[0].name)”")
-            : tr("\(items.count) 件の保存先を選んでください", "Choose where to save \(items.count) items")
+            ? String(localized: "Choose where to save “\(items[0].name)”")
+            : String(localized: "Choose where to save \(items.count) items")
         panel.directoryURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
         guard panel.runModal() == .OK, let dest = panel.url else { return }
         startExtraction(items, to: dest, forPreview: false)
@@ -182,12 +182,11 @@ final class ArchiveModel {
         guard !files.isEmpty else { return }
         let total = files.reduce(UInt64(0)) { $0 + $1.item.size }
         if let free = Self.freeSpace(at: destination), UInt64(max(free, 0)) < total {
-            errorMessage = tr("保存先の空きが足りません（必要 \(ByteFormat.string(total))、空き \(ByteFormat.string(UInt64(max(free, 0))))）。",
-                              "Not enough free space (needs \(ByteFormat.string(total)), available \(ByteFormat.string(UInt64(max(free, 0))))).")
+            errorMessage = String(localized: "Not enough free space (needs \(ByteFormat.string(total)), available \(ByteFormat.string(UInt64(max(free, 0))))).")
             return
         }
         let state = Extraction(totalBytes: total, fileTotal: files.count,
-                               currentName: files.count == 1 ? files[0].item.name : tr("\(files.count) 件", "\(files.count) items"),
+                               currentName: files.count == 1 ? files[0].item.name : String(localized: "\(files.count) items"),
                                destinationLabel: Self.displayPath(destination), isForPreview: forPreview)
         extraction = state
         let cancel = state.cancel

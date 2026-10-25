@@ -70,6 +70,11 @@ macOS 14 (Sonoma) or later, Apple silicon or Intel.
 
 ## 開発 / Development
 
+画面は Apple の [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines)（HIG）に従います。HIGと実装の都合がぶつかったときはHIGを優先し、例外にする場合は理由をここに書きます。
+UI follows Apple's Human Interface Guidelines; where they conflict with implementation convenience, the HIG wins.
+
+画面の文言は `ZipPeek/Resources/Localizable.xcstrings`（英語が元、日本語が訳）で管理します。
+
 Macが無くても開発できるよう、Xcodeのプロジェクトは `project.yml` から [XcodeGen](https://github.com/yonaskolb/XcodeGen) で作ります。
 
 ```sh

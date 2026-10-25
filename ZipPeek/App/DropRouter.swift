@@ -49,7 +49,7 @@ final class ServiceProvider: NSObject {
     @objc func extractFiles(_ pboard: NSPasteboard, userData: String?, error: AutoreleasingUnsafeMutablePointer<NSString?>) {
         let archives = urls(from: pboard).filter(ArchiveKind.isArchive)
         if archives.isEmpty {
-            error.pointee = tr("圧縮ファイルが選ばれていません。", "No archive is selected.") as NSString
+            error.pointee = String(localized: "No archive is selected.") as NSString
             return
         }
         JobQueue.shared.enqueueExtract(archives)

@@ -50,4 +50,18 @@ echo "== 7. 対応するmacOS"
 /usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "$APP/Contents/Info.plist"
 lipo -info "$APP/Contents/MacOS/ZipPeek"
 
+echo "== 8. アプリアイコン（Icon Composer形式から作られたか。古いmacOS用のicnsもあるか）"
+test -f "$APP/Contents/Resources/Assets.car"
+test -f "$APP/Contents/Resources/AppIcon.icns"
+test ! -e "$APP/Contents/Resources/AppIcon.icon"
+/usr/libexec/PlistBuddy -c "Print :CFBundleIconName" "$APP/Contents/Info.plist"
+echo "OK"
+
+echo "== 9. 日本語の訳（文字列カタログ）が入っているか"
+LOC="$APP/Contents/Resources/ja.lproj/Localizable.strings"
+test -f "$LOC"
+plutil -p "$LOC" | grep -F '"Extract All" => "すべて取り出す"'
+plutil -p "$LOC" | grep -F '"Compress %lld items" => "%lld 個の項目を圧縮"'
+echo "OK"
+
 echo "すべて確認できました"

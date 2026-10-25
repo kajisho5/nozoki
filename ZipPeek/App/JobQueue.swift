@@ -31,14 +31,14 @@ final class JobQueue {
         let startedAt = Date()
 
         var title: String {
-            let name = inputs.count == 1 ? inputs[0].lastPathComponent : tr("\(inputs.count) 個の項目", "\(inputs.count) items")
+            let name = inputs.count == 1 ? inputs[0].lastPathComponent : String(localized: "\(inputs.count) items")
             switch (kind, state) {
-            case (.compress, .done): return tr("\(results.first?.lastPathComponent ?? name) を作りました", "Created \(results.first?.lastPathComponent ?? name)")
-            case (.extract, .done): return tr("\(name) を解凍しました", "Extracted \(name)")
-            case (.compress, .waiting): return tr("\(name) を圧縮待ち", "Waiting to compress \(name)")
-            case (.extract, .waiting): return tr("\(name) を解凍待ち", "Waiting to extract \(name)")
-            case (.compress, _): return tr("\(name) を圧縮中", "Compressing \(name)")
-            case (.extract, _): return tr("\(name) を解凍中", "Extracting \(name)")
+            case (.compress, .done): return String(localized: "Created \(results.first?.lastPathComponent ?? name)")
+            case (.extract, .done): return String(localized: "Extracted \(name)")
+            case (.compress, .waiting): return String(localized: "Waiting to compress \(name)")
+            case (.extract, .waiting): return String(localized: "Waiting to extract \(name)")
+            case (.compress, _): return String(localized: "Compressing \(name)")
+            case (.extract, _): return String(localized: "Extracting \(name)")
             }
         }
 
@@ -64,7 +64,7 @@ final class JobQueue {
             panel.canChooseDirectories = true
             panel.canChooseFiles = false
             panel.canCreateDirectories = true
-            panel.prompt = tr("ここに解凍", "Extract Here")
+            panel.prompt = String(localized: "Extract Here")
             guard panel.runModal() == .OK, let url = panel.url else { return }
             dest = url
         }

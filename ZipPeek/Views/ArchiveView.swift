@@ -2,7 +2,7 @@ import QuickLook
 import SwiftUI
 import ZipPeekCore
 
-/// 中身を見る窓（デザイン②・⑪）。窓は不透明で読みやすく、上の操作と作業中の表示だけガラスで浮かせる
+/// 中身を見る窓（デザイン②・⑪）。操作は標準のツールバーに置く（macOS 26以降はシステムが Liquid Glass の浮かぶボタンとして描く）
 struct ArchiveView: View {
     @Bindable var model: ArchiveModel
 
@@ -10,16 +10,16 @@ struct ArchiveView: View {
         Group {
             switch model.state {
             case .loading:
-                ProgressView(tr("目次を読んでいます…", "Reading the table of contents…"))
+                ProgressView(String(localized: "Reading the table of contents…"))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .failed(let message):
                 ContentUnavailableView {
-                    Label(tr("「\(model.url.lastPathComponent)」を開けませんでした", "Couldn’t open “\(model.url.lastPathComponent)”"),
+                    Label(String(localized: "Couldn’t open “\(model.url.lastPathComponent)”"),
                           systemImage: "exclamationmark.triangle")
                 } description: {
                     Text(message)
                 } actions: {
-                    Button(tr("もう一度読む", "Try Again")) { model.load() }
+                    Button(String(localized: "Try Again")) { model.load() }
                 }
             case .loaded:
                 if let listing = model.listing {
@@ -28,8 +28,9 @@ struct ArchiveView: View {
             }
         }
         .frame(minWidth: 760, minHeight: 460)
+        .navigationTitle(model.url.lastPathComponent)
         .quickLookPreview($model.previewURL)
-        .alert(tr("うまくいきませんでした", "Something went wrong"),
+        .alert(String(localized: "Couldn’t Extract"),
                isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
             Button("OK", role: .cancel) { model.errorMessage = nil }
         } message: {
@@ -41,6 +42,7 @@ struct ArchiveView: View {
 private struct LoadedView: View {
     @Bindable var model: ArchiveModel
     let listing: ArchiveListing
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         NavigationSplitView {
@@ -51,18 +53,18 @@ private struct LoadedView: View {
                 FileTable(model: model)
                 StatusBar(model: model, listing: listing)
             }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                FloatingHeader(model: model)
-            }
             .overlay(alignment: .bottom) {
                 if let e = model.extraction, !(e.isForPreview && e.totalBytes < 200_000_000) {
                     ExtractionCapsule(model: model, extraction: e)
                         .padding(.bottom, 44)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .animation(.snappy, value: model.extraction != nil)
+            .animation(reduceMotion ? nil : .snappy, value: model.extraction != nil)
         }
+        .navigationSubtitle(String(localized: "\(model.folderTitle) · \(model.visibleItems.count.formatted()) items"))
+        .searchable(text: $model.search, placement: .toolbar, prompt: Text(String(localized: "Search file names")))
+        .toolbar { ArchiveToolbar(model: model, listing: listing) }
     }
 }
 
@@ -76,7 +78,7 @@ private struct Sidebar: View {
         List(selection: Binding(get: { model.isSearching ? nil : model.folderPath },
                                 set: { model.search = ""; model.folderPath = $0; model.selection.removeAll() })) {
             Section(model.url.lastPathComponent) {
-                FolderRow(name: tr("すべて", "All"), count: listing.summary.fileCount, isRoot: true)
+                FolderRow(name: String(localized: "All"), count: listing.summary.fileCount, isRoot: true)
                     .tag("")
                 OutlineGroup(listing.root.children ?? [], children: \.children) { node in
                     FolderRow(name: node.name, count: node.fileCount, isRoot: false)
@@ -87,14 +89,15 @@ private struct Sidebar: View {
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(tr("展開後", "Expanded")) \(ByteFormat.string(listing.summary.totalSize))")
-                Text("\(tr("圧縮後", "Packed")) \(ByteFormat.string(listing.summary.packedSize))")
+                Text(String(localized: "Expanded \(ByteFormat.string(listing.summary.totalSize))"))
+                Text(String(localized: "Packed \(ByteFormat.string(listing.summary.packedSize))"))
             }
             .font(.caption)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
+            .accessibilityElement(children: .combine)
         }
     }
 }
@@ -110,62 +113,70 @@ private struct FolderRow: View {
             Spacer(minLength: 4)
             Text(count.formatted()).font(.caption).monospacedDigit().foregroundStyle(.secondary)
         }
+        .accessibilityElement(children: .combine)
     }
 }
 
-// MARK: - 浮かぶ操作（A4）
+// MARK: - ツールバー（A4。macOS 26以降はシステムがガラスの浮かぶボタンとして描く）
 
-private struct FloatingHeader: View {
+private struct ArchiveToolbar: ToolbarContent {
     @Bindable var model: ArchiveModel
+    let listing: ArchiveListing
+
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .navigation) {
+            Button { model.goUp() } label: {
+                Label(String(localized: "Enclosing Folder"), systemImage: "chevron.backward")
+            }
+            .help(String(localized: "Go to the enclosing folder (⌘↑)"))
+            .keyboardShortcut(.upArrow, modifiers: .command)
+            .disabled(model.currentFolder.isEmpty || model.isSearching)
+        }
+        ToolbarItemGroup(placement: .primaryAction) {
+            if listing.hasLegacyNames {
+                EncodingMenu(model: model, listing: listing)
+            }
+            Button {
+                if let item = model.selectedItems.first(where: { !$0.isFolder }) { model.preview(item) }
+            } label: {
+                Label(String(localized: "Preview"), systemImage: "eye")
+            }
+            .help(String(localized: "Temporarily extract and show the selected file (or press Space)"))
+            .disabled(!model.selectedItems.contains { !$0.isFolder } || model.extraction != nil)
+
+            Button {
+                model.extractSelection()
+            } label: {
+                Label(model.selection.isEmpty ? String(localized: "Extract All") : String(localized: "Extract"),
+                      systemImage: "arrow.down.to.line")
+                    .labelStyle(.titleAndIcon)
+            }
+            .buttonStyle(.borderedProminent)
+            .help(String(localized: "Save the selected files and folders, or everything if nothing is selected"))
+            .disabled(model.visibleItems.isEmpty || model.extraction != nil)
+        }
+    }
+}
+
+/// ファイル名の文字コードの切り替え（Windowsで作ったzipなど、UTF-8でない名前があるときだけ出す）
+private struct EncodingMenu: View {
+    @Bindable var model: ArchiveModel
+    let listing: ArchiveListing
 
     var body: some View {
-        HStack(spacing: 12) {
-            GlassCapsule {
-                Button { model.goUp() } label: { Image(systemName: "chevron.left") }
-                    .buttonStyle(.plain)
-                    .help(tr("ひとつ上のフォルダへ", "Go to the enclosing folder"))
-                    .disabled(model.currentFolder.isEmpty || model.isSearching)
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(model.folderTitle).font(.headline).lineLimit(1)
-                    Text(tr("\(model.visibleItems.count.formatted()) 項目", "\(model.visibleItems.count.formatted()) items"))
-                        .font(.caption2).foregroundStyle(.secondary)
+        Menu {
+            Picker(String(localized: "File Name Encoding"), selection: Binding(get: { model.encodingChoice }, set: { model.setEncoding($0) })) {
+                Text(String(localized: "Automatic (\(listing.detectedEncoding.label))")).tag(NameEncoding?.none)
+                Divider()
+                ForEach(NameEncoding.allCases) { enc in
+                    Text(enc.label).tag(NameEncoding?.some(enc))
                 }
             }
-            Spacer(minLength: 8)
-            GlassCapsule {
-                Button {
-                    if let item = model.selectedItems.first(where: { !$0.isFolder }) { model.preview(item) }
-                } label: {
-                    Label(tr("プレビュー", "Preview"), systemImage: "eye")
-                }
-                .buttonStyle(.plain)
-                .help(tr("選んだファイルだけを一時的に取り出して表示します（スペースキーでも可）",
-                         "Temporarily extract and show the selected file (or press Space)"))
-                .disabled(!model.selectedItems.contains { !$0.isFolder } || model.extraction != nil)
-
-                Button {
-                    model.extractSelection()
-                } label: {
-                    Label(model.selection.isEmpty ? tr("すべて取り出す", "Extract All") : tr("取り出す", "Extract"),
-                          systemImage: "arrow.down.to.line")
-                        .padding(.horizontal, 4)
-                }
-                .buttonStyle(.borderedProminent)
-                .buttonBorderShape(.capsule)
-                .help(tr("選んだファイルやフォルダだけを書き出します", "Save only the selected files and folders"))
-                .disabled(model.visibleItems.isEmpty || model.extraction != nil)
-
-                HStack(spacing: 4) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                    TextField(tr("検索", "Search"), text: $model.search, prompt: Text(tr("ファイル名で検索", "Search file names")))
-                        .textFieldStyle(.plain)
-                        .frame(width: 150)
-                }
-            }
+            .pickerStyle(.inline)
+        } label: {
+            Label(String(localized: "File Name Encoding"), systemImage: "character.book.closed")
         }
-        .padding(.horizontal, 14)
-        .padding(.top, 8)
-        .padding(.bottom, 6)
+        .help(String(localized: "If file names look garbled, change the encoding here (now: \(listing.encoding.label))"))
     }
 }
 
@@ -177,13 +188,14 @@ private struct FileTable: View {
     var body: some View {
         let items = model.visibleItems
         Table(of: ArchiveItem.self, selection: $model.selection, sortOrder: $model.sortOrder) {
-            TableColumn(tr("名前", "Name"), value: \.name, comparator: .localizedStandard) { item in
+            TableColumn(String(localized: "Name"), value: \.name, comparator: .localizedStandard) { item in
                 HStack(spacing: 7) {
                     FileIconView(item: item)
                     Text(item.name).lineLimit(1).truncationMode(.middle)
                     if item.isEncrypted {
                         Image(systemName: "lock.fill").font(.caption2).foregroundStyle(.orange)
-                            .help(tr("パスワード付き", "Password-protected"))
+                            .help(String(localized: "Password-protected"))
+                            .accessibilityLabel(String(localized: "Password-protected"))
                     }
                     if model.isSearching, !item.parentPath.isEmpty {
                         Text(item.parentPath).font(.caption).foregroundStyle(.tertiary).lineLimit(1).truncationMode(.head)
@@ -192,18 +204,18 @@ private struct FileTable: View {
             }
             .width(min: 220, ideal: 360)
 
-            TableColumn(tr("サイズ", "Size"), value: \.size) { item in
+            TableColumn(String(localized: "Size"), value: \.size) { item in
                 Text(ByteFormat.string(item.size)).monospacedDigit().frame(maxWidth: .infinity, alignment: .trailing)
             }
             .width(min: 70, ideal: 90)
 
-            TableColumn(tr("圧縮後", "Packed"), value: \.packedSize) { item in
+            TableColumn(String(localized: "Packed"), value: \.packedSize) { item in
                 Text(ByteFormat.string(item.packedSize)).monospacedDigit().foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .width(min: 70, ideal: 90)
 
-            TableColumn(tr("更新日", "Modified"), value: \.sortDate) { item in
+            TableColumn(String(localized: "Modified"), value: \.sortDate) { item in
                 Text(item.modified.map { $0.formatted(date: .numeric, time: .shortened) } ?? "—")
                     .monospacedDigit().foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .trailing)
             }
@@ -216,10 +228,10 @@ private struct FileTable: View {
         .contextMenu(forSelectionType: ArchiveItem.ID.self) { ids in
             let chosen = items.filter { ids.contains($0.id) }
             if chosen.count == 1, let one = chosen.first, !one.isFolder {
-                Button(tr("プレビュー", "Preview")) { model.preview(one) }
+                Button(String(localized: "Preview")) { model.preview(one) }
             }
             if !chosen.isEmpty {
-                Button(tr("取り出す…", "Extract…")) {
+                Button(String(localized: "Extract…")) {
                     model.selection = Set(ids)
                     model.extractSelection()
                 }
@@ -236,8 +248,11 @@ private struct FileTable: View {
         }
         .overlay {
             if items.isEmpty {
-                ContentUnavailableView(model.isSearching ? tr("見つかりません", "No Results") : tr("このフォルダは空です", "This folder is empty"),
-                                       systemImage: model.isSearching ? "magnifyingglass" : "folder")
+                if model.isSearching {
+                    ContentUnavailableView.search(text: model.search)
+                } else {
+                    ContentUnavailableView(String(localized: "This Folder Is Empty"), systemImage: "folder")
+                }
             }
         }
     }
@@ -255,14 +270,12 @@ private struct ExtractionCapsule: View {
                 ProgressRing(progress: extraction.progress).frame(width: 22, height: 22)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(extraction.isForPreview
-                         ? tr("プレビューの準備中 ・ \(extraction.currentName)", "Preparing preview · \(extraction.currentName)")
-                         : tr("取り出し中 ・ \(extraction.currentName)", "Extracting · \(extraction.currentName)"))
+                         ? String(localized: "Preparing preview · \(extraction.currentName)")
+                         : String(localized: "Extracting · \(extraction.currentName)"))
                         .lineLimit(1).truncationMode(.middle)
                     Text(remainingText).font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 }
-                Button { model.cancelExtraction() } label: { Image(systemName: "xmark.circle.fill") }
-                    .buttonStyle(.plain).foregroundStyle(.secondary)
-                    .help(tr("中止", "Cancel"))
+                CancelButton(help: String(localized: "Stop extracting (esc)")) { model.cancelExtraction() }
                     .keyboardShortcut(.cancelAction)
             }
             .frame(maxWidth: 460)
@@ -272,8 +285,8 @@ private struct ExtractionCapsule: View {
     var remainingText: String {
         let pct = Int((extraction.progress * 100).rounded())
         guard let s = extraction.remainingSeconds else { return "\(pct)%" }
-        if s < 60 { return tr("\(pct)% ・ 残り 約 \(max(1, Int(s))) 秒", "\(pct)% · about \(max(1, Int(s))) s left") }
-        return tr("\(pct)% ・ 残り 約 \(Int(s / 60)) 分", "\(pct)% · about \(Int(s / 60)) min left")
+        if s < 60 { return String(localized: "\(pct)% · about \(max(1, Int(s))) s left") }
+        return String(localized: "\(pct)% · about \(Int(s / 60)) min left")
     }
 }
 
@@ -288,8 +301,33 @@ struct ProgressRing: View {
             Circle().trim(from: 0, to: max(0.02, progress))
                 .stroke(Color.accentColor, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .animation(.linear(duration: 0.2), value: progress)
+                .animation(reduceMotion ? nil : .linear(duration: 0.2), value: progress)
         }
+        .accessibilityElement()
+        .accessibilityLabel(String(localized: "Progress"))
+        .accessibilityValue("\(Int((progress * 100).rounded()))%")
+    }
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+}
+
+/// 中止ボタン（見た目は小さな記号、当たり判定は 44pt 四方まで広げる）
+struct CancelButton: View {
+    let help: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(String(localized: "Stop"), systemImage: "xmark.circle.fill")
+                .labelStyle(.iconOnly)
+                .font(.title3)
+                .foregroundStyle(.secondary)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .padding(.vertical, -11)
+        .help(help)
     }
 }
 
@@ -302,34 +340,20 @@ private struct StatusBar: View {
     var body: some View {
         HStack(spacing: 12) {
             if model.selection.isEmpty {
-                Text(tr("\(listing.summary.fileCount.formatted()) ファイル ・ 目次の読み込み \(String(format: "%.1f", model.loadSeconds)) 秒",
-                        "\(listing.summary.fileCount.formatted()) files · read in \(String(format: "%.1f", model.loadSeconds)) s"))
+                Text(String(localized: "\(listing.summary.fileCount.formatted()) files · read in \(String(format: "%.1f", model.loadSeconds)) s"))
                     .foregroundStyle(.secondary)
             } else {
-                Text(tr("\(model.selection.count) 件選択", "\(model.selection.count) selected")).fontWeight(.semibold)
+                Text(String(localized: "\(model.selection.count) selected")).fontWeight(.semibold)
                 Text("・ \(ByteFormat.string(model.selectedSize))").foregroundStyle(.secondary)
             }
             if let free = model.desktopFreeSpace {
-                Text(tr("・ デスクトップの空き \(ByteFormat.string(UInt64(max(free, 0))))",
-                        "· Desktop free \(ByteFormat.string(UInt64(max(free, 0))))"))
+                Text(String(localized: "· Desktop free \(ByteFormat.string(UInt64(max(free, 0))))"))
                     .foregroundStyle(.secondary)
             }
             Spacer()
             if listing.hasLegacyNames {
-                Menu {
-                    Button(tr("自動（\(listing.detectedEncoding.label)）", "Automatic (\(listing.detectedEncoding.label))")) { model.setEncoding(nil) }
-                    Divider()
-                    ForEach(NameEncoding.allCases) { enc in
-                        Button(enc.label) { model.setEncoding(enc) }
-                    }
-                } label: {
-                    Text(tr("ファイル名：", "File names: ") + listing.encoding.label
-                         + (model.encodingChoice == nil ? tr("（自動判定）", " (auto)") : ""))
-                }
-                .menuStyle(.button)
-                .buttonStyle(.borderless)
-                .fixedSize()
-                .help(tr("ファイル名が文字化けしているときは、ここで読み方を切り替えます", "If file names look garbled, change the encoding here"))
+                Text(String(localized: "File names: \(listing.encoding.label)"))
+                    .foregroundStyle(.secondary)
             }
         }
         .font(.callout)

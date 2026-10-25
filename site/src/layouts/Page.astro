@@ -1,0 +1,167 @@
+---
+import { text, formats, creates, repo, type Lang } from '../i18n/text';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = text[lang];
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<!doctype html>
+<html lang={t.lang}>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>{t.title}</title>
+  <meta name="description" content={t.description} />
+  <link rel="icon" type="image/png" href={`${base}/icon.png`} />
+  <link rel="alternate" hreflang="ja" href="https://kajisho5.github.io/zippeek/" />
+  <link rel="alternate" hreflang="en" href="https://kajisho5.github.io/zippeek/en/" />
+  <meta property="og:title" content={t.title} />
+  <meta property="og:description" content={t.description} />
+  <meta property="og:image" content="https://kajisho5.github.io/zippeek/icon.png" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#121614" media="(prefers-color-scheme: dark)" />
+</head>
+<body>
+  <div class="glow" aria-hidden="true"></div>
+  <main class="wrap">
+    <nav class="top">
+      <a class="lang" href={t.switchHref}>{t.switchLabel}</a>
+    </nav>
+
+    <header class="hero">
+      <img class="icon" src={`${base}/icon.png`} width="88" height="88" alt="" />
+      <div class="heading">
+        <h1>ZipPeek</h1>
+        <p class="tagline">{t.tagline}</p>
+      </div>
+    </header>
+
+    <section class="get">
+      <a class="button" href={`${repo}/releases/latest`}>{t.download}</a>
+      <p class="meta">{t.meta1}<br />{t.meta2}</p>
+    </section>
+
+    <section class="features">
+      {t.features.map((f) => (
+        <article class="card">
+          <h2>{f.title}</h2>
+          <p>{f.body}</p>
+        </article>
+      ))}
+    </section>
+
+    <section class="more">
+      <ul>
+        {t.more.map((m) => <li>{m}</li>)}
+      </ul>
+    </section>
+
+    <section class="formats">
+      <div>
+        <h3>{t.formatsTitle}</h3>
+        <p class="mono">{formats.join('  ')}</p>
+      </div>
+      <div>
+        <h3>{t.createTitle}</h3>
+        <p class="mono">{creates.join('  ')}</p>
+      </div>
+    </section>
+
+    <section class="install">
+      <h3>{t.installTitle}</h3>
+      <ol>
+        {t.install.map((s) => <li>{s}</li>)}
+      </ol>
+    </section>
+
+    <footer>
+      <p class="links">
+        <a href={repo}>{t.footerGitHub}</a>
+        <a href={`${repo}/releases`}>{t.footerReleases}</a>
+        <a href="https://www.7-zip.org/license.txt">{t.footerLicense}</a>
+      </p>
+      <p class="credit">{t.credit}</p>
+    </footer>
+  </main>
+
+  <style is:global>
+    :root {
+      --bg: #ffffff;
+      --fg: #18201c;
+      --muted: #56625b;
+      --line: #e3e8e5;
+      --card: rgba(255, 255, 255, 0.62);
+      --accent: #1f7a5a;
+      --accent-fg: #ffffff;
+      --glow-a: rgba(63, 155, 124, 0.20);
+      --glow-b: rgba(43, 111, 143, 0.16);
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Segoe UI", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121614;
+        --fg: #e6ece8;
+        --muted: #9aa7a0;
+        --line: #26302b;
+        --card: rgba(30, 36, 33, 0.6);
+        --accent: #5cc79d;
+        --accent-fg: #0d1210;
+        --glow-a: rgba(92, 199, 157, 0.14);
+        --glow-b: rgba(60, 120, 160, 0.12);
+        color-scheme: dark;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    .glow {
+      position: fixed; inset: -20vh -20vw auto auto; width: 80vw; height: 80vh; pointer-events: none; z-index: 0;
+      background: radial-gradient(closest-side, var(--glow-a), transparent 70%), radial-gradient(closest-side at 30% 60%, var(--glow-b), transparent 70%);
+      filter: blur(20px);
+    }
+    .wrap {
+      position: relative; z-index: 1; max-width: 860px; margin: 0 auto;
+      padding: max(28px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 64px max(20px, env(safe-area-inset-left));
+      display: flex; flex-direction: column; gap: 44px;
+    }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+    .top { display: flex; justify-content: flex-end; }
+    .lang { font-size: 14px; color: var(--muted); text-decoration: none; padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; }
+    .hero { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+    .icon { border-radius: 20px; flex: none; }
+    .heading { min-width: 0; }
+    h1 { font-size: clamp(36px, 7vw, 52px); line-height: 1.1; margin: 0; letter-spacing: -0.01em; }
+    .tagline { margin: 8px 0 0; font-size: clamp(16px, 2.6vw, 19px); color: var(--fg); text-wrap: balance; }
+    .get { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+    .button {
+      display: inline-block; background: var(--accent); color: var(--accent-fg); text-decoration: none; font-weight: 600;
+      padding: 13px 26px; border-radius: 999px; font-size: 16px;
+      box-shadow: 0 6px 18px -8px var(--accent);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -10px var(--accent); }
+    .meta { margin: 0; color: var(--muted); font-size: 14px; }
+    .features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 720px) { .features { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 20px 20px 18px;
+      backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    }
+    .card h2 { margin: 0 0 6px; font-size: 18px; }
+    .card p { margin: 0; color: var(--muted); font-size: 15px; }
+    .more ul { margin: 0; padding-left: 1.2em; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 28px; }
+    @media (max-width: 600px) { .more ul { grid-template-columns: 1fr; } }
+    .formats { display: grid; grid-template-columns: 3fr 1fr; gap: 24px; border-top: 1px solid var(--line); padding-top: 24px; }
+    @media (max-width: 600px) { .formats { grid-template-columns: 1fr; } }
+    h3 { margin: 0 0 6px; font-size: 15px; }
+    .mono { margin: 0; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px; color: var(--muted); word-spacing: 6px; }
+    .install ol { margin: 0; padding-left: 1.3em; }
+    footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--muted); font-size: 13px; }
+    .links { display: flex; gap: 18px; flex-wrap: wrap; margin: 0 0 6px; }
+    .credit { margin: 0; }
+    @media (prefers-reduced-motion: reduce) { .button { transition: none; } }
+  </style>
+</body>
+</html>

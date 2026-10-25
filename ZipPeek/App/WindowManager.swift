@@ -18,6 +18,23 @@ final class WindowManager: NSObject, NSWindowDelegate {
 
     // MARK: 中身を見る窓
 
+    private let openArchivesKey = "openArchiveWindows"
+
+    /// 終了時に開いていた窓を覚える（Macの設定で「終了時にウインドウを閉じる」がオンなら覚えない）
+    func saveOpenArchiveWindows() {
+        let keepWindows = UserDefaults.standard.bool(forKey: "NSQuitAlwaysKeepsWindows")
+        let paths = keepWindows ? archiveWindows.keys.map(\.path) : []
+        UserDefaults.standard.set(paths, forKey: openArchivesKey)
+    }
+
+    func restoreArchiveWindows() {
+        let paths = UserDefaults.standard.stringArray(forKey: openArchivesKey) ?? []
+        UserDefaults.standard.removeObject(forKey: openArchivesKey)
+        for path in paths where FileManager.default.fileExists(atPath: path) {
+            open(URL(fileURLWithPath: path))
+        }
+    }
+
     func open(_ rawURL: URL) {
         let url = ArchiveKind.firstVolume(of: rawURL).standardizedFileURL
         if let existing = archiveWindows[url] {
@@ -35,7 +52,8 @@ final class WindowManager: NSObject, NSWindowDelegate {
         window.contentMinSize = NSSize(width: 760, height: 460)
         window.title = url.lastPathComponent
         window.representedURL = url
-        window.titlebarAppearsTransparent = true
+        // ツールバーは SwiftUI 側（ArchiveView の .toolbar）から作る
+        window.toolbarStyle = .unified
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.tabbingMode = .automatic
@@ -56,8 +74,8 @@ final class WindowManager: NSObject, NSWindowDelegate {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
-        panel.message = tr("中身を見たい圧縮ファイルを選んでください", "Choose archives to look inside")
-        panel.prompt = tr("開く", "Open")
+        panel.message = String(localized: "Choose archives to look inside")
+        panel.prompt = String(localized: "Open")
         if panel.runModal() == .OK {
             for url in panel.urls { open(url) }
         }
@@ -68,8 +86,8 @@ final class WindowManager: NSObject, NSWindowDelegate {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = true
-        panel.message = tr("圧縮・解凍するものを選んでください", "Choose items to compress or extract")
-        panel.prompt = tr("選ぶ", "Choose")
+        panel.message = String(localized: "Choose items to compress or extract")
+        panel.prompt = String(localized: "Choose")
         if panel.runModal() == .OK {
             DropRouter.handle(panel.urls, alternate: false)
         }
@@ -150,7 +168,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
             let host = NSHostingController(rootView: JobsView())
             host.sizingOptions = .preferredContentSize
             let window = NSWindow(contentViewController: host)
-            window.title = tr("ZipPeek ─ 作業中", "ZipPeek — Working")
+            window.title = String(localized: "ZipPeek — Working")
             window.styleMask = [.titled, .closable, .fullSizeContentView]
             window.titlebarAppearsTransparent = true
             window.isReleasedWhenClosed = false
@@ -171,6 +189,8 @@ final class WindowManager: NSObject, NSWindowDelegate {
         guard !queue.hasActiveJobs else { return }
         let hasFailure = queue.jobs.contains { if case .failed = $0.state { return true } else { return false } }
         guard !hasFailure else { return }
+        // 終わったらFinderで表示する設定がオフのときは、結果を見落とさないよう窓を残す（時間で消える表示に頼らない）
+        guard Preferences.shared.revealWhenDone else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
             guard let self, !JobQueue.shared.hasActiveJobs else { return }
             JobQueue.shared.clearFinished()
@@ -191,7 +211,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
         let host = NSHostingController(rootView: view)
         host.sizingOptions = .preferredContentSize
         window.contentViewController = host
-        window.title = tr("圧縮", "Compress")
+        window.title = String(localized: "Compress")
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false
         window.center()
@@ -243,6 +263,8 @@ final class WindowManager: NSObject, NSWindowDelegate {
 /// 枠のない小窓でもキーボード（⌘W など）を受け取れるようにする
 final class KeyableWindow: NSWindow {
     override var canBecomeKey: Bool { true }
+    // 枠のない窓は閉じるボタンがないため、⌘W（performClose）が警告音になる。ここで閉じる
+    override func performClose(_ sender: Any?) { close() }
 }
 
 /// プレビューやドラッグのために取り出した一時ファイルの置き場

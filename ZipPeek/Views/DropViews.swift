@@ -4,6 +4,7 @@ import ZipPeekCore
 
 /// 標準のドラッグ先の窓（A4）。はじめて起動したときは、スペースキー機能の案内も出す
 struct DropWindowView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isTargeted = false
     @State private var showSetup = !Preferences.shared.hasSeenWelcome
     @State private var preview = PreviewExtensionStatus()
@@ -17,39 +18,44 @@ struct DropWindowView: View {
             VStack(spacing: 8) {
                 Image(systemName: "arrow.down.doc").font(.system(size: 26, weight: .light))
                     .foregroundStyle(isTargeted ? Color.accentColor : .secondary)
-                Text(tr("ここにドラッグ", "Drop files here")).font(.headline)
+                Text(String(localized: "Drop files here")).font(.headline)
                 HStack(spacing: 18) {
-                    Label(tr("ファイル・フォルダ → 圧縮", "Files & folders → compress"), systemImage: "archivebox")
-                    Label(tr("圧縮ファイル → 解凍", "Archives → extract"), systemImage: "shippingbox.and.arrow.backward")
+                    Label(String(localized: "Files & folders → compress"), systemImage: "archivebox")
+                    Label(String(localized: "Archives → extract"), systemImage: "arrow.down.to.line")
                 }
                 .font(.caption).foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 26)
-            .background(RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(isTargeted ? Color.accentColor : Color.secondary.opacity(0.35),
-                              style: StrokeStyle(lineWidth: 1.5, dash: [7, 5])))
+            .background {
+                // 重なったときは色だけでなく、線の太さと塗りでも示す
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(isTargeted ? Color.accentColor.opacity(0.10) : Color.clear)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(isTargeted ? Color.accentColor : Color.secondary.opacity(0.5),
+                                  style: StrokeStyle(lineWidth: isTargeted ? 3 : 1.5, dash: isTargeted ? [] : [7, 5]))
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(String(localized: "Drop target. Drop files or folders to compress, or archives to extract"))
             .dropDestination(for: URL.self) { urls, _ in
                 DropRouter.handle(urls)
                 return !urls.isEmpty
             } isTargeted: { isTargeted = $0 }
 
             HStack {
-                Button(tr("選ぶ…", "Choose…")) { WindowManager.shared.showOpenPanel() }
+                Button(String(localized: "Choose…")) { WindowManager.shared.showOpenPanel() }
                     .buttonStyle(.borderedProminent).buttonBorderShape(.capsule)
-                Button(tr("中身を見る…", "Look Inside…")) { WindowManager.shared.showBrowsePanel() }
+                Button(String(localized: "Look Inside…")) { WindowManager.shared.showBrowsePanel() }
                     .buttonBorderShape(.capsule)
                 Spacer()
-                SettingsLink { Image(systemName: "gearshape") }
-                    .buttonStyle(.borderless).help(tr("設定", "Settings"))
             }
 
             if showSetup {
                 Divider()
                 PreviewSetupSection(status: preview)
-                Button(tr("あとで", "Later")) {
+                Button(String(localized: "Later")) {
                     Preferences.shared.hasSeenWelcome = true
-                    withAnimation { showSetup = false }
+                    withAnimation(reduceMotion ? nil : .default) { showSetup = false }
                 }
                 .buttonStyle(.borderless)
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -65,6 +71,7 @@ struct DropWindowView: View {
 
 /// 小窓モード（A5）。丸いガラスの小窓1つで、待機・作業中・完了を表示する
 struct CompactDropView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isTargeted = false
     private var queue: JobQueue { JobQueue.shared }
 
@@ -80,11 +87,13 @@ struct CompactDropView: View {
                     Text(active.inputs.first?.lastPathComponent ?? "").font(.caption).lineLimit(1).truncationMode(.middle)
                         .foregroundStyle(.secondary)
                 }
-                .contextMenu { Button(tr("中止", "Cancel")) { queue.cancel(active.id) } }
+                .contextMenu { Button(String(localized: "Stop")) { queue.cancel(active.id) } }
+                .accessibilityAction(named: String(localized: "Stop")) { queue.cancel(active.id) }
             } else if let done = queue.lastFinished, done.state == .done, !isTargeted {
                 VStack(spacing: 10) {
                     Image(systemName: "checkmark.circle.fill").font(.system(size: 64)).foregroundStyle(Color.accentColor)
-                    Button(tr("Finderで表示", "Show in Finder")) {
+                        .accessibilityLabel(String(localized: "Done"))
+                    Button(String(localized: "Show in Finder")) {
                         NSWorkspace.shared.activateFileViewerSelecting(done.results)
                         queue.clearFinished()
                     }
@@ -93,16 +102,18 @@ struct CompactDropView: View {
             } else if let failed = queue.lastFinished, case .failed(let message) = failed.state {
                 VStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 40)).foregroundStyle(.orange)
+                        .accessibilityLabel(String(localized: "Failed"))
                     Text(message).font(.caption2).multilineTextAlignment(.center).lineLimit(3)
-                    Button(tr("閉じる", "Dismiss")) { queue.clearFinished() }.buttonStyle(.borderless).font(.caption)
+                    Button(String(localized: "Dismiss")) { queue.clearFinished() }.buttonStyle(.borderless).font(.caption)
                 }
                 .padding(.horizontal, 14)
             } else {
                 VStack(spacing: 10) {
                     Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 72, height: 72)
-                        .scaleEffect(isTargeted ? 1.08 : 1).animation(.snappy, value: isTargeted)
-                    Text(tr("ここにドラッグ", "Drop here")).font(.callout.weight(.semibold))
-                    Text(tr("圧縮・解凍", "Compress · Extract")).font(.caption2).foregroundStyle(.secondary)
+                        .scaleEffect(isTargeted && !reduceMotion ? 1.08 : 1).animation(reduceMotion ? nil : .snappy, value: isTargeted)
+                        .accessibilityHidden(true)
+                    Text(String(localized: "Drop here")).font(.callout.weight(.semibold))
+                    Text(String(localized: "Compress · Extract")).font(.caption2).foregroundStyle(.secondary)
                 }
             }
         }
@@ -113,13 +124,23 @@ struct CompactDropView: View {
             DropRouter.handle(urls)
             return !urls.isEmpty
         } isTargeted: { isTargeted = $0 }
-        .contextMenu {
-            Button(tr("選ぶ…", "Choose…")) { WindowManager.shared.showOpenPanel() }
-            Button(tr("中身を見る…", "Look Inside…")) { WindowManager.shared.showBrowsePanel() }
-            SettingsLink { Text(tr("設定…", "Settings…")) }
-            Divider()
-            Button(tr("小窓を閉じる", "Close")) { WindowManager.shared.closeCompactWindow() }
+        // 重なったときは拡大に加えて、縁取りでも示す（視差効果を減らす設定でも分かるように）
+        .overlay {
+            RoundedRectangle(cornerRadius: 56, style: .continuous)
+                .strokeBorder(Color.accentColor, lineWidth: 3)
+                .opacity(isTargeted ? 1 : 0)
         }
+        .contextMenu {
+            Button(String(localized: "Choose…")) { WindowManager.shared.showOpenPanel() }
+            Button(String(localized: "Look Inside…")) { WindowManager.shared.showBrowsePanel() }
+            SettingsLink { Text(String(localized: "Settings…")) }
+            Divider()
+            Button(String(localized: "Close")) { WindowManager.shared.closeCompactWindow() }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(String(localized: "ZipPeek drop target"))
+        .accessibilityAction(named: String(localized: "Choose…")) { WindowManager.shared.showOpenPanel() }
+        .accessibilityAction(named: String(localized: "Look Inside…")) { WindowManager.shared.showBrowsePanel() }
         .padding(8)
     }
 }
@@ -134,7 +155,7 @@ struct JobsView: View {
                 JobRow(job: job)
             }
             if queue.jobs.isEmpty {
-                Text(tr("作業はありません", "Nothing in progress")).foregroundStyle(.secondary).padding()
+                Text(String(localized: "Nothing in progress")).foregroundStyle(.secondary).padding()
             }
         }
         .padding(.horizontal, 16)
@@ -149,37 +170,44 @@ private struct JobRow: View {
 
     var body: some View {
         GlassCapsule {
-            switch job.state {
-            case .running, .waiting:
-                ProgressRing(progress: job.progress).frame(width: 22, height: 22)
-            case .done:
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.accentColor).font(.title3)
-            case .failed:
-                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange).font(.title3)
-            case .cancelled:
-                Image(systemName: "xmark.circle").foregroundStyle(.secondary).font(.title3)
+            Group {
+                switch job.state {
+                case .running, .waiting:
+                    ProgressRing(progress: job.progress).frame(width: 22, height: 22)
+                case .done:
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.accentColor).font(.title3)
+                        .accessibilityLabel(String(localized: "Done"))
+                case .failed:
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange).font(.title3)
+                        .accessibilityLabel(String(localized: "Failed"))
+                case .cancelled:
+                    Image(systemName: "xmark.circle").foregroundStyle(.secondary).font(.title3)
+                        .accessibilityLabel(String(localized: "Stopped"))
+                }
             }
             VStack(alignment: .leading, spacing: 1) {
                 Text(job.title).lineLimit(1).truncationMode(.middle)
                 Group {
                     switch job.state {
                     case .running: Text("\(Int((job.progress * 100).rounded()))%")
-                    case .waiting: Text(tr("前の作業が終わると始まります", "Starts after the current task"))
-                    case .done: Text(tr("Finderで表示", "Show in Finder")).foregroundStyle(Color.accentColor)
+                    case .waiting: Text(String(localized: "Starts after the current task"))
+                    case .done: EmptyView()
                     case .failed(let m): Text(m).lineLimit(2)
-                    case .cancelled: Text(tr("中止しました", "Cancelled"))
+                    case .cancelled: Text(String(localized: "Stopped"))
                     }
                 }
                 .font(.caption).foregroundStyle(.secondary).monospacedDigit()
             }
+            .accessibilityElement(children: .combine)
             Spacer(minLength: 4)
             if job.isActive {
-                Button { JobQueue.shared.cancel(job.id) } label: { Image(systemName: "xmark.circle.fill") }
-                    .buttonStyle(.plain).foregroundStyle(.secondary).help(tr("中止", "Cancel"))
+                CancelButton(help: String(localized: "Stop")) { JobQueue.shared.cancel(job.id) }
+            } else if job.state == .done {
+                Button(String(localized: "Show in Finder")) {
+                    NSWorkspace.shared.activateFileViewerSelecting(job.results)
+                }
+                .buttonStyle(.borderless)
             }
-        }
-        .onTapGesture {
-            if job.state == .done { NSWorkspace.shared.activateFileViewerSelecting(job.results) }
         }
     }
 }

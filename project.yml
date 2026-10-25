@@ -6,7 +6,7 @@ options:
   deploymentTarget:
     macOS: "14.0"
   createIntermediateGroups: true
-  developmentLanguage: ja
+  developmentLanguage: en
 
 settings:
   base:
@@ -19,6 +19,8 @@ settings:
     CODE_SIGN_IDENTITY: "-"
     DEVELOPMENT_TEAM: ""
     DEAD_CODE_STRIPPING: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
 
 packages:
   ZipPeekCore:
@@ -60,7 +62,7 @@ targets:
       properties:
         CFBundleDisplayName: ZipPeek
         CFBundleName: ZipPeek
-        CFBundleDevelopmentRegion: ja
+        CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [ja, en]
         LSApplicationCategoryType: public.app-category.utilities
         LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
@@ -138,7 +140,7 @@ targets:
       properties:
         CFBundleDisplayName: ZipPeek
         CFBundleName: ZipPeekPreview
-        CFBundleDevelopmentRegion: ja
+        CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [ja, en]
         LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
         NSExtension:

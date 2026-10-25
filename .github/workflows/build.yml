@@ -37,6 +37,8 @@ jobs:
           brew install xcodegen
           xcodegen --version
           xcodegen generate
+          # アイコン（Icon Composer形式）の種類が正しく登録されたかを記録する
+          grep -n "AppIcon.icon" ZipPeek.xcodeproj/project.pbxproj | head -5
 
       - name: アプリをビルド（署名なし）
         run: |
@@ -49,6 +51,23 @@ jobs:
 
       - name: できたアプリの中身を確認
         run: bash scripts/check-app.sh build/Build/Products/Release/ZipPeek.app
+
+      - name: 文言の日本語訳に抜けがないか
+        run: |
+          xcodebuild -exportLocalizations -project ZipPeek.xcodeproj -localizationPath loc -exportLanguage ja > /dev/null
+          python3 scripts/check-localizations.py loc
+
+      - name: 画面の写真を撮る（見た目の確認用）
+        continue-on-error: true
+        run: bash scripts/ui-shots.sh build/Build/Products/Release/ZipPeek.app shots
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: screenshots
+          path: shots
+          retention-days: 14
+          if-no-files-found: ignore
 
       - name: アプリを保存（動作確認用・署名なし）
         run: |

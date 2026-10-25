@@ -12,3 +12,8 @@ xcuserdata/
 DerivedData/
 /Vendor/7zip/7zz
 /Vendor/7zip/.version
+
+# CIで作るもの
+samples/
+shots/
+loc/
