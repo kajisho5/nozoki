@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """GitHubのMacで撮った画面写真（scripts/ui-shots.sh の shots/）から、配布ページとREADME用の画像を切り出す。
 使い方: python3 scripts/site-shots.py <shotsフォルダ>
-出力: site/public/shots/{en,ja}/{browse,quicklook,drop,compact}.png と docs/images/*.png（英語）"""
+出力: site/public/shots/{en,ja}/*.png と docs/images/*.png（英語）・docs/images/ja/*.png（日本語）"""
 import os, sys
 from PIL import Image, ImageDraw
 
@@ -41,8 +41,11 @@ for lang in ('en', 'ja'):
     # クイックルックは上の帯（qlmanage の確認用の表示）を除く
     cut(f'quicklook-{lang}', None, f'{out}/quicklook.png', 22, top=41)
 
-docs = os.path.join(root, 'docs/images')
-for n in ('browse', 'quicklook', 'drop', 'compact'):
-    p = os.path.join(root, 'site/public/shots/en', n + '.png')
-    if os.path.exists(p):
-        Image.open(p).save(os.path.join(docs, n + '.png'), optimize=True)
+# README 用：英語は docs/images、日本語は docs/images/ja
+for lang, sub in (('en', ''), ('ja', 'ja')):
+    docs = os.path.join(root, 'docs/images', sub)
+    os.makedirs(docs, exist_ok=True)
+    for n in ('browse', 'quicklook', 'drop', 'compact'):
+        p = os.path.join(root, 'site/public/shots', lang, n + '.png')
+        if os.path.exists(p):
+            Image.open(p).save(os.path.join(docs, n + '.png'), optimize=True)

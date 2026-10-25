@@ -23,9 +23,7 @@ Finderでスペースキーを押せばzipの中身が見えて、必要な1フ�
   <img alt="macOS 14 以降" src="https://img.shields.io/badge/macOS-14%2B-lightgrey.svg">
 </p>
 
-![日本語Windowsで作ったzipを開いたところ。ファイル名が正しく表示されている](docs/images/browse.png)
-
-> 画面写真は英語表示のMacで撮ったものです。日本語のMacでは、メニューやボタンも日本語になります。
+![日本語Windowsで作ったzipを開いたところ。ファイル名が正しく表示されている](docs/images/ja/browse.png)
 
 ## 目次
 
@@ -57,8 +55,8 @@ Finderでスペースキーを押せばzipの中身が見えて、必要な1フ�
 
 <table>
 <tr>
-<td width="50%"><img src="docs/images/quicklook.png" alt="Finderでスペースキーを押したときの表示。zipの中のフォルダとファイルが一覧になっている"></td>
-<td width="50%"><img src="docs/images/drop.png" alt="ZipPeekのドラッグ先の窓"></td>
+<td width="50%"><img src="docs/images/ja/quicklook.png" alt="Finderでスペースキーを押したときの表示。zipの中のフォルダとファイルが一覧になっている"></td>
+<td width="50%"><img src="docs/images/ja/drop.png" alt="ZipPeekのドラッグ先の窓"></td>
 </tr>
 <tr>
 <td>Finderでスペースキーを押すと中身が見える</td>
