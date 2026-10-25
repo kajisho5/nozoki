@@ -23,7 +23,8 @@ public enum NameEncoding: String, CaseIterable, Sendable, Identifiable {
         case .utf8: return .utf8
         case .shiftJIS:
             #if canImport(Darwin)
-            let cp932 = CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(0x0421)) // DOS Japanese
+            // kCFStringEncodingDOSJapanese = 0x0420（0x0421 は簡体字中国語なので注意）
+            let cp932 = CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(0x0420))
             return String.Encoding(rawValue: cp932)
             #else
             return .shiftJIS
