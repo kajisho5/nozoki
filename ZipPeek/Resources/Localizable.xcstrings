@@ -2145,6 +2145,666 @@
           }
         }
       }
+    },
+    "%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        }
+      }
+    },
+    "7z": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7z"
+          }
+        }
+      }
+    },
+    "A Mac disk image. Opens by double-clicking on any Mac.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac のディスクイメージ。どの Mac でもダブルクリックで開けます。"
+          }
+        }
+      }
+    },
+    "Archive": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮ファイル"
+          }
+        }
+      }
+    },
+    "Archive Format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮の形式"
+          }
+        }
+      }
+    },
+    "Changes Can’t Be Saved to the Archive": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更を圧縮ファイルに戻せません"
+          }
+        }
+      }
+    },
+    "Check ${archive} for damage": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${archive} が壊れていないか確かめる"
+          }
+        }
+      }
+    },
+    "Check Archive for Damage": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮ファイルが壊れていないか確かめる"
+          }
+        }
+      }
+    },
+    "Check for Damage": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "壊れていないか確かめる"
+          }
+        }
+      }
+    },
+    "Checking…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確かめています…"
+          }
+        }
+      }
+    },
+    "Common on Mac and Linux. Keeps permissions. No password or splitting.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac や Linux でよく使う形式。権限も保ちます。パスワードと分割は使えません。"
+          }
+        }
+      }
+    },
+    "Compress ${files} as ${format}": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${files} を ${format} で圧縮"
+          }
+        }
+      }
+    },
+    "Compress Files": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイルを圧縮"
+          }
+        }
+      }
+    },
+    "Compresses files and folders into one archive next to the first item.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイルやフォルダを1つの圧縮ファイルにまとめ、最初の項目と同じ場所に置きます。"
+          }
+        }
+      }
+    },
+    "Copy SHA-256": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SHA-256 をコピー"
+          }
+        }
+      }
+    },
+    "Couldn’t Check": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確かめられませんでした"
+          }
+        }
+      }
+    },
+    "Couldn’t Rename": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前を変えられませんでした"
+          }
+        }
+      }
+    },
+    "Every file was read and its checksum matched. Nothing was written to disk.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべてのファイルを読み、チェックサムも一致しました。ディスクには何も書き出していません。"
+          }
+        }
+      }
+    },
+    "Extract ${archive}": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${archive} を解凍"
+          }
+        }
+      }
+    },
+    "Extract Archive": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮ファイルを解凍"
+          }
+        }
+      }
+    },
+    "Extracts an archive next to it and returns what was extracted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮ファイルを同じ場所に解凍し、できたものを返します。"
+          }
+        }
+      }
+    },
+    "Files": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイル"
+          }
+        }
+      }
+    },
+    "Get Contents": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中身を見る"
+          }
+        }
+      }
+    },
+    "Get Contents of Archive": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮ファイルの中身を取得"
+          }
+        }
+      }
+    },
+    "Get contents of ${archive}": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${archive} の中身を取得"
+          }
+        }
+      }
+    },
+    "Link": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リンク"
+          }
+        }
+      }
+    },
+    "Lists the files inside an archive without extracting it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解凍せずに、圧縮ファイルの中のファイルを一覧にします。"
+          }
+        }
+      }
+    },
+    "Look Inside": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中身を見る"
+          }
+        }
+      }
+    },
+    "Look Inside a Link": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リンクのままのぞく"
+          }
+        }
+      }
+    },
+    "Look Inside a Link…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リンクのままのぞく…"
+          }
+        }
+      }
+    },
+    "More": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その他"
+          }
+        }
+      }
+    },
+    "New name": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しい名前"
+          }
+        }
+      }
+    },
+    "No Problems Found": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "問題は見つかりませんでした"
+          }
+        }
+      }
+    },
+    "Not Now": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今はしない"
+          }
+        }
+      }
+    },
+    "Open in Default App": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "既定のアプリで開く"
+          }
+        }
+      }
+    },
+    "Opens on any computer without extra software.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "どのパソコンでも、ほかのソフトなしで開けます。"
+          }
+        }
+      }
+    },
+    "Paste a link to a ZIP file. ZipPeek reads only its table of contents, so you can see what’s inside and download just the files you need.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "zip ファイルのリンクを貼ってください。ZipPeek は目次だけを読むので、中身を見て、必要なファイルだけをダウンロードできます。"
+          }
+        }
+      }
+    },
+    "Reads every file in the archive and reports whether it’s damaged. Nothing is extracted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮ファイルの中をすべて読み、壊れていないかを返します。何も解凍しません。"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前を変更"
+          }
+        }
+      }
+    },
+    "Rename “%@”": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」の名前を変更"
+          }
+        }
+      }
+    },
+    "Rename, open in another app, or check the archive for damage": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前の変更、ほかのアプリで開く、壊れていないかの確認"
+          }
+        }
+      }
+    },
+    "Rename…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前を変更…"
+          }
+        }
+      }
+    },
+    "Renaming…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前を変えています…"
+          }
+        }
+      }
+    },
+    "Smallest files. Can hide file names with a password.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "いちばん小さくなります。パスワードでファイル名も隠せます。"
+          }
+        }
+      }
+    },
+    "Some files can’t be read correctly. Ask the sender to send it again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正しく読めないファイルがあります。送った人に、もう一度送ってもらってください。"
+          }
+        }
+      }
+    },
+    "That Link Can’t Be Opened": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "そのリンクは開けません"
+          }
+        }
+      }
+    },
+    "The compression engine (7-Zip) is missing. Please reinstall the app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮・解凍の部品（7-Zip）が見つかりません。アプリを入れ直してください。"
+          }
+        }
+      }
+    },
+    "The name is changed inside the archive.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮ファイルの中で名前を変えます。"
+          }
+        }
+      }
+    },
+    "This Archive Is Damaged": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この圧縮ファイルは壊れています"
+          }
+        }
+      }
+    },
+    "Update “%@” in “%@”?": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%2$@」の中の「%1$@」を更新しますか？"
+          }
+        }
+      }
+    },
+    "Updating…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新しています…"
+          }
+        }
+      }
+    },
+    "You saved changes to this file. ZipPeek can put the new version back into the archive.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このファイルの変更が保存されました。新しい版を圧縮ファイルに戻せます。"
+          }
+        }
+      }
+    },
+    "Your edited copy is here: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "編集したコピーはここにあります：%@"
+          }
+        }
+      }
+    },
+    "ZipPeek couldn’t find the file. Pass a file from Finder or another action.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイルが見つかりませんでした。Finder やほかのアクションからファイルを渡してください。"
+          }
+        }
+      }
+    },
+    "dmg": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dmg"
+          }
+        }
+      }
+    },
+    "dmg (Mac disk image)": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dmg（Mac のディスクイメージ）"
+          }
+        }
+      }
+    },
+    "tar.bz2": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tar.bz2"
+          }
+        }
+      }
+    },
+    "tar.gz": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tar.gz"
+          }
+        }
+      }
+    },
+    "tar.xz": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tar.xz"
+          }
+        }
+      }
+    },
+    "zip": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "zip"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

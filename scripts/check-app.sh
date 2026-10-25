@@ -40,6 +40,10 @@ codesign --verify --strict "$APP/Contents/MacOS/7zz"
 test ! -e "$APPEX/Contents/MacOS/7zz"
 echo "OK"
 
+echo "== 5b. ショートカット App 向けの操作が入っているか"
+test -d "$APP/Contents/Resources/Metadata.appintents" && ls "$APP/Contents/Resources/Metadata.appintents"
+echo "OK"
+
 echo "== 6. 右クリック（サービス）と言語"
 /usr/libexec/PlistBuddy -c "Print :NSServices" "$APP/Contents/Info.plist" | grep -E "NSMessage" 
 test "$(/usr/libexec/PlistBuddy -c "Print :NSServices" "$APP/Contents/Info.plist" | grep -c NSMessage)" = "3"

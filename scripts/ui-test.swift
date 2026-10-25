@@ -8,6 +8,9 @@
 //   swift scripts/ui-test.swift windows <bundle id>         窓の題名の一覧
 //   swift scripts/ui-test.swift move <bundle id> <x> <y> <幅> <高さ>   いちばん手前の窓の位置と大きさを変える
 //   swift scripts/ui-test.swift key <キー番号> [cmd]          キーを押す（51 = delete）
+//   swift scripts/ui-test.swift press <bundle id> <名前>…    ボタンやメニュー項目を押す（名前はどれか1つが合えばよい）
+//   swift scripts/ui-test.swift type <文字>                  文字を打つ
+//   swift scripts/ui-test.swift has <bundle id> <文字>…      窓のどこかにその文字を含む表示があるか
 import AppKit
 import ApplicationServices
 
@@ -89,6 +92,40 @@ case "key":
         e?.post(tap: .cghidEventTap)
         usleep(80_000)
     }
+case "press":
+    guard let a = app(args[2]) else { print("起動していない"); exit(1) }
+    let wins = (attr(a, kAXWindowsAttribute) as? [AXUIElement]) ?? []
+    let menubar = attr(a, kAXMenuBarAttribute).map { $0 as! AXUIElement }
+    var hit: AXUIElement?
+    for name in args[3...] {
+        hit = wins.lazy.compactMap { find($0, name) }.first ?? menubar.flatMap { find($0, name) }
+        if hit != nil { break }
+    }
+    guard let e = hit else { print("見つからない"); exit(1) }
+    print(AXUIElementPerformAction(e, kAXPressAction as CFString) == .success ? "押した" : "押せなかった")
+case "type":
+    for ch in args[2].utf16 {
+        for down in [true, false] {
+            let e = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: down)
+            var c = ch
+            e?.keyboardSetUnicodeString(stringLength: 1, unicodeString: &c)
+            e?.post(tap: .cghidEventTap)
+            usleep(20_000)
+        }
+    }
+case "has":
+    guard let a = app(args[2]) else { print("起動していない"); exit(1) }
+    func contains(_ e: AXUIElement, _ text: String, _ depth: Int = 0) -> Bool {
+        if depth > 14 { return false }
+        for key in [kAXTitleAttribute, kAXValueAttribute, kAXDescriptionAttribute] {
+            if let s = attr(e, key) as? String, s.contains(text) { return true }
+        }
+        return ((attr(e, kAXChildrenAttribute) as? [AXUIElement]) ?? []).contains { contains($0, text, depth + 1) }
+    }
+    let wins = (attr(a, kAXWindowsAttribute) as? [AXUIElement]) ?? []
+    let found = args[3...].contains { t in wins.contains { contains($0, t) } }
+    print(found ? "ある" : "ない")
+    exit(found ? 0 : 1)
 case "windows":
     guard let a = app(args[2]) else { print("起動していない"); exit(1) }
     for w in (attr(a, kAXWindowsAttribute) as? [AXUIElement]) ?? [] { print(attr(w, kAXTitleAttribute) as? String ?? "(題名なし)") }

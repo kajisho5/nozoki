@@ -218,6 +218,71 @@ if [ -n "$R" ] && [ "$R" != "見つからない" ]; then
 fi
 quit
 
+# 10) 0.4.0 の機能：リンクのままのぞく、中の zip を開く、壊れていないかの確認、中で名前変更
+T="swift scripts/ui-test.swift"
+LOG="$OUT/ui-test.log"
+quit
+defaults delete $ID 2>/dev/null; defaults write $ID hasSeenWelcome -bool true
+osascript -e 'tell application "Finder" to close every window' 2>/dev/null || true
+rm -rf ~/zp-web && mkdir -p ~/zp-web && cp samples/sample-mac.zip ~/zp-web/web-sample.zip
+python3 scripts/range-server.py ~/zp-web 8765 > /dev/null 2>&1 &
+SERVER=$!
+sleep 1
+printf 'http://127.0.0.1:8765/web-sample.zip' | pbcopy
+open -a "$APP"; sleep 5
+$T press $ID "Look Inside a Link…" "リンクのままのぞく…" | tee -a "$LOG"
+shot "test-7-link-dialog" 2
+$T press $ID "Look Inside" "中身を見る" | tee -a "$LOG"
+sleep 5
+$T windows $ID | tee "$OUT/ui-test-windows-3.txt"
+if grep -q "web-sample.zip" "$OUT/ui-test-windows-3.txt"; then echo "合格: リンクのまま zip の中身を開けた" | tee -a "$LOG"
+else echo "不合格: リンクのまま開けなかった" | tee -a "$LOG"; fi
+shot "test-8-link-window" 1
+kill $SERVER 2>/dev/null
+quit
+
+# 中の zip を開く（ダブルクリック）
+rm -rf ~/Desktop/zp-nest && mkdir -p ~/Desktop/zp-nest
+(cd samples && "$Z" a -bso0 -bsp0 ~/Desktop/zp-nest/outer.zip sample-mac.zip)
+open -a "$APP" ~/Desktop/zp-nest/outer.zip; sleep 5
+$T move $ID 0 40 900 600
+P=$($T pos $ID sample-mac.zip); echo "中の zip の行: $P" | tee -a "$LOG"
+if [ -n "$P" ] && [ "$P" != "見つからない" ]; then
+  # shellcheck disable=SC2086
+  $T doubleclick $P; sleep 6
+  $T windows $ID | tee "$OUT/ui-test-windows-4.txt"
+  if grep -q "^sample-mac.zip" "$OUT/ui-test-windows-4.txt"; then echo "合格: 中の zip を、別の窓で開けた" | tee -a "$LOG"
+  else echo "不合格: 中の zip が開かなかった" | tee -a "$LOG"; fi
+  shot "test-9-nested" 1
+fi
+quit
+
+# 壊れていないかの確認と、中で名前変更
+rm -rf ~/Desktop/zp-tool && mkdir -p ~/Desktop/zp-tool && cp samples/sample-mac.zip ~/Desktop/zp-tool/tool.zip
+open -a "$APP" ~/Desktop/zp-tool/tool.zip; sleep 5
+$T move $ID 0 40 900 600
+$T press $ID "More" "その他" | tee -a "$LOG"; sleep 1
+$T press $ID "Check for Damage" "壊れていないか確かめる" | tee -a "$LOG"
+sleep 6
+shot "test-10-verify" 1
+if $T has $ID "No Problems Found" "問題は見つかりませんでした" > /dev/null; then echo "合格: 壊れていないかの確認で「問題なし」と出た" | tee -a "$LOG"
+else echo "不合格: 確認の結果が出なかった" | tee -a "$LOG"; fi
+$T key 36; sleep 1   # return で閉じる
+R=$($T pos $ID 撮影メモ.txt); echo "名前を変える行: $R" | tee -a "$LOG"
+if [ -n "$R" ] && [ "$R" != "見つからない" ]; then
+  # shellcheck disable=SC2086
+  $T click $R; sleep 1
+  $T press $ID "More" "その他" > /dev/null; sleep 1
+  $T press $ID "Rename…" "名前を変更…" | tee -a "$LOG"; sleep 2
+  $T key 0 cmd; $T type "台本.txt"; sleep 1
+  shot "test-11-rename" 1
+  $T key 36; sleep 6
+  if LC_ALL=en_US.UTF-8 "$Z" l -ba ~/Desktop/zp-tool/tool.zip | grep -q "台本.txt"; then echo "合格: 中で名前を変えられた" | tee -a "$LOG"
+  else echo "不合格: 名前が変わらなかった" | tee -a "$LOG"; fi
+  LC_ALL=en_US.UTF-8 "$Z" l -ba ~/Desktop/zp-tool/tool.zip | tee -a "$LOG"
+fi
+quit
+
 # 6) アイコンの各見た目（Xcode付属の Icon Composer の道具で描く）
 ICTOOL="$(xcode-select -p)/../Applications/Icon Composer.app/Contents/Executables/ictool"
 if [ -x "$ICTOOL" ]; then
