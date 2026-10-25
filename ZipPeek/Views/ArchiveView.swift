@@ -157,6 +157,8 @@ private struct ArchiveToolbar: ToolbarContent {
             .help(String(localized: "Temporarily extract and show the selected file (or press Space)"))
             .disabled(!model.selectedItems.contains { !$0.isFolder } || model.extraction != nil)
 
+            MoreMenu(model: model)
+
             Button {
                 model.extractSelection()
             } label: {
@@ -168,6 +170,27 @@ private struct ArchiveToolbar: ToolbarContent {
             .help(String(localized: "Save the selected files and folders, or everything if nothing is selected"))
             .disabled(model.visibleItems.isEmpty || model.extraction != nil)
         }
+    }
+}
+
+/// そのほかの操作（名前を変える、既定のアプリで開く、壊れていないか確かめる）
+private struct MoreMenu: View {
+    @Bindable var model: ArchiveModel
+
+    var body: some View {
+        Menu {
+            let one = model.selectedItems.count == 1 ? model.selectedItems.first : nil
+            Button(String(localized: "Open in Default App")) { if let one { model.openInDefaultApp(one) } }
+                .disabled(one == nil || one?.isFolder == true || model.extraction != nil)
+            Button(String(localized: "Rename…")) { model.requestRename() }
+                .disabled(!model.canRename)
+            Divider()
+            Button(String(localized: "Check for Damage")) { model.verify() }
+                .disabled(model.isRemote || model.verifying || model.extraction != nil || model.editing != nil)
+        } label: {
+            Label(String(localized: "More"), systemImage: "ellipsis.circle")
+        }
+        .help(String(localized: "Rename, open in another app, or check the archive for damage"))
     }
 }
 
@@ -241,7 +264,11 @@ private struct FileTable: View {
         .contextMenu(forSelectionType: ArchiveItem.ID.self) { ids in
             let chosen = items.filter { ids.contains($0.id) }
             if chosen.count == 1, let one = chosen.first, !one.isFolder {
+                if ArchiveKind.isArchive(URL(fileURLWithPath: one.name)) {
+                    Button(String(localized: "Look Inside")) { model.openNested(one) }
+                }
                 Button(String(localized: "Preview")) { model.preview(one) }
+                Button(String(localized: "Open in Default App")) { model.openInDefaultApp(one) }
             }
             if !chosen.isEmpty {
                 Button(String(localized: "Extract…")) {
@@ -249,6 +276,13 @@ private struct FileTable: View {
                     model.extractSelection()
                 }
                 Divider()
+                if chosen.count == 1, let one = chosen.first {
+                    Button(String(localized: "Rename…")) {
+                        model.selection = Set(ids)
+                        model.requestRename(one)
+                    }
+                    .disabled(model.editBlocker != nil || (model.listing?.namesNeedConversion ?? false))
+                }
                 Button(String(localized: "Delete from Archive…"), role: .destructive) {
                     model.selection = Set(ids)
                     model.requestDelete()

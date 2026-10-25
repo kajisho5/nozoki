@@ -26,11 +26,8 @@ struct CompressSheetView: View {
             }
 
             Form {
-                Picker(String(localized: "Format"), selection: $options.format) {
-                    Text(verbatim: "zip").tag(CompressOptions.Format.zip)
-                    Text(verbatim: "7z").tag(CompressOptions.Format.sevenZip)
-                }
-                .pickerStyle(.segmented)
+                FormatPicker(format: $options.format)
+                Text(options.format.explanation).font(.caption).foregroundStyle(.secondary)
 
                 Picker(String(localized: "Compression Level"), selection: $options.level) {
                     Text(String(localized: "Faster")).tag(CompressOptions.Level.fast)
@@ -39,6 +36,7 @@ struct CompressSheetView: View {
                 }
                 .pickerStyle(.segmented)
 
+                if options.format.supportsPassword {
                 SecureField(String(localized: "Password"), text: $options.password,
                             prompt: Text(String(localized: "Leave empty for none")))
                 if options.format == .zip && !options.password.isEmpty {
@@ -64,6 +62,7 @@ struct CompressSheetView: View {
                         TextField(String(localized: "Size of each part"), value: $customSplitMB, format: .number)
                         Text(verbatim: "MB").foregroundStyle(.secondary)
                     }
+                }
                 }
 
                 if options.format == .zip {
@@ -116,6 +115,7 @@ struct CompressSheetView: View {
         case .custom: o.splitSize = UInt64(max(1, customSplitMB) * 1_000_000)
         }
         if o.format != .zip { o.windowsNames = false }
+        if !o.format.supportsPassword { o.password = ""; o.splitSize = nil }
         // 標準設定として覚える（パスワードは覚えない）
         var saved = o
         saved.password = ""
@@ -162,5 +162,40 @@ struct PasswordView: View {
         .padding(.top, 10)
         .frame(width: 360)
         .onAppear { focused = true }
+    }
+}
+
+/// 圧縮の形式を選ぶ（よく使う順。zstd は、その Mac で作れるときだけ出す）
+struct FormatPicker: View {
+    @Binding var format: CompressOptions.Format
+
+    var body: some View {
+        Picker(String(localized: "Format"), selection: $format) {
+            Text(verbatim: "zip").tag(CompressOptions.Format.zip)
+            Text(verbatim: "7z").tag(CompressOptions.Format.sevenZip)
+            Divider()
+            Text(verbatim: "tar.gz").tag(CompressOptions.Format.tarGz)
+            Text(verbatim: "tar.xz").tag(CompressOptions.Format.tarXz)
+            Text(verbatim: "tar.bz2").tag(CompressOptions.Format.tarBz2)
+            if LibArchive.canWrite(.zstd) {
+                Text(verbatim: "tar.zst").tag(CompressOptions.Format.tarZst)
+            }
+            Text(verbatim: "tar").tag(CompressOptions.Format.tar)
+            Divider()
+            Text(String(localized: "dmg (Mac disk image)")).tag(CompressOptions.Format.dmg)
+        }
+    }
+}
+
+extension CompressOptions.Format {
+    /// 選んだ形式の一言説明
+    var explanation: String {
+        switch self {
+        case .zip: String(localized: "Opens on any computer without extra software.")
+        case .sevenZip: String(localized: "Smallest files. Can hide file names with a password.")
+        case .tarGz, .tarXz, .tarBz2, .tarZst, .tar:
+            String(localized: "Common on Mac and Linux. Keeps permissions. No password or splitting.")
+        case .dmg: String(localized: "A Mac disk image. Opens by double-clicking on any Mac.")
+        }
     }
 }

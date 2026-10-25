@@ -116,10 +116,7 @@ private struct CompressSettings: View {
     var body: some View {
         Form {
             Toggle(String(localized: "Ask for settings every time"), isOn: $prefs.askBeforeCompress)
-            Picker(String(localized: "Format"), selection: $prefs.compressDefaults.format) {
-                Text(verbatim: "zip").tag(CompressOptions.Format.zip)
-                Text(verbatim: "7z").tag(CompressOptions.Format.sevenZip)
-            }
+            FormatPicker(format: $prefs.compressDefaults.format)
             Picker(String(localized: "Compression Level"), selection: $prefs.compressDefaults.level) {
                 Text(String(localized: "Faster")).tag(CompressOptions.Level.fast)
                 Text(String(localized: "Normal")).tag(CompressOptions.Level.normal)

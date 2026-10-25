@@ -23,7 +23,8 @@ final class WindowManager: NSObject, NSWindowDelegate {
     /// 終了時に開いていた窓を覚える（Macの設定で「終了時にウインドウを閉じる」がオンなら覚えない）
     func saveOpenArchiveWindows() {
         let keepWindows = UserDefaults.standard.bool(forKey: "NSQuitAlwaysKeepsWindows")
-        let paths = keepWindows ? archiveWindows.keys.map(\.path) : []
+        // 手元の圧縮ファイルだけ覚える（リンクや、中から開いた一時ファイルは覚えない）
+        let paths = keepWindows ? archiveWindows.filter { $0.key.isFileURL && !$0.value.model.isNested }.map(\.key.path) : []
         UserDefaults.standard.set(paths, forKey: openArchivesKey)
     }
 
@@ -35,13 +36,14 @@ final class WindowManager: NSObject, NSWindowDelegate {
         }
     }
 
-    func open(_ rawURL: URL) {
-        let url = ArchiveKind.firstVolume(of: rawURL).standardizedFileURL
+    func open(_ rawURL: URL, nested: Bool = false) {
+        let url = rawURL.isFileURL ? ArchiveKind.firstVolume(of: rawURL).standardizedFileURL : rawURL
         if let existing = archiveWindows[url] {
             existing.window.makeKeyAndOrderFront(nil)
             return
         }
         let model = ArchiveModel(url: url)
+        model.isNested = nested
         let host = NSHostingController(rootView: ArchiveView(model: model))
         host.sizingOptions = []
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 640),
@@ -51,7 +53,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
         window.setContentSize(NSSize(width: 1000, height: 640))
         window.contentMinSize = NSSize(width: 760, height: 460)
         window.title = url.lastPathComponent
-        window.representedURL = url
+        if url.isFileURL && !nested { window.representedURL = url }
         // ツールバーは SwiftUI 側（ArchiveView の .toolbar）から作る
         window.toolbarStyle = .unified
         window.isReleasedWhenClosed = false
@@ -65,8 +67,38 @@ final class WindowManager: NSObject, NSWindowDelegate {
         archiveWindows[url] = (window, model)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        NSDocumentController.shared.noteNewRecentDocumentURL(url)
+        if url.isFileURL && !nested { NSDocumentController.shared.noteNewRecentDocumentURL(url) }
         model.load()
+    }
+
+    /// メニュー「リンクのままのぞく…」：zip のリンクを貼ると、ダウンロードせずに中身を見る窓で開く
+    func openLink() {
+        let a = NSAlert()
+        a.messageText = String(localized: "Look Inside a Link")
+        a.informativeText = String(localized: "Paste a link to a ZIP file. ZipPeek reads only its table of contents, so you can see what’s inside and download just the files you need.")
+        let field = NSTextField(string: "")
+        field.placeholderString = "https://example.com/files.zip"
+        field.frame = NSRect(x: 0, y: 0, width: 360, height: 24)
+        field.setAccessibilityLabel(String(localized: "Link"))
+        // クリップボードにリンクがあれば入れておく
+        if let s = NSPasteboard.general.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines),
+           s.hasPrefix("http://") || s.hasPrefix("https://"), !s.contains(" ") {
+            field.stringValue = s
+        }
+        a.accessoryView = field
+        a.addButton(withTitle: String(localized: "Look Inside"))
+        a.addButton(withTitle: String(localized: "Cancel"))
+        a.window.initialFirstResponder = field
+        guard a.runModal() == .alertFirstButtonReturn else { return }
+        let text = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: text), let scheme = url.scheme?.lowercased(), scheme == "https" || scheme == "http" else {
+            let e = NSAlert()
+            e.messageText = String(localized: "That Link Can’t Be Opened")
+            e.informativeText = RemoteZip.Failure.badURL.localizedDescription
+            e.runModal()
+            return
+        }
+        open(url)
     }
 
     /// メニュー「中身を見る…」：圧縮ファイルを選んで中身を見る窓で開く

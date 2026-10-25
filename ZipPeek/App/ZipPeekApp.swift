@@ -19,6 +19,8 @@ struct ZipPeekApp: App {
                     .keyboardShortcut("o")
                 Button(String(localized: "Look Inside…")) { WindowManager.shared.showBrowsePanel() }
                     .keyboardShortcut("o", modifiers: [.command, .shift])
+                Button(String(localized: "Look Inside a Link…")) { WindowManager.shared.openLink() }
+                    .keyboardShortcut("l", modifiers: [.command, .shift])
             }
             // 「表示」メニュー（サイドバー・ツールバーの表示切り替え）
             SidebarCommands()

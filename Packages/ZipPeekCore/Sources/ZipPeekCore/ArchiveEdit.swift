@@ -3,7 +3,7 @@ import Foundation
 /// 今ある圧縮ファイル（zip・7z）に、ファイルを足したり消したりする。中身の処理は7-Zipに任せる。
 public enum ArchiveEdit {
     public enum Failure: LocalizedError, Equatable {
-        case unsupportedFormat, splitArchive, encrypted, legacyNames, readOnly, nothingDeleted, badName, nameExists, itemMissing
+        case unsupportedFormat, splitArchive, encrypted, legacyNames, readOnly, nothingDeleted, badName, nameExists, itemMissing, remoteLink, nested
         public var errorDescription: String? {
             switch self {
             case .unsupportedFormat: tr("足したり消したりできるのは zip と 7z だけです。", "Only ZIP and 7z archives can be changed.")
@@ -11,6 +11,8 @@ public enum ArchiveEdit {
             case .encrypted: tr("パスワード付きの圧縮ファイルは変更できません。", "Password-protected archives can’t be changed.")
             case .legacyNames: tr("Windowsで作られた名前のzipからは削除できません（追加はできます）。", "Items can’t be deleted from a ZIP with Windows-style names (adding works).")
             case .readOnly: tr("この圧縮ファイルは書き込みできない場所にあります。", "This archive is in a location you can’t write to.")
+            case .remoteLink: tr("リンクのままのぞいている圧縮ファイルは変更できません。", "An archive opened from a link can’t be changed.")
+            case .nested: tr("圧縮ファイルの中の圧縮ファイルは変更できません。いったん取り出してから開いてください。", "An archive inside another archive can’t be changed. Extract it first.")
             case .itemMissing: tr("その項目が圧縮ファイルの中に見つかりませんでした。", "That item wasn’t found in the archive.")
             case .badName: tr("その名前は使えません（「/」は入れられません）。", "That name can’t be used (it can’t contain “/”).")
             case .nameExists: tr("同じ名前のものが、すでに同じ場所にあります。", "An item with that name already exists there.")
@@ -106,9 +108,12 @@ public enum ArchiveEdit {
         // 同じ名前がすでにあるときは変えない（上書きで消えるのを防ぐ）
         if entries.contains(where: { nfc($0) == nfc(target) || nfc($0).hasPrefix(nfc(target) + "/") }) { throw Failure.nameExists }
         var pairs: [String] = []
+        // 一覧の名前と、保存されている名前の形（濁点が分かれているか）が違っても見つけられるよう NFC で比べる
+        let f = nfc(from)
         for e in entries {
-            if e == from { pairs += [e, target] }
-            else if e.hasPrefix(from + "/") { pairs += [e, target + e.dropFirst(from.count)] }
+            let n = nfc(e)
+            if n == f { pairs += [e, target] }
+            else if n.hasPrefix(f + "/") { pairs += [e, target + n.dropFirst(f.count)] }
         }
         guard !pairs.isEmpty else { throw Failure.itemMissing }
         try sevenZip.run(["rn", "-sccUTF-8", "-bsp1", "-bso0", "-bse2", archive.standardizedFileURL.path] + pairs, password: nil)

@@ -1,4 +1,5 @@
 import AppKit
+import CryptoKit
 import Foundation
 import Observation
 import ZipPeekCore
@@ -21,8 +22,10 @@ final class ArchiveModel {
         var destinationLabel: String
         let startedAt = Date()
         let cancel = CancelFlag()
-        /// プレビュー用の取り出し（終わったら自動でプレビューを開く）
-        let isForPreview: Bool
+        /// 何のための取り出しか
+        let purpose: Purpose
+        /// 一時的な取り出し（プレビュー・中の圧縮ファイル・既定のアプリで開く）。小さければ進み具合を出さない
+        var isForPreview: Bool { purpose != .save }
 
         var remainingSeconds: Double? {
             let elapsed = Date().timeIntervalSince(startedAt)
@@ -31,7 +34,15 @@ final class ArchiveModel {
         }
     }
 
+    /// 取り出しの目的
+    enum Purpose: Equatable { case save, preview, openNested, edit }
+
     let url: URL
+    /// リンクのままのぞいている zip（url が https のとき）
+    private(set) var remote: RemoteZip?
+    var isRemote: Bool { url.scheme == "http" || url.scheme == "https" }
+    /// 別の圧縮ファイルの中から開いた圧縮ファイル（一時フォルダにある）
+    var isNested = false
     var state: LoadState = .loading
     var listing: ArchiveListing?
     var loadSeconds: Double = 0
@@ -67,12 +78,29 @@ final class ArchiveModel {
         let choice = encodingChoice
         let pw = password
         let sevenZip = SevenZip.bundled()
+        let isRemote = self.isRemote
+        let loadedRemote = remote
         Task {
             let start = Date()
             let result: Result<ArchiveListing, Error> = await Task.detached(priority: .userInitiated) {
+                if isRemote {
+                    // リンクの先の zip：末尾と目次だけを取り寄せる
+                    do {
+                        let r = try loadedRemote ?? RemoteZip(url: url)
+                        if loadedRemote == nil { try r.load() }
+                        await MainActor.run { self.remote = r }
+                        return .success(ArchiveListing.build(entries: r.entries, encoding: choice))
+                    } catch {
+                        return .failure(error)
+                    }
+                }
                 // zipはまず自前で目次を読む（30GBでも一瞬）。だめなら7-Zipに一覧を頼む
                 if ArchiveKind.isZip(url), let listing = try? ArchiveListing.load(url: url, encoding: choice) {
                     return .success(listing)
+                }
+                if LibArchive.handles(url) {
+                    // 7-Zip が読めない zstd・lzip は OS の libarchive で
+                    do { return .success(ArchiveListing.build(raw: try LibArchive.entries(url))) } catch { return .failure(error) }
                 }
                 guard let sevenZip else { return .failure(SevenZipError.notFound) }
                 do {
@@ -141,9 +169,27 @@ final class ArchiveModel {
             search = ""
             folderPath = item.path
             selection.removeAll()
+        } else if ArchiveKind.isArchive(URL(fileURLWithPath: item.name)) {
+            openNested(item)
         } else {
             preview(item)
         }
+    }
+
+    /// 中の圧縮ファイルを、その中身を見る窓で開く（一時フォルダに取り出してから）
+    func openNested(_ item: ArchiveItem) {
+        guard !item.isFolder else { return }
+        let folder = TempFiles.newFolder()
+        tempFolders.append(folder)
+        startExtraction([item], to: folder, purpose: .openNested)
+    }
+
+    /// 既定のアプリで開く。保存されたら、圧縮ファイルに書き戻すか聞く
+    func openInDefaultApp(_ item: ArchiveItem) {
+        guard !item.isFolder else { return }
+        let folder = TempFiles.newFolder()
+        tempFolders.append(folder)
+        startExtraction([item], to: folder, purpose: .edit, editedItem: item)
     }
 
     func goUp() {
@@ -168,17 +214,17 @@ final class ArchiveModel {
             : String(localized: "Choose where to save \(items.count) items")
         panel.directoryURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
         guard panel.runModal() == .OK, let dest = panel.url else { return }
-        startExtraction(items, to: dest, forPreview: false)
+        startExtraction(items, to: dest, purpose: .save)
     }
 
     func preview(_ item: ArchiveItem) {
         guard !item.isFolder else { return }
         let folder = TempFiles.newFolder()
         tempFolders.append(folder)
-        startExtraction([item], to: folder, forPreview: true)
+        startExtraction([item], to: folder, purpose: .preview)
     }
 
-    func startExtraction(_ items: [ArchiveItem], to destination: URL, forPreview: Bool) {
+    func startExtraction(_ items: [ArchiveItem], to destination: URL, purpose: Purpose, editedItem: ArchiveItem? = nil) {
         guard let listing, extraction == nil else { return }
         let files = listing.files(for: items)
         guard !files.isEmpty else { return }
@@ -189,13 +235,14 @@ final class ArchiveModel {
         }
         let state = Extraction(totalBytes: total, fileTotal: files.count,
                                currentName: files.count == 1 ? files[0].item.name : String(localized: "\(files.count) items"),
-                               destinationLabel: Self.displayPath(destination), isForPreview: forPreview)
+                               destinationLabel: Self.displayPath(destination), purpose: purpose)
         extraction = state
         let cancel = state.cancel
         let zipURL = url
         let engine = self.engine
         // 暗号のない普通のzipは自前で（日本語Windowsの名前を正しく扱える）。それ以外は7-Zip
-        let native = listing.source == .zip && !files.contains { $0.item.isEncrypted }
+        let native = listing.source == .zip && !files.contains { $0.item.isEncrypted } && !isRemote
+        let remote = self.remote
         let progress: @Sendable (Double) -> Void = { p in
             Task { @MainActor in self.extraction?.progress = max(self.extraction?.progress ?? 0, p) }
         }
@@ -207,6 +254,17 @@ final class ArchiveModel {
                 do {
                     let passwordNow = pw
                     let written: [URL] = try await Task.detached(priority: .userInitiated) {
+                        if let remote {
+                            // リンクの先から、選んだファイルの部分だけを取り寄せる
+                            var out: [URL] = []
+                            for (n, f) in files.enumerated() {
+                                guard let index = f.item.entryIndex else { continue }
+                                out.append(try remote.extract(remote.entries[index], as: f.relativePath, into: destination,
+                                                              isCancelled: { cancel.isCancelled }))
+                                progress(Double(n + 1) / Double(files.count))
+                            }
+                            return out
+                        }
                         if native {
                             let jobs = files.compactMap { f -> Extractor.Job? in
                                 guard let index = f.item.entryIndex else { return nil }
@@ -222,10 +280,15 @@ final class ArchiveModel {
                     }.value
                     self.password = pw
                     self.extraction = nil
-                    if forPreview {
-                        self.previewURL = written.first
-                    } else if !written.isEmpty {
-                        NSWorkspace.shared.activateFileViewerSelecting(written)
+                    switch purpose {
+                    case .preview: self.previewURL = written.first
+                    case .save: if !written.isEmpty { NSWorkspace.shared.activateFileViewerSelecting(written) }
+                    case .openNested: if let inner = written.first { WindowManager.shared.open(inner, nested: true) }
+                    case .edit:
+                        if let file = written.first, let editedItem {
+                            self.watch(file, for: editedItem)
+                            NSWorkspace.shared.open(file)
+                        }
                     }
                     break
                 } catch SevenZipError.needsPassword, SevenZipError.wrongPassword {
@@ -255,6 +318,8 @@ final class ArchiveModel {
 
     /// 変更できない理由（できるなら nil）
     var editBlocker: ArchiveEdit.Failure? {
+        if isRemote { return .remoteLink }
+        if isNested { return .nested }
         let encrypted = listing?.allFiles.contains(where: \.isEncrypted) ?? false
         return ArchiveEdit.check(url, encrypted: encrypted || password != nil)
     }
@@ -333,6 +398,160 @@ final class ArchiveModel {
         }
     }
 
+    // MARK: 名前を変える
+
+    var canRename: Bool {
+        editBlocker == nil && !(listing?.namesNeedConversion ?? false) && selectedItems.count == 1 && editing == nil && extraction == nil
+    }
+
+    func requestRename(_ item: ArchiveItem? = nil) {
+        guard let item = item ?? selectedItems.first, editing == nil, extraction == nil else { return }
+        if let blocker = editBlocker ?? ((listing?.namesNeedConversion ?? false) ? .legacyNames : nil) {
+            errorTitle = String(localized: "Couldn’t Rename")
+            errorMessage = blocker.localizedDescription
+            return
+        }
+        let a = NSAlert()
+        a.messageText = String(localized: "Rename “\(item.name)”")
+        a.informativeText = String(localized: "The name is changed inside the archive.")
+        let field = NSTextField(string: item.name)
+        field.frame = NSRect(x: 0, y: 0, width: 280, height: 24)
+        field.setAccessibilityLabel(String(localized: "New name"))
+        a.accessoryView = field
+        a.addButton(withTitle: String(localized: "Rename"))
+        a.addButton(withTitle: String(localized: "Cancel"))
+        a.window.initialFirstResponder = field
+        // 拡張子の手前までを選んでおく（Finder と同じ）
+        DispatchQueue.main.async {
+            let stem = (item.name as NSString).deletingPathExtension
+            field.currentEditor()?.selectedRange = NSRange(location: 0, length: item.isFolder ? item.name.utf16.count : stem.utf16.count)
+        }
+        guard a.runModal() == .alertFirstButtonReturn else { return }
+        let newName = field.stringValue
+        guard newName != item.name else { return }
+        let archive = url
+        let from = item.archivePath ?? item.path
+        runEdit(label: String(localized: "Renaming…")) { sevenZip in
+            try ArchiveEdit.rename(from, to: newName, in: archive, sevenZip: sevenZip)
+        }
+    }
+
+    // MARK: 壊れていないか確かめる
+
+    var verifying = false
+
+    func verify() {
+        guard !isRemote, !verifying, extraction == nil, editing == nil, let sevenZip = SevenZip.bundled() else { return }
+        verifying = true
+        editing = String(localized: "Checking…")
+        let archive = url
+        Task {
+            var pw = self.password
+            var wrong = false
+            while true {
+                let passwordNow = pw
+                let outcome: Result<(ArchiveTest.Result, String), Error> = await Task.detached(priority: .userInitiated) {
+                    do {
+                        let r = try ArchiveTest.run(archive, password: passwordNow, sevenZip: sevenZip)
+                        return .success((r, Self.sha256(of: archive) ?? ""))
+                    } catch { return .failure(error) }
+                }.value
+                switch outcome {
+                case .failure(let e as SevenZipError) where e == .needsPassword || e == .wrongPassword:
+                    if pw != nil { wrong = true }
+                    guard let entered = await WindowManager.shared.askPassword(for: archive.lastPathComponent, wasWrong: wrong) else {
+                        editing = nil; verifying = false; return
+                    }
+                    pw = entered
+                    continue
+                case .failure(let e):
+                    editing = nil; verifying = false
+                    errorTitle = String(localized: "Couldn’t Check")
+                    errorMessage = e.localizedDescription
+                    return
+                case .success(let (result, hash)):
+                    editing = nil; verifying = false
+                    self.password = pw ?? self.password
+                    showVerifyResult(result, hash: hash)
+                    return
+                }
+            }
+        }
+    }
+
+    private func showVerifyResult(_ result: ArchiveTest.Result, hash: String) {
+        let a = NSAlert()
+        a.alertStyle = result.ok ? .informational : .critical
+        a.messageText = result.ok ? String(localized: "No Problems Found") : String(localized: "This Archive Is Damaged")
+        var info = result.ok
+            ? String(localized: "Every file was read and its checksum matched. Nothing was written to disk.")
+            : String(localized: "Some files can’t be read correctly. Ask the sender to send it again.") + "\n\n" + result.detail
+        if !hash.isEmpty { info += "\n\nSHA-256\n" + hash }
+        a.informativeText = info
+        a.addButton(withTitle: "OK")
+        if !hash.isEmpty { a.addButton(withTitle: String(localized: "Copy SHA-256")) }
+        if a.runModal() == .alertSecondButtonReturn {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(hash, forType: .string)
+        }
+    }
+
+    /// ファイル全体の SHA-256（相手が公開している値と見比べるため）
+    nonisolated static func sha256(of url: URL) -> String? {
+        guard let h = try? FileHandle(forReadingFrom: url) else { return nil }
+        defer { try? h.close() }
+        var hasher = SHA256()
+        while let chunk = try? h.read(upToCount: 4 << 20), !chunk.isEmpty { hasher.update(data: chunk) }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    // MARK: 既定のアプリで直したら書き戻す
+
+    private struct Watched { let item: ArchiveItem; var modified: Date; var asking = false }
+    private var watched: [URL: Watched] = [:]
+    private var watchTimer: Timer?
+
+    private func watch(_ file: URL, for item: ArchiveItem) {
+        let date = (try? file.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+        watched[file] = Watched(item: item, modified: date)
+        guard watchTimer == nil else { return }
+        // 保存のしかたはアプリによって違う（上書き・置き換え）ので、変更日時を見張る
+        watchTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.checkWatched() }
+        }
+    }
+
+    private func checkWatched() {
+        for (file, w) in watched where !w.asking {
+            guard let date = try? file.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate,
+                  date > w.modified else { continue }
+            watched[file]?.modified = date
+            watched[file]?.asking = true
+            askWriteBack(file, item: w.item)
+        }
+    }
+
+    private func askWriteBack(_ file: URL, item: ArchiveItem) {
+        defer { watched[file]?.asking = false }
+        if let blocker = editBlocker {
+            errorTitle = String(localized: "Changes Can’t Be Saved to the Archive")
+            errorMessage = blocker.localizedDescription + "\n" + String(localized: "Your edited copy is here: \(Self.displayPath(file))")
+            return
+        }
+        let a = NSAlert()
+        a.messageText = String(localized: "Update “\(item.name)” in “\(url.lastPathComponent)”?")
+        a.informativeText = String(localized: "You saved changes to this file. ZipPeek can put the new version back into the archive.")
+        a.addButton(withTitle: String(localized: "Update"))
+        a.addButton(withTitle: String(localized: "Not Now"))
+        NSApp.activate(ignoringOtherApps: true)
+        guard a.runModal() == .alertFirstButtonReturn else { return }
+        let archive = url
+        let folder = item.parentPath
+        runEdit(label: String(localized: "Updating…")) { sevenZip in
+            try ArchiveEdit.add([file], to: archive, inFolder: folder, sevenZip: sevenZip)
+        }
+    }
+
     private func runEdit(label: String, _ work: @escaping @Sendable (SevenZip) throws -> Void) {
         guard let sevenZip = SevenZip.bundled() else { return }
         editing = label
@@ -351,6 +570,9 @@ final class ArchiveModel {
     }
 
     func close() {
+        watchTimer?.invalidate()
+        watchTimer = nil
+        watched.removeAll()
         extraction?.cancel.cancel()
         password = nil
         for folder in tempFolders { try? FileManager.default.removeItem(at: folder) }
@@ -369,7 +591,8 @@ final class ArchiveModel {
         let type = FileIcon.contentType(for: item.fileExtension)
         let zipURL = url
         let files = listing.files(for: [item])
-        let native = listing.source == .zip && !item.isEncrypted
+        let native = listing.source == .zip && !item.isEncrypted && !isRemote
+        let remote = self.remote
         let pw = password
         let engine = self.engine
         let folder = TempFiles.newFolder()
@@ -379,7 +602,10 @@ final class ArchiveModel {
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     let written: [URL]
-                    if native, let index = item.entryIndex {
+                    if let remote, let index = item.entryIndex {
+                        written = [try remote.extract(remote.entries[index], as: item.name, into: folder,
+                                                      isCancelled: { progress.isCancelled })]
+                    } else if native, let index = item.entryIndex {
                         let job = Extractor.Job(entryIndex: index, name: item.name, size: item.size, isEncrypted: false, relativePath: item.name)
                         written = try Extractor(zipURL: zipURL).extract([job], into: folder, onProgress: { p in
                             if p.totalBytes > 0 { progress.completedUnitCount = Int64(Double(p.doneBytes) / Double(p.totalBytes) * 100) }
