@@ -91,9 +91,33 @@ print("zip を開くアプリ: " + (NSWorkspace.shared.urlForApplication(toOpen:
 SWIFT
 swift /tmp/setdef.swift "$APP" 2>&1 | tee "$OUT/default-app.log"
 shot "default-app-prompt" 1
-osascript -e "tell application \"Finder\" to open (POSIX file \"$PWD/samples/sample-mac.zip\")" 2>&1 | tee -a "$OUT/default-app.log" \
-  || open samples/sample-mac.zip
+# Mac の確認画面の「“ZipPeek”を使用」を押す（利用者が押すのと同じ。画面中央の上のボタン）
+cat > /tmp/click.swift <<'SWIFT'
+import CoreGraphics
+import Foundation
+let p = CGPoint(x: Double(CommandLine.arguments[1])!, y: Double(CommandLine.arguments[2])!)
+for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
+    CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap)
+    usleep(150_000)
+}
+SWIFT
+swift /tmp/click.swift 640 334 2>&1 | tee -a "$OUT/default-app.log"
+sleep 3
+cat > /tmp/getdef.swift <<'SWIFT'
+import AppKit
+import UniformTypeIdentifiers
+print("zip を開くアプリ（押した後）: " + (NSWorkspace.shared.urlForApplication(toOpen: .zip)?.path ?? "なし"))
+SWIFT
+swift /tmp/getdef.swift 2>&1 | tee -a "$OUT/default-app.log"
+shot "default-app-after" 1
+# Finder でダブルクリックしたのと同じ「開く」を Finder から送る
+osascript -e "tell application \"Finder\" to open (POSIX file \"$PWD/samples/sample-mac.zip\")" 2>&1 | tee -a "$OUT/default-app.log"
 shot "en-light-5-doubleclick" 6
+quit
+# 「このアプリケーションで開く」と同じ開き方（送り主は Dock 以外）でも、中身を見る窓が開くか
+defaults delete $ID 2>/dev/null
+open -a "$APP" samples/sample-win.zip
+shot "en-light-6-openwith" 6
 quit
 
 # 6) アイコンの各見た目（Xcode付属の Icon Composer の道具で描く）
