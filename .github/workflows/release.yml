@@ -79,6 +79,8 @@ jobs:
           name: ZipPeek-notarized
           path: dist
       - name: dmg と中のアプリを確かめる
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
         run: |
           set -euo pipefail
           dmg=$(ls dist/*.dmg)
@@ -90,6 +92,10 @@ jobs:
           ls -la "$mnt"
           test -L "$mnt/Applications"
           app="$mnt/ZipPeek.app"
+          # 版番号がリリースと同じか（アップデートの比較に使う）
+          got=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$app/Contents/Info.plist")
+          echo "アプリの版: $got / リリース: $VERSION"
+          [ "$got" = "$VERSION" ] || { echo "::error::アプリの版番号（${got}）がリリース（${VERSION}）と違う"; exit 1; }
           spctl -a -t exec -vv "$app"
           codesign --verify --strict --deep --verbose=2 "$app"
           codesign -dvv "$app" 2>&1 | tee /tmp/sig.txt

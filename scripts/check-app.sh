@@ -64,4 +64,12 @@ plutil -p "$LOC" | grep -F '"Extract All" => "すべて取り出す"'
 plutil -p "$LOC" | grep -F '"Compress %lld items" => "%lld 個の項目を圧縮"'
 echo "OK"
 
+echo "== 10. アプリの版番号が project.yml と同じか（アップデートの比較に使うため）"
+WANT=$(sed -n 's/^ *MARKETING_VERSION: *"\{0,1\}\([0-9.]*\)"\{0,1\}.*/\1/p' project.yml | head -1)
+GOT=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist")
+GOT_EXT=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APPEX/Contents/Info.plist")
+echo "project.yml: $WANT / アプリ: $GOT / 拡張: $GOT_EXT"
+[ "$GOT" = "$WANT" ] && [ "$GOT_EXT" = "$WANT" ]
+echo "OK"
+
 echo "すべて確認できました"

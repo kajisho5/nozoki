@@ -81,6 +81,7 @@ const en = {
     title: 'FAQ',
     items: [
       { q: 'Is it really free?', a: 'Yes. ZipPeek is open source under the MIT License.' },
+      { q: 'Does it update itself?', a: 'Yes, from version 0.2. ZipPeek checks once a day, asks before updating, and installs only updates signed by the same developer. Version 0.1.0 can’t do this, so please download the latest version once.' },
       { q: 'Why do I need to turn on the Space-key preview?', a: 'macOS asks you to approve new Quick Look extensions once. ZipPeek shows whether it’s on and opens System Settings for you.' },
       { q: 'Does the Space key work for 7z and rar?', a: 'The Space-key preview reads ZIP archives. Other formats open in the ZipPeek window: right-click → Look Inside with ZipPeek.' },
       { q: 'My ZIP came from Windows and the names look broken.', a: 'ZipPeek detects Shift_JIS names automatically. If the guess is wrong, switch it with File Name Encoding in the toolbar.' },
@@ -177,6 +178,7 @@ const ja: Text = {
     title: 'よくある質問',
     items: [
       { q: '本当に無料？', a: 'はい。MITライセンスのオープンソースです。' },
+      { q: 'アップデートは自動？', a: '0.2 からは自動で知らせます。1日に1回確認し、入れる前に聞き、同じ開発者の署名があるときだけ入れ替えます。0.1.0 にはこの機能がないので、一度だけ最新版を入れ直してください。' },
       { q: 'スペースキーの機能をオンにする必要があるのはなぜ？', a: '新しいクイックルックの部品は、最初に1回だけMacの設定で許可が必要です。ZipPeekが状態を表示し、設定画面も開きます。' },
       { q: '7zやrarもスペースキーで見られる？', a: 'スペースキーで見られるのはzipです。ほかの形式はZipPeekの窓で開けます（右クリック →「ZipPeekで中身を見る」）。' },
       { q: 'Windowsから来たzipの名前が化けている', a: '自動で判定しますが、外れたときはツールバーの「ファイル名の文字コード」で切り替えてください。' },

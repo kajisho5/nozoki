@@ -130,6 +130,9 @@ ZipPeek works entirely on your Mac. It has no accounts and no analytics, and it 
 
 ## FAQ
 
+**Does ZipPeek update itself?**
+Yes, from version 0.2 on. Once a day ZipPeek checks for a new version and asks before updating. It installs the update only if it's signed by the same developer, then restarts. You can turn this off in Settings → General, or check any time with **ZipPeek → Check for Updates…**. (Version 0.1.0 can't do this — please download the latest version once.)
+
 **Is it really free?**
 Yes. ZipPeek is open source under the MIT License.
 
