@@ -14,6 +14,6 @@ DerivedData/
 /Vendor/7zip/.version
 
 # CIで作るもの
-samples/
-shots/
-loc/
+/samples/
+/shots/
+/loc/
