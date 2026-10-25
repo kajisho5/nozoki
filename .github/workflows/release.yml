@@ -54,13 +54,13 @@ jobs:
           app="$mnt/ZipPeek.app"
           spctl -a -t exec -vv "$app"
           codesign --verify --strict --deep --verbose=2 "$app"
-          codesign -dv "$app" 2>&1 | tee /tmp/sig.txt
+          codesign -dvv "$app" 2>&1 | tee /tmp/sig.txt
           grep -q "Authority=Developer ID Application" /tmp/sig.txt
           grep -q "runtime" /tmp/sig.txt
           appex="$app/Contents/PlugIns/ZipPeekPreview.appex"
           codesign -d --entitlements - "$appex" 2>/dev/null | tee /tmp/ent.txt
           grep -q "com.apple.security.app-sandbox" /tmp/ent.txt
-          codesign -dv "$app/Contents/MacOS/7zz" 2>&1 | grep "Authority=Developer ID Application"
+          codesign -dvv "$app/Contents/MacOS/7zz" 2>&1 | grep "Authority=Developer ID Application"
           "$app/Contents/MacOS/7zz" i | head -1
           hdiutil detach "$mnt" > /dev/null
           echo "すべて確認できました"
