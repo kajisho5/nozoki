@@ -278,8 +278,10 @@ R=$($T pos $ID 撮影メモ.txt); echo "名前を変える行: $R" | tee -a "$LO
 if [ -n "$R" ] && [ "$R" != "見つからない" ]; then
   # shellcheck disable=SC2086
   $T click $R; sleep 1
-  $T press $ID "More" "その他" > /dev/null; sleep 1
+  $T press $ID "More" "その他" | tee -a "$LOG"; sleep 1
+  $T dump $ID > "$OUT/ax-more-menu.txt" 2>&1
   $T press $ID "Rename…" "名前を変更…" | tee -a "$LOG"; sleep 2
+  $T dump $ID > "$OUT/ax-rename.txt" 2>&1
   $T key 0 cmd; $T type "台本.txt"; sleep 1
   shot "test-11-rename" 1
   $T key 36; sleep 6

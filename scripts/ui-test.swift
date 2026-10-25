@@ -104,7 +104,9 @@ case "press":
         if hit != nil { break }
     }
     guard let e = hit else { print("見つからない"); exit(1) }
-    print(AXUIElementPerformAction(e, kAXPressAction as CFString) == .success ? "押した" : "押せなかった")
+    let role = attr(e, kAXRoleAttribute) as? String ?? "?"
+    let enabled = (attr(e, kAXEnabledAttribute) as? Bool).map { $0 ? "使える" : "使えない" } ?? "?"
+    print((AXUIElementPerformAction(e, kAXPressAction as CFString) == .success ? "押した" : "押せなかった") + "（\(role)・\(enabled)）")
 case "type":
     for ch in args[2].utf16 {
         for down in [true, false] {
@@ -135,7 +137,8 @@ case "dump":
         let role = attr(e, kAXRoleAttribute) as? String ?? "?"
         let bits = [kAXTitleAttribute, kAXDescriptionAttribute, kAXValueAttribute, kAXIdentifierAttribute]
             .compactMap { k -> String? in (attr(e, k) as? String).flatMap { $0.isEmpty ? nil : "\(k)=\($0)" } }
-        print(String(repeating: "  ", count: depth) + role + " " + bits.joined(separator: " "))
+        let en = (attr(e, kAXEnabledAttribute) as? Bool).map { $0 ? "" : " [使えない]" } ?? ""
+        print(String(repeating: "  ", count: depth) + role + " " + bits.joined(separator: " ") + en)
         for c in (attr(e, kAXChildrenAttribute) as? [AXUIElement]) ?? [] { walk(c, depth + 1) }
     }
     walk(w, 0)
