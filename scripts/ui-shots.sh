@@ -18,9 +18,10 @@ echo "== 画面の大きさ"; system_profiler SPDisplaysDataType | grep -i resol
 for LANG_CODE in ja en; do
   for LOOK in light dark; do
     reset
-    defaults write $ID appearance -string $LOOK
+    # ライト／ダークはMacの設定に合わせる作りなので、起動時にだけダークを指定して撮る
+    if [ $LOOK = dark ]; then STYLE=(-AppleInterfaceStyle Dark); else STYLE=(); fi
     # 1) 最初の窓（スペースキー機能の案内つき）
-    "$BIN" -AppleLanguages "($LANG_CODE)" &
+    "$BIN" -AppleLanguages "($LANG_CODE)" ${STYLE[@]+"${STYLE[@]}"} &
     shot "$LANG_CODE-$LOOK-1-drop" 6
     # 2) 中身を見る窓（Windowsで作った日本語名のzip）
     open -a "$APP" samples/sample-win.zip

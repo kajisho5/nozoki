@@ -42,7 +42,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var receivedFilesAtLaunch = false
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        Preferences.shared.applyAppearance()
         // Finderの右クリック（サービス）を受け取る
         NSApp.servicesProvider = ServiceProvider.shared
         NSUpdateDynamicServices()

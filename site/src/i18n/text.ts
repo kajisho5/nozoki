@@ -16,7 +16,7 @@ export const text = {
     more: [
       'パスワード（AES-256）・分割・圧縮率を選べる',
       'Mac専用の隠しファイル（.DS_Store など）を入れない',
-      'ライト／ダーク、ガラスの小窓にも切り替え',
+      'ライト／ダークはMacの設定に自動で合わせる。ガラスの小窓にも切り替え',
       '日本語・英語',
     ],
     shot: 'screen-ja.png',
@@ -52,7 +52,7 @@ export const text = {
     more: [
       'Passwords (AES-256), splitting and compression levels',
       'Leaves out Mac-only hidden files like .DS_Store',
-      'Light / dark, or a compact glass drop target',
+      'Follows your Mac’s light or dark setting; optional compact glass drop target',
       'Japanese and English',
     ],
     shot: 'screen-en.png',

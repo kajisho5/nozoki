@@ -23,7 +23,7 @@ Compress and extract on your Mac — and peek inside without extracting.
 - **たくさんの形式**：zip・7z・rar・tar・gz・bz2・xz・zst・iso・lzh・cab など（中身の処理に [7-Zip](https://www.7-zip.org/) を同梱）
 - **圧縮の設定**：zip・7z、パスワード（AES-256）、分割、圧縮率、Mac専用の隠しファイルを入れない
 - **文字化けしない**：日本語Windowsで作ったzip（Shift_JIS）の名前を自動判定。逆に、Windowsで文字化けしないzipも作れます
-- **見た目**：ライト／ダーク、標準の窓／ガラスの小窓を設定で切り替え（macOS 26以降はLiquid Glass）
+- **見た目**：ライト／ダークはMacの設定に自動で合わせます。標準の窓／ガラスの小窓は設定で切り替え（macOS 26以降はLiquid Glass）
 - **日本語・英語**：Macの言語設定に合わせて切り替わります
 
 ### 入れ方
@@ -55,7 +55,7 @@ macOS 14（Sonoma）以降、Apple シリコン / Intel
 - **Many formats**: zip, 7z, rar, tar, gz, bz2, xz, zst, iso, lzh, cab and more (powered by the bundled [7-Zip](https://www.7-zip.org/)).
 - **Compression options**: zip or 7z, AES-256 passwords, splitting, compression level, leave out Mac-only hidden files.
 - **No garbled names**: Japanese file names from Windows (Shift_JIS) are detected automatically, and you can create ZIPs that open cleanly on Japanese Windows.
-- **Your look**: light / dark, standard window or compact glass drop target (Liquid Glass on macOS 26+).
+- **Your look**: follows your Mac’s light or dark setting; choose a standard window or a compact glass drop target (Liquid Glass on macOS 26+).
 - **Japanese and English**, following your Mac's language.
 
 ### Install

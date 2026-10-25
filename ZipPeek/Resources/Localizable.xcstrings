@@ -474,17 +474,6 @@
         }
       }
     },
-    "Dark": {
-      "extractionState": "manual",
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ダーク"
-          }
-        }
-      }
-    },
     "Dismiss": {
       "extractionState": "manual",
       "localizations": {
@@ -914,28 +903,6 @@
         }
       }
     },
-    "Light": {
-      "extractionState": "manual",
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ライト"
-          }
-        }
-      }
-    },
-    "Light or Dark": {
-      "extractionState": "manual",
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ライト・ダーク"
-          }
-        }
-      }
-    },
     "Look Inside…": {
       "extractionState": "manual",
       "localizations": {
@@ -943,17 +910,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "中身を見る…"
-          }
-        }
-      }
-    },
-    "Match System": {
-      "extractionState": "manual",
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Macに合わせる"
           }
         }
       }

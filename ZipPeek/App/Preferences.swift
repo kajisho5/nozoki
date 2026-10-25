@@ -2,7 +2,8 @@ import AppKit
 import Observation
 import ZipPeekCore
 
-/// アプリの設定（Macの標準の設定保存 UserDefaults に保存する）。パスワードは保存しない
+/// アプリの設定。ライト／ダークはMacの設定に自動で合わせる（Appleの指針どおり、アプリ独自の切り替えは持たない）
+/// （Macの標準の設定保存 UserDefaults に保存する）。パスワードは保存しない
 @MainActor
 @Observable
 final class Preferences {
@@ -10,7 +11,6 @@ final class Preferences {
 
     enum ArchiveDropAction: String, CaseIterable { case extract, browse }
     enum ExtractDestination: String, CaseIterable { case sameFolder, ask }
-    enum Appearance: String, CaseIterable { case system, light, dark }
     enum DropStyle: String, CaseIterable { case window, compactGlass }
 
     private let d = UserDefaults.standard
@@ -29,7 +29,6 @@ final class Preferences {
     var compressDefaults: CompressOptions {
         didSet { if let data = try? JSONEncoder().encode(compressDefaults) { d.set(data, forKey: "compressDefaults") } }
     }
-    var appearance: Appearance { didSet { d.set(appearance.rawValue, forKey: "appearance"); applyAppearance() } }
     var dropStyle: DropStyle { didSet { d.set(dropStyle.rawValue, forKey: "dropStyle") } }
     var hasSeenWelcome: Bool { didSet { d.set(hasSeenWelcome, forKey: "hasSeenWelcome") } }
 
@@ -45,16 +44,8 @@ final class Preferences {
         } else {
             compressDefaults = CompressOptions()
         }
-        appearance = Appearance(rawValue: d.string(forKey: "appearance") ?? "") ?? .system
         dropStyle = DropStyle(rawValue: d.string(forKey: "dropStyle") ?? "") ?? .window
         hasSeenWelcome = d.bool(forKey: "hasSeenWelcome")
     }
 
-    func applyAppearance() {
-        switch appearance {
-        case .system: NSApp.appearance = nil
-        case .light: NSApp.appearance = NSAppearance(named: .aqua)
-        case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
-        }
-    }
 }

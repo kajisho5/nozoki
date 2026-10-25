@@ -56,13 +56,6 @@ private struct AppearanceSettings: View {
 
     var body: some View {
         Form {
-            Picker(String(localized: "Light or Dark"), selection: $prefs.appearance) {
-                Text(String(localized: "Match System")).tag(Preferences.Appearance.system)
-                Text(String(localized: "Light")).tag(Preferences.Appearance.light)
-                Text(String(localized: "Dark")).tag(Preferences.Appearance.dark)
-            }
-            .pickerStyle(.segmented)
-
             Section(String(localized: "Drop target and progress")) {
                 HStack(spacing: 16) {
                     StyleChoice(title: String(localized: "Standard (window)"), selected: prefs.dropStyle == .window) {
