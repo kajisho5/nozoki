@@ -36,11 +36,8 @@ test -x "$APP/Contents/MacOS/7zz"
 "$APP/Contents/MacOS/7zz" i | head -1
 test -f "$APP/Contents/Resources/7-Zip/License.txt"
 codesign --verify --strict "$APP/Contents/MacOS/7zz"
-# スペースキーの部品の中にも、サンドボックスを受け継ぐ設定の 7zz がある（単体では起動できないので中身は動かさない）
-test -x "$APPEX/Contents/MacOS/7zz"
-codesign --verify --strict "$APPEX/Contents/MacOS/7zz"
-codesign -d --entitlements - "$APPEX/Contents/MacOS/7zz" 2>/dev/null | tee /tmp/ent-7zz.txt
-grep -q "com.apple.security.inherit" /tmp/ent-7zz.txt
+# スペースキーの部品には 7zz を入れない（サンドボックスの中では起動できないため、libarchive で読む）
+test ! -e "$APPEX/Contents/MacOS/7zz"
 echo "OK"
 
 echo "== 6. 右クリック（サービス）と言語"

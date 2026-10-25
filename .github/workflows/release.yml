@@ -105,8 +105,6 @@ jobs:
           codesign -d --entitlements - "$appex" 2>/dev/null | tee /tmp/ent.txt
           grep -q "com.apple.security.app-sandbox" /tmp/ent.txt
           codesign -dvv "$app/Contents/MacOS/7zz" 2>&1 | grep "Authority=Developer ID Application"
-          codesign -dvv "$appex/Contents/MacOS/7zz" 2>&1 | grep "Authority=Developer ID Application"
-          codesign -d --entitlements - "$appex/Contents/MacOS/7zz" 2>/dev/null | grep -q "com.apple.security.inherit"
           "$app/Contents/MacOS/7zz" i | head -1
           hdiutil detach "$mnt" > /dev/null
           echo "すべて確認できました"
