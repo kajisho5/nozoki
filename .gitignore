@@ -1,0 +1,12 @@
+.DS_Store
+/build/
+/dist/
+*.xcodeproj
+/Nozoki/Info.plist
+/NozokiPreview/Info.plist
+.build/
+.swiftpm/
+Packages/NozokiCore/.build/
+Packages/NozokiCore/Package.resolved
+xcuserdata/
+DerivedData/

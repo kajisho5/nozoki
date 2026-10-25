@@ -1,0 +1,94 @@
+# Xcodeのプロジェクトはこの設定から自動で作る（Macが無くてもGitHub上で作れるように）
+# 作り方: xcodegen generate
+name: Nozoki
+options:
+  bundleIdPrefix: com.kajisho5
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  developmentLanguage: ja
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    DEAD_CODE_STRIPPING: YES
+
+packages:
+  NozokiCore:
+    path: Packages/NozokiCore
+
+targets:
+  Nozoki:
+    type: application
+    platform: macOS
+    sources:
+      - path: Nozoki
+    dependencies:
+      - package: NozokiCore
+      - target: NozokiPreview
+        embed: true
+    settings:
+      base:
+        PRODUCT_NAME: nozoki
+        PRODUCT_BUNDLE_IDENTIFIER: com.kajisho5.nozoki
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_ENTITLEMENTS: Nozoki/Nozoki.entitlements
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+    info:
+      path: Nozoki/Info.plist
+      properties:
+        CFBundleDisplayName: nozoki
+        CFBundleName: nozoki
+        CFBundleDevelopmentRegion: ja
+        LSApplicationCategoryType: public.app-category.utilities
+        LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
+        NSHumanReadableCopyright: "MIT License"
+        # Finderの「このアプリケーションで開く」にだけ出す（標準の解凍を勝手に置き換えない）
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: ZIPアーカイブ
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.zip-archive
+              - com.pkware.zip-archive
+    scheme:
+      testTargets: []
+
+  NozokiPreview:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: NozokiPreview
+    dependencies:
+      - package: NozokiCore
+      - sdk: QuickLookUI.framework
+    settings:
+      base:
+        PRODUCT_NAME: NozokiPreview
+        PRODUCT_BUNDLE_IDENTIFIER: com.kajisho5.nozoki.preview
+        CODE_SIGN_ENTITLEMENTS: NozokiPreview/NozokiPreview.entitlements
+        SKIP_INSTALL: YES
+    info:
+      path: NozokiPreview/Info.plist
+      properties:
+        CFBundleDisplayName: nozoki
+        CFBundleName: NozokiPreview
+        CFBundleDevelopmentRegion: ja
+        LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.quicklook.preview
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).PreviewProvider"
+          NSExtensionAttributes:
+            QLIsDataBasedPreview: true
+            QLSupportsSearchableItems: false
+            QLSupportedContentTypes:
+              - public.zip-archive
+              - com.pkware.zip-archive
