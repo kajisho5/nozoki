@@ -11,6 +11,9 @@ struct ZipPeekApp: App {
             SettingsView()
         }
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button(String(localized: "Check for Updates…")) { Updater.shared.checkFromMenu() }
+            }
             CommandGroup(replacing: .newItem) {
                 Button(String(localized: "Compress or Extract…")) { WindowManager.shared.showOpenPanel() }
                     .keyboardShortcut("o")
@@ -64,6 +67,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 WindowManager.shared.showDropTarget()
             }
         }
+        // 新しい版の確認（設定でオフにできる。1日に1回まで）
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { Updater.shared.checkOnLaunch() }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

@@ -210,6 +210,28 @@
         }
       }
     },
+    "Check for Updates…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アップデートを確認…"
+          }
+        }
+      }
+    },
+    "Check for updates automatically": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しい版を自動で確認する"
+          }
+        }
+      }
+    },
     "Checking": {
       "extractionState": "manual",
       "localizations": {
@@ -217,6 +239,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "確認中"
+          }
+        }
+      }
+    },
+    "Checking the signature…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名を確かめています…"
           }
         }
       }
@@ -441,6 +474,17 @@
         }
       }
     },
+    "Couldn’t check for updates": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アップデートを確認できませんでした"
+          }
+        }
+      }
+    },
     "Couldn’t open “%@”": {
       "extractionState": "manual",
       "localizations": {
@@ -547,6 +591,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "ダブルクリックで ZipPeek が開きます"
+          }
+        }
+      }
+    },
+    "Downloading ZipPeek %@…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZipPeek %@ をダウンロードしています…"
           }
         }
       }
@@ -855,6 +910,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "パスワードが違います。もう一度入力してください"
+          }
+        }
+      }
+    },
+    "Installing…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入れ替えています…"
           }
         }
       }
@@ -1453,6 +1519,17 @@
         }
       }
     },
+    "Skip This Version": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この版はスキップ"
+          }
+        }
+      }
+    },
     "Smallest": {
       "extractionState": "manual",
       "localizations": {
@@ -1552,6 +1629,39 @@
         }
       }
     },
+    "The downloaded app isn’t signed by the ZipPeek developer, so it wasn’t installed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロードしたアプリが ZipPeek の開発者の署名ではないため、入れ替えませんでした。"
+          }
+        }
+      }
+    },
+    "The downloaded disk image couldn’t be opened.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロードしたディスクイメージを開けませんでした。"
+          }
+        }
+      }
+    },
+    "The update information couldn’t be read.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アップデートの情報を読み取れませんでした。"
+          }
+        }
+      }
+    },
     "This Folder Is Empty": {
       "extractionState": "manual",
       "localizations": {
@@ -1585,6 +1695,17 @@
         }
       }
     },
+    "Try updating again when compressing or extracting is finished.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮・解凍が終わってから、もう一度アップデートしてください。"
+          }
+        }
+      }
+    },
     "Turn this on once in System Settings. Move ZipPeek to the Applications folder first.": {
       "extractionState": "manual",
       "localizations": {
@@ -1592,6 +1713,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "最初に1回だけ、Macの設定でこの機能をオンにします。ZipPeek を「アプリケーション」フォルダに入れてから行ってください。"
+          }
+        }
+      }
+    },
+    "Update": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アップデート"
+          }
+        }
+      }
+    },
+    "Update failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アップデートできませんでした"
           }
         }
       }
@@ -1673,6 +1816,28 @@
         }
       }
     },
+    "You have %@. Update now? ZipPeek will restart.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今は %@ です。アップデートしますか？ ZipPeek は再起動します。"
+          }
+        }
+      }
+    },
+    "You have the latest version (%@).": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "お使いの版（%@）が最新です。"
+          }
+        }
+      }
+    },
     "ZipCrypto (opens on stock Windows, weak)": {
       "extractionState": "manual",
       "localizations": {
@@ -1680,6 +1845,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "ZipCrypto（Windows標準で開ける・弱い）"
+          }
+        }
+      }
+    },
+    "ZipPeek %@ is available": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZipPeek %@ があります"
+          }
+        }
+      }
+    },
+    "ZipPeek couldn’t replace itself. Please install the new version from the website.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZipPeek を入れ替えられませんでした。配布ページから新しい版を入れてください。"
           }
         }
       }
@@ -1695,6 +1882,17 @@
         }
       }
     },
+    "ZipPeek is still working": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZipPeek は作業中です"
+          }
+        }
+      }
+    },
     "ZipPeek is still working. Quit anyway?": {
       "extractionState": "manual",
       "localizations": {
@@ -1702,6 +1900,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "作業中です。終了しますか？"
+          }
+        }
+      }
+    },
+    "ZipPeek is up to date": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZipPeek は最新です"
           }
         }
       }

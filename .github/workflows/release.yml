@@ -1,10 +1,12 @@
 name: release
 
-# 「v0.1.0」のような目印（タグ）を付けると、配布用の dmg を作ってリリースページに置く。
+# 版番号（project.yml の MARKETING_VERSION）を上げて main に反映すると、まだ出していない版なら自動でリリースする。
+# 「v0.1.0」のような目印（タグ）を付けても同じ。手動実行で版を入れても出せる。
 # 署名（Developer ID）と Apple の公証は kajisho5/runway の共通ワークフローが行う。
 # 証明書は kajisho5/hanger、鍵などの Secrets は runway の sync-secrets が配る（runway の repos.txt に登録済み）。
 on:
   push:
+    branches: [main]
     tags: ["v*"]
   workflow_dispatch:   # 手動でも動かせる（iPhone の GitHub アプリからも）
     inputs:
@@ -17,11 +19,41 @@ permissions:
   contents: read
 
 jobs:
+  # 出すかどうかと版番号を決める
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      release: ${{ steps.v.outputs.release }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.publish_version }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            ver="${GITHUB_REF_NAME#v}"; release=true
+          elif [ -n "${INPUT_VERSION:-}" ]; then
+            ver="${INPUT_VERSION#v}"; release=true
+          else
+            ver=$(sed -n 's/^ *MARKETING_VERSION: *"\{0,1\}\([0-9.]*\)"\{0,1\}.*/\1/p' project.yml | head -1)
+            if gh release view "v$ver" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then release=false; else release=true; fi
+            # 手動実行で版を空にしたときは、試しに作るだけ
+            [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && release=false
+          fi
+          echo "版: $ver / 公開: $release"
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+
   mac:
+    needs: check
+    if: needs.check.outputs.release == 'true' || github.event_name == 'workflow_dispatch'
     uses: kajisho5/runway/.github/workflows/mac-notarize.yml@main
     with:
       name: ZipPeek
-      version: ${{ inputs.publish_version }}
+      version: ${{ needs.check.outputs.version }}
       runner: macos-26
       build: >-
         bash scripts/fetch-7zip.sh
@@ -38,7 +70,7 @@ jobs:
 
   # できた dmg を、まっさらな Mac で開いて確かめる（Gatekeeper の判定・拡張のサンドボックス・7-Zip の署名）
   verify:
-    needs: mac
+    needs: [check, mac]
     runs-on: macos-26
     timeout-minutes: 20
     steps:
@@ -71,9 +103,60 @@ jobs:
           hdiutil detach "$mnt" > /dev/null
           echo "すべて確認できました"
 
+      - uses: actions/checkout@v7
+        with:
+          path: src
+
+      - name: アップデートの入れ替えを試す（同じ dmg を「新しい版」として配って、押して入れ替わるか）
+        run: |
+          set -euo pipefail
+          dmg=$(ls "$PWD"/dist/*.dmg); name=$(basename "$dmg")
+          mnt=$(mktemp -d); hdiutil attach -nobrowse -readonly -mountpoint "$mnt" "$dmg" > /dev/null
+          sudo rm -rf /Applications/ZipPeek.app; sudo ditto "$mnt/ZipPeek.app" /Applications/ZipPeek.app
+          sudo chown -R "$USER" /Applications/ZipPeek.app
+          hdiutil detach "$mnt" > /dev/null
+          before=$(stat -f %i /Applications/ZipPeek.app/Contents/MacOS/ZipPeek)
+          mkdir -p feed && cp "$dmg" feed/
+          cat > feed/latest.json <<EOF
+          {"tag_name": "v99.0.0", "html_url": "https://github.com/kajisho5/zippeek/releases",
+           "assets": [{"name": "$name", "browser_download_url": "http://localhost:8765/$name"}]}
+          EOF
+          (cd feed && python3 -m http.server 8765 > /dev/null 2>&1 &)
+          sleep 1
+          ZIPPEEK_UPDATE_FEED=http://localhost:8765/latest.json /Applications/ZipPeek.app/Contents/MacOS/ZipPeek &
+          sleep 10
+          screencapture -x offer.png || true
+          T="swift src/scripts/ui-test.swift"
+          $T trusted
+          P=$($T pos com.kajisho5.zippeek Update)
+          echo "「アップデート」ボタンの位置: $P"
+          # shellcheck disable=SC2086  # 位置は「x y」の2つに分けて渡す
+          $T click $P
+          for _ in $(seq 1 30); do
+            sleep 2
+            after=$(stat -f %i /Applications/ZipPeek.app/Contents/MacOS/ZipPeek 2>/dev/null || echo "$before")
+            [ "$after" != "$before" ] && pgrep -x ZipPeek > /dev/null && break
+          done
+          screencapture -x after.png || true
+          echo "入れ替え前: $before / 後: $after"
+          [ "$after" != "$before" ] || { echo "::error::アップデートで入れ替わらなかった"; exit 1; }
+          pgrep -x ZipPeek > /dev/null || { echo "::error::入れ替え後に再起動しなかった"; exit 1; }
+          codesign --verify --strict --deep /Applications/ZipPeek.app
+          spctl -a -t exec -vv /Applications/ZipPeek.app
+          echo "合格: アップデートの通知から入れ替え・再起動まで動いた"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: update-test
+          path: |
+            offer.png
+            after.png
+          if-no-files-found: ignore
+
   publish:
-    needs: verify
-    if: startsWith(github.ref, 'refs/tags/v') || inputs.publish_version != ''
+    needs: [check, verify]
+    if: needs.check.outputs.release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -85,14 +168,10 @@ jobs:
       - name: リリースページに置く
         env:
           GH_TOKEN: ${{ github.token }}
-          REF_TYPE: ${{ github.ref_type }}
-          REF_NAME: ${{ github.ref_name }}
-          INPUT_VERSION: ${{ inputs.publish_version }}
+          VERSION: ${{ needs.check.outputs.version }}
         run: |
           set -euo pipefail
-          # タグを付けて動いたときはタグの版、手動のときは入力の版（タグはこのとき作る）
-          if [ "$REF_TYPE" = "tag" ]; then TAG="$REF_NAME"; else TAG="v${INPUT_VERSION#v}"; fi
-          ver="${TAG#v}"
+          ver="$VERSION"; TAG="v$ver"
           cat > notes.md <<EOF
           ## ZipPeek ${ver}
 

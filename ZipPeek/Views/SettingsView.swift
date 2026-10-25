@@ -49,6 +49,7 @@ private struct GeneralSettings: View {
             }
             Toggle(String(localized: "Put multiple items in a folder"), isOn: $prefs.groupIntoFolder)
             Toggle(String(localized: "Show in Finder when done"), isOn: $prefs.revealWhenDone)
+            Toggle(String(localized: "Check for updates automatically"), isOn: $prefs.checkForUpdates)
             Toggle(isOn: $prefs.trashAfterExtract) {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(String(localized: "Move the archive to the Trash after extracting"))

@@ -33,6 +33,8 @@ final class Preferences {
     }
     var dropStyle: DropStyle { didSet { d.set(dropStyle.rawValue, forKey: "dropStyle") } }
     var hasSeenWelcome: Bool { didSet { d.set(hasSeenWelcome, forKey: "hasSeenWelcome") } }
+    /// 新しい版を自動で確認する（1日に1回まで）
+    var checkForUpdates: Bool { didSet { d.set(checkForUpdates, forKey: "checkForUpdates") } }
 
     private init() {
         onArchiveDrop = ArchiveDropAction(rawValue: d.string(forKey: "onArchiveDrop") ?? "") ?? .extract
@@ -49,6 +51,7 @@ final class Preferences {
         }
         dropStyle = DropStyle(rawValue: d.string(forKey: "dropStyle") ?? "") ?? .window
         hasSeenWelcome = d.bool(forKey: "hasSeenWelcome")
+        checkForUpdates = d.object(forKey: "checkForUpdates") as? Bool ?? true
     }
 
 }

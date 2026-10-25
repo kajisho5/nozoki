@@ -2,6 +2,7 @@
 // 画面の部品の位置を読み取り（アクセシビリティ）、人と同じようにマウスやキーを動かす。
 //   swift scripts/ui-test.swift trusted                     読み取りの許可があるか
 //   swift scripts/ui-test.swift pos <bundle id> <名前>      部品の中心の位置（x y）
+//   swift scripts/ui-test.swift click <x> <y>
 //   swift scripts/ui-test.swift doubleclick <x> <y>
 //   swift scripts/ui-test.swift drag <x1> <y1> <x2> <y2>
 //   swift scripts/ui-test.swift windows <bundle id>         窓の題名の一覧
@@ -50,6 +51,10 @@ case "trusted":
 case "pos":
     guard let a = app(args[2]), let e = find(a, args[3]), let c = center(e) else { print("見つからない"); exit(1) }
     print(Int(c.x), Int(c.y))
+case "click":
+    let p = CGPoint(x: Double(args[2])!, y: Double(args[3])!)
+    mouse(.mouseMoved, p); usleep(200_000)
+    mouse(.leftMouseDown, p); mouse(.leftMouseUp, p)
 case "doubleclick":
     let p = CGPoint(x: Double(args[2])!, y: Double(args[3])!)
     mouse(.mouseMoved, p); usleep(200_000)
