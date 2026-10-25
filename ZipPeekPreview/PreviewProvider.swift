@@ -23,7 +23,11 @@ final class PreviewProvider: QLPreviewProvider, QLPreviewingController {
                     NSLog("ZipPeekPreview: 7zz not usable. bundle=%@ exists=%d exec=%d aux=%@", Bundle.main.bundlePath,
                           FileManager.default.fileExists(atPath: exe) ? 1 : 0, FileManager.default.isExecutableFile(atPath: exe) ? 1 : 0,
                           Bundle.main.url(forAuxiliaryExecutable: "7zz")?.path ?? "nil")
-                    throw SevenZipError.notFound
+                    // 原因を調べられるよう、確かめた場所と結果も表示する
+                    let fm = FileManager.default
+                    let detail = "\(exe) exists=\(fm.fileExists(atPath: exe)) readable=\(fm.isReadableFile(atPath: exe)) exec=\(fm.isExecutableFile(atPath: exe))"
+                    throw NSError(domain: "ZipPeekPreview", code: 1, userInfo: [
+                        NSLocalizedDescriptionKey: (SevenZipError.notFound.errorDescription ?? "") + "\n" + detail])
                 }
                 listing = ArchiveListing.build(raw: try sevenZip.list(url, password: nil))
             }

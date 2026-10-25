@@ -80,6 +80,8 @@ LSREG=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchService
 sudo rm -rf /Applications/ZipPeek.app && sudo ditto "$APP" /Applications/ZipPeek.app
 "$LSREG" -u "$APP" 2>/dev/null; "$LSREG" -f /Applications/ZipPeek.app
 APP=/Applications/ZipPeek.app
+ls -la "$APP/Contents/PlugIns/ZipPeekPreview.appex/Contents/MacOS/" > "$OUT/appex-macos.txt" 2>&1
+codesign -d --entitlements - "$APP/Contents/PlugIns/ZipPeekPreview.appex/Contents/MacOS/7zz" >> "$OUT/appex-macos.txt" 2>&1
 cat > /tmp/setdef.swift <<'SWIFT'
 import AppKit
 import UniformTypeIdentifiers
