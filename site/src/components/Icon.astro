@@ -1,0 +1,18 @@
+---
+// 機能カードの線の記号（24×24。色は currentColor）
+import type { IconName } from '../i18n/text';
+interface Props { name: IconName }
+const { name } = Astro.props;
+const paths: Record<string, string> = {
+  extract: 'M12 3v12M7 10l5 5 5-5M5 20h14',
+  drop: 'M4 13v6h16v-6M12 3v11M8 10l4 4 4-4',
+  menu: 'M5 4h14v16H5zM8.5 9h7M8.5 12.5h7M8.5 16h4.5',
+  stack: 'M5 10h11v9H5zM8 7h11v9M11 4h10v9',
+  lock: 'M6 11h12v9H6zM9 11V8a3 3 0 0 1 6 0v3',
+};
+---
+<svg class="icon-line" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+  {name === 'kana'
+    ? <text x="12" y="17.5" text-anchor="middle" font-size="16" font-weight="700" fill="currentColor">あ</text>
+    : <path d={paths[name]} fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />}
+</svg>

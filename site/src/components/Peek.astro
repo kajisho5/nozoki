@@ -1,0 +1,16 @@
+---
+import type { Text } from '../i18n/text';
+interface Props { t: Text; base: string }
+const { t, base } = Astro.props;
+---
+<section class="wrap section">
+  <div class="panel peek">
+    <img class="shot" src={`${base}/shots/${t.lang}/quicklook.png`} width="830" height="567" alt={t.peek.shotAlt} loading="lazy" decoding="async" />
+    <div class="peek-text">
+      <p class="eyebrow">{t.peek.eyebrow}</p>
+      <h2>{t.peek.title}</h2>
+      <p class="muted">{t.peek.body}</p>
+      <span class="chip">{t.peek.chip}</span>
+    </div>
+  </div>
+</section>

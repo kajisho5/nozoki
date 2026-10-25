@@ -1,0 +1,16 @@
+---
+import type { Text } from '../i18n/text';
+interface Props { t: Text }
+const { t } = Astro.props;
+---
+<section class="wrap section" aria-labelledby="install-title">
+  <h2 id="install-title">{t.install.title}</h2>
+  <ol class="grid3 steps">
+    {t.install.steps.map((s, i) => (
+      <li class="card">
+        <div class="step-head"><span class="num" aria-hidden="true">{i + 1}</span><h3>{s.title}</h3></div>
+        <p class="muted">{s.body}</p>
+      </li>
+    ))}
+  </ol>
+</section>

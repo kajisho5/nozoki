@@ -1,0 +1,22 @@
+---
+import type { Text } from '../i18n/text';
+interface Props { t: Text }
+const { t } = Astro.props;
+---
+<section class="wrap section">
+  <div class="panel enc">
+    <p class="eyebrow">{t.encoding.eyebrow}</p>
+    <h2>{t.encoding.title}</h2>
+    <p class="muted lead-s">{t.encoding.lead}</p>
+    <div class="enc-grid">
+      <div class="enc-box">
+        <span class="enc-label bad">✕ {t.encoding.without}</span>
+        <span class="enc-name garbled" lang="en">ÄBëeâüâé.txt</span>
+      </div>
+      <div class="enc-box">
+        <span class="enc-label good">✓ {t.encoding.withZipPeek}</span>
+        <span class="enc-name" lang="ja">撮影メモ.txt</span>
+      </div>
+    </div>
+  </div>
+</section>

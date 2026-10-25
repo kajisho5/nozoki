@@ -1,0 +1,19 @@
+---
+import type { Text } from '../i18n/text';
+import { repo } from '../i18n/text';
+interface Props { t: Text; base: string }
+const { t, base } = Astro.props;
+---
+<section class="hero">
+  <div class="wrap hero-inner">
+    <p class="eyebrow">{t.hero.eyebrow}</p>
+    <h1>{t.hero.title.map((line) => <span class="line">{line}</span>)}</h1>
+    <p class="lead">{t.hero.lead}</p>
+    <div class="actions">
+      <a class="btn" href={`${repo}/releases/latest`}>{t.hero.download}</a>
+      <a class="btn btn-ghost" href={repo}>{t.hero.github}</a>
+    </div>
+    <p class="meta">{t.hero.meta}</p>
+    <img class="shot hero-shot" src={`${base}/shots/${t.lang}/browse.png`} width="1000" height="640" alt={t.hero.shotAlt} />
+  </div>
+</section>

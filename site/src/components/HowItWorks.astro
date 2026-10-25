@@ -1,0 +1,19 @@
+---
+import type { Text } from '../i18n/text';
+interface Props { t: Text }
+const { t } = Astro.props;
+---
+<section class="wrap section" id="how" aria-labelledby="how-title">
+  <p class="eyebrow">{t.how.eyebrow}</p>
+  <h2 id="how-title">{t.how.title}</h2>
+  <p class="muted lead-s">{t.how.lead}</p>
+  <figure class="zipbar" aria-label={`${t.how.data} / ${t.how.tocNote}`}>
+    <div class="blocks" aria-hidden="true">{Array.from({ length: 14 }, () => <span />)}</div>
+    <span class="toc">{t.how.toc}</span>
+  </figure>
+  <div class="zipbar-labels">
+    <span class="muted small">{t.how.data}</span>
+    <strong class="accent small">{t.how.tocNote}</strong>
+  </div>
+  <div class="result-row"><span class="result">→ {t.how.result}</span></div>
+</section>

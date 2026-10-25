@@ -1,0 +1,24 @@
+---
+import type { Text } from '../i18n/text';
+import { repo } from '../i18n/text';
+interface Props { t: Text; base: string }
+const { t, base } = Astro.props;
+---
+<section class="wrap section">
+  <div class="cta">
+    <img src={`${base}/icon.png`} width="112" height="112" alt="" />
+    <div class="cta-text">
+      <h2>{t.cta.title}</h2>
+      <p>{t.cta.lead}</p>
+    </div>
+    <a class="btn btn-invert" href={`${repo}/releases/latest`}>{t.cta.download}</a>
+  </div>
+</section>
+<footer class="wrap site-footer">
+  <ul class="footer-links">
+    {t.footer.links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+    <li><a href={t.nav.otherHref}>{t.nav.other}</a></li>
+  </ul>
+  <p class="small muted">{t.footer.privacy}</p>
+  <p class="small muted">{t.footer.credit}</p>
+</footer>

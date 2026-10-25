@@ -1,0 +1,25 @@
+---
+import type { Text } from '../i18n/text';
+import { repo } from '../i18n/text';
+interface Props { t: Text; base: string }
+const { t, base } = Astro.props;
+---
+<a class="skip" href="#main">{t.nav.skip}</a>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href={`${base}${t.path}`} aria-label="ZipPeek">
+      <img src={`${base}/icon.png`} width="32" height="32" alt="" />
+      <span class="wordmark" aria-hidden="true">Zip<span>Peek</span></span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#features">{t.nav.features}</a>
+      <a href="#how">{t.nav.how}</a>
+      <a href="#formats">{t.nav.formats}</a>
+      <a href="#faq">{t.nav.faq}</a>
+    </nav>
+    <div class="header-actions">
+      <a class="lang" href={t.nav.otherHref} hreflang={t.lang === 'en' ? 'ja' : 'en'}>{t.nav.other}</a>
+      <a class="btn btn-small" href={`${repo}/releases/latest`}>{t.nav.download}</a>
+    </div>
+  </div>
+</header>

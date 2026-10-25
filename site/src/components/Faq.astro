@@ -1,0 +1,16 @@
+---
+import type { Text } from '../i18n/text';
+interface Props { t: Text }
+const { t } = Astro.props;
+---
+<section class="wrap section" id="faq" aria-labelledby="faq-title">
+  <h2 id="faq-title">{t.faq.title}</h2>
+  <div class="faq">
+    {t.faq.items.map((f) => (
+      <details>
+        <summary>{f.q}</summary>
+        <p class="muted">{f.a}</p>
+      </details>
+    ))}
+  </div>
+</section>

@@ -1,0 +1,16 @@
+---
+import type { Text } from '../i18n/text';
+import { extractFormats, createFormats } from '../i18n/text';
+interface Props { t: Text }
+const { t } = Astro.props;
+---
+<section class="wrap section" id="formats" aria-labelledby="formats-title">
+  <h2 id="formats-title">{t.formats.title}</h2>
+  <dl class="formats">
+    <dt>{t.formats.extract}</dt>
+    <dd><ul class="chips">{extractFormats.map((f) => <li>{f}</li>)}<li>…</li></ul></dd>
+    <dt>{t.formats.create}</dt>
+    <dd><ul class="chips create">{createFormats.map((f) => <li>{f}</li>)}</ul></dd>
+  </dl>
+  <p class="muted small">{t.formats.note}</p>
+</section>
