@@ -266,6 +266,7 @@ quit
 rm -rf ~/Desktop/zp-tool && mkdir -p ~/Desktop/zp-tool && cp samples/sample-mac.zip ~/Desktop/zp-tool/tool.zip
 open -a "$APP" ~/Desktop/zp-tool/tool.zip; sleep 5
 $T move $ID 0 40 900 600
+$T dump $ID > "$OUT/ax-tool-window.txt" 2>&1
 $T press $ID "More" "その他" | tee -a "$LOG"; sleep 1
 $T press $ID "Check for Damage" "壊れていないか確かめる" | tee -a "$LOG"
 sleep 6
@@ -287,6 +288,11 @@ if [ -n "$R" ] && [ "$R" != "見つからない" ]; then
   LC_ALL=en_US.UTF-8 "$Z" l -ba ~/Desktop/zp-tool/tool.zip | tee -a "$LOG"
 fi
 quit
+
+# 落ちたときの記録（あれば）
+mkdir -p "$OUT/crash"
+cp ~/Library/Logs/DiagnosticReports/ZipPeek* "$OUT/crash/" 2>/dev/null || true
+ls "$OUT/crash"
 
 # 6) アイコンの各見た目（Xcode付属の Icon Composer の道具で描く）
 ICTOOL="$(xcode-select -p)/../Applications/Icon Composer.app/Contents/Executables/ictool"

@@ -11,6 +11,7 @@
 //   swift scripts/ui-test.swift press <bundle id> <名前>…    ボタンやメニュー項目を押す（名前はどれか1つが合えばよい）
 //   swift scripts/ui-test.swift type <文字>                  文字を打つ
 //   swift scripts/ui-test.swift has <bundle id> <文字>…      窓のどこかにその文字を含む表示があるか
+//   swift scripts/ui-test.swift dump <bundle id>              手前の窓の部品の一覧（調べる用）
 //   swift scripts/ui-test.swift allow                       ほかのアプリの確認（ローカルネットワーク等）で「許可」を押す
 import AppKit
 import ApplicationServices
@@ -127,6 +128,17 @@ case "has":
     let found = args[3...].contains { t in wins.contains { contains($0, t) } }
     print(found ? "ある" : "ない")
     exit(found ? 0 : 1)
+case "dump":
+    guard let a = app(args[2]), let w = (attr(a, kAXWindowsAttribute) as? [AXUIElement])?.first else { print("窓が無い"); exit(1) }
+    func walk(_ e: AXUIElement, _ depth: Int) {
+        if depth > 12 { return }
+        let role = attr(e, kAXRoleAttribute) as? String ?? "?"
+        let bits = [kAXTitleAttribute, kAXDescriptionAttribute, kAXValueAttribute, kAXIdentifierAttribute]
+            .compactMap { k -> String? in (attr(e, k) as? String).flatMap { $0.isEmpty ? nil : "\(k)=\($0)" } }
+        print(String(repeating: "  ", count: depth) + role + " " + bits.joined(separator: " "))
+        for c in (attr(e, kAXChildrenAttribute) as? [AXUIElement]) ?? [] { walk(c, depth + 1) }
+    }
+    walk(w, 0)
 case "allow":
     // 試験用サーバー（python）が出させる「ローカルネットワークの許可」などの確認を閉じる
     var pressed = 0
