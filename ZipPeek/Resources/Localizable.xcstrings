@@ -45,6 +45,17 @@
         }
       }
     },
+    "%lld%%": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%%"
+          }
+        }
+      }
+    },
     "%lld%% · about %lld min left": {
       "extractionState": "manual",
       "localizations": {

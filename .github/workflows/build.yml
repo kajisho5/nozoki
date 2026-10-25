@@ -58,6 +58,7 @@ jobs:
           python3 scripts/check-localizations.py loc
 
       - name: 画面の写真を撮る（見た目の確認用）
+        if: success() || failure()
         continue-on-error: true
         run: bash scripts/ui-shots.sh build/Build/Products/Release/ZipPeek.app shots
 
