@@ -1,69 +1,97 @@
-<p align="center"><img src="docs/icon.png" width="128" alt="nozoki のアイコン"></p>
+<p align="center"><img src="docs/icon.png" width="128" alt="ZipPeek icon"></p>
 
-<h1 align="center">nozoki（のぞき）</h1>
+<h1 align="center">ZipPeek</h1>
 
-<p align="center">Macで、zipを<b>展開せずに</b>中身を見て、必要なファイルだけ取り出す無料のツール</p>
+<p align="center">
+Macの圧縮・解凍。そして、展開せずにのぞく。<br>
+Compress and extract on your Mac — and peek inside without extracting.
+</p>
+
+<p align="center"><a href="#日本語">日本語</a> ・ <a href="#english">English</a></p>
 
 ---
 
-Macの標準機能では、zipを選んでスペースキーを押しても大きなアイコンが出るだけです。20〜30GBの撮影素材のzipでも、全部展開しないと中身を確認できません。nozoki はそれを解決します。
+## 日本語
 
-## できること
+### できること
 
-- **Finderでスペースキー → 中身の一覧**：フォルダ構造・サイズ・更新日をその場で確認
-- **巨大zipでも一瞬**：zipの末尾にある「目次」だけを読むので、30GBでも一覧はすぐ出ます
-- **1ファイルだけ取り出す**：nozoki で開いて、選んで「取り出す」。デスクトップへのドラッグでも書き出せます
-- **中のファイルをちょい見**：選んでスペースキーで、そのファイルだけ一時的に取り出してプレビュー
-- **文字化けしない**：日本語Windowsで作ったzip（Shift_JIS）の日本語ファイル名を自動で判定。手動の切り替えも可能
-- **4GB超のzip（ZIP64）対応**、検索、並べ替え
+- **ドラッグで、すぐ**：Dockのアイコンや窓にファイルを落とすと圧縮、圧縮ファイルを落とすと解凍。Finderの右クリック（「ZipPeekで圧縮／解凍／中身を見る」）からも使えます
+- **展開せずにのぞく**：Finderでzipを選んでスペースキーを押すと、中身の一覧が出ます。zipの末尾にある「目次」だけを読むので、30GBでも一瞬です
+- **1ファイルだけ取り出す**：中身を見る窓で選んで「取り出す」。デスクトップへのドラッグでも書き出せます
+- **たくさんの形式**：zip・7z・rar・tar・gz・bz2・xz・zst・iso・lzh・cab など（中身の処理に [7-Zip](https://www.7-zip.org/) を同梱）
+- **圧縮の設定**：zip・7z、パスワード（AES-256）、分割、圧縮率、Mac専用の隠しファイルを入れない
+- **文字化けしない**：日本語Windowsで作ったzip（Shift_JIS）の名前を自動判定。逆に、Windowsで文字化けしないzipも作れます
+- **見た目**：ライト／ダーク、標準の窓／ガラスの小窓を設定で切り替え（macOS 26以降はLiquid Glass）
+- **日本語・英語**：Macの言語設定に合わせて切り替わります
 
-## 入れ方
+### 入れ方
 
-1. [リリース](https://github.com/kajisho5/zippeek/releases) から `nozoki-*.dmg` をダウンロード
-2. dmgを開き、nozoki を「アプリケーション」フォルダへドラッグ
-3. nozoki を一度起動し、「はじめに」の画面で「設定を開く」→「クイックルック」の nozoki をオン
+1. [リリース](https://github.com/kajisho5/zippeek/releases) から `ZipPeek-*.dmg` をダウンロード
+2. dmgを開き、ZipPeek を「アプリケーション」フォルダへドラッグ
+3. ZipPeek を一度起動し、表示される案内に沿って「スペースキーで中身を見る」機能をオン
 
-これでFinderでzipを選んでスペースキーを押すと中身が出ます。
+zipをダブルクリックしたときは、これまでどおりMacの標準の解凍が動きます。ZipPeekで開きたいときは、右クリック →「このアプリケーションで開く」→ ZipPeek。
 
-zipをダブルクリックしたときは、これまでどおりMacの標準の解凍が動きます。nozoki で開きたいときは、zipを右クリック →「このアプリケーションで開く」→ nozoki。
+### 動作環境
 
-## 動作環境
+macOS 14（Sonoma）以降、Apple シリコン / Intel
 
-- macOS 14（Sonoma）以降
-- Apple シリコン / Intel
+### できないこと
 
-## 今の版でできないこと
+- rar形式での圧縮（rarの作成は開発元以外には許されていないため。解凍はできます）
+- 圧縮ファイルの中身の書き換え
 
-- zip以外（7z・rarなど）
-- パスワード付きzipからの取り出し（一覧の表示はできます）
-- 分割zip（.z01 など）
-- zipの作成・編集
+---
 
-## 開発
+## English
+
+### Features
+
+- **Drop to go**: drop files on the Dock icon or the window to compress, drop archives to extract. Also available from Finder's right-click menu (Compress / Extract / Look Inside with ZipPeek).
+- **Peek without extracting**: select a ZIP in Finder and press Space to see what's inside. Only the archive's table of contents is read, so even 30 GB archives open instantly.
+- **Take out just one file**: pick files in the browser window and extract them, or drag them to the Desktop.
+- **Many formats**: zip, 7z, rar, tar, gz, bz2, xz, zst, iso, lzh, cab and more (powered by the bundled [7-Zip](https://www.7-zip.org/)).
+- **Compression options**: zip or 7z, AES-256 passwords, splitting, compression level, leave out Mac-only hidden files.
+- **No garbled names**: Japanese file names from Windows (Shift_JIS) are detected automatically, and you can create ZIPs that open cleanly on Japanese Windows.
+- **Your look**: light / dark, standard window or compact glass drop target (Liquid Glass on macOS 26+).
+- **Japanese and English**, following your Mac's language.
+
+### Install
+
+1. Download `ZipPeek-*.dmg` from [Releases](https://github.com/kajisho5/zippeek/releases)
+2. Open it and drag ZipPeek into Applications
+3. Launch ZipPeek once and follow the prompt to turn on "Press Space to look inside"
+
+### Requirements
+
+macOS 14 (Sonoma) or later, Apple silicon or Intel.
+
+---
+
+## 開発 / Development
 
 Macが無くても開発できるよう、Xcodeのプロジェクトは `project.yml` から [XcodeGen](https://github.com/yonaskolb/XcodeGen) で作ります。
 
 ```sh
+bash scripts/fetch-7zip.sh   # 7-Zip 26.05 を取得（版と指紋は固定）
 brew install xcodegen
 xcodegen generate
-open Nozoki.xcodeproj
+open ZipPeek.xcodeproj
 ```
 
-| 場所 | 中身 |
+| 場所 / Path | 中身 / Contents |
 | --- | --- |
-| `Packages/NozokiCore` | zipの目次の読み取り・文字コード判定・取り出し（画面なし。テスト付き） |
-| `Nozoki/` | アプリ本体（SwiftUI） |
-| `NozokiPreview/` | Finderのスペースキー用の拡張（クイックルック拡張） |
-| `.github/workflows/` | GitHubのMacでのビルド・テスト・配布 |
+| `Packages/ZipPeekCore` | 目次の読み取り・文字コード判定・圧縮・解凍（テスト付き） / archive engine with tests |
+| `ZipPeek/` | アプリ本体（SwiftUI） / the app |
+| `ZipPeekPreview/` | Finderのスペースキー用の拡張 / Quick Look extension |
+| `site/` | 配布ページ / website |
 
-テスト：`cd Packages/NozokiCore && swift test`
+テスト / Tests: `cd Packages/ZipPeekCore && ZIPPEEK_7ZZ=../../Vendor/7zip/7zz swift test`
 
-使っている部品：[ZIPFoundation](https://github.com/weichsel/ZIPFoundation) 0.9.20（MIT）
+## ライセンス / License
 
-## English
+ZipPeek: MIT License
 
-nozoki is a free, open-source macOS app that lets you peek inside ZIP files without extracting them. Press Space in Finder to see the file list (even for 30 GB archives, since only the central directory is read), open the archive in nozoki to extract just the files you need, and enjoy correct Japanese file names from Windows-made (Shift_JIS) archives. Requires macOS 14 or later.
-
-## ライセンス
-
-MIT License
+同梱 / Bundled:
+- [7-Zip](https://www.7-zip.org/) 26.05 by Igor Pavlov — GNU LGPL + BSD 3-clause + unRAR restriction（[Vendor/7zip/License.txt](Vendor/7zip/License.txt)）
+- [ZIPFoundation](https://github.com/weichsel/ZIPFoundation) 0.9.20 — MIT

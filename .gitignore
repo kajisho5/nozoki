@@ -2,11 +2,13 @@
 /build/
 /dist/
 *.xcodeproj
-/Nozoki/Info.plist
-/NozokiPreview/Info.plist
+/ZipPeek/Info.plist
+/ZipPeekPreview/Info.plist
 .build/
 .swiftpm/
-Packages/NozokiCore/.build/
-Packages/NozokiCore/Package.resolved
+Packages/ZipPeekCore/.build/
+Packages/ZipPeekCore/Package.resolved
 xcuserdata/
 DerivedData/
+/Vendor/7zip/7zz
+/Vendor/7zip/.version

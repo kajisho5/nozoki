@@ -3,10 +3,10 @@
 set -euo pipefail
 
 APP="$1"
-APPEX="$APP/Contents/PlugIns/NozokiPreview.appex"
+APPEX="$APP/Contents/PlugIns/ZipPeekPreview.appex"
 
 echo "== 1. 本体と拡張があるか"
-test -x "$APP/Contents/MacOS/nozoki"
+test -x "$APP/Contents/MacOS/ZipPeek"
 test -d "$APPEX"
 echo "OK"
 
@@ -28,11 +28,26 @@ echo "OK"
 echo "== 4. Macの仕組みに拡張として登録できるか"
 pluginkit -a "$APPEX" || true
 sleep 2
-pluginkit -m -A -v -i com.kajisho5.nozoki.preview | tee /tmp/pk.txt
-grep -q "com.kajisho5.nozoki.preview" /tmp/pk.txt
+pluginkit -m -A -v -i com.kajisho5.zippeek.preview | tee /tmp/pk.txt
+grep -q "com.kajisho5.zippeek.preview" /tmp/pk.txt
 
-echo "== 5. 対応するmacOS"
+echo "== 5. 7-Zip が同梱され、動くか"
+test -x "$APP/Contents/MacOS/7zz"
+"$APP/Contents/MacOS/7zz" i | head -1
+test -f "$APP/Contents/Resources/7-Zip/License.txt"
+codesign --verify --strict "$APP/Contents/MacOS/7zz"
+echo "OK"
+
+echo "== 6. 右クリック（サービス）と言語"
+/usr/libexec/PlistBuddy -c "Print :NSServices" "$APP/Contents/Info.plist" | grep -E "NSMessage" 
+test "$(/usr/libexec/PlistBuddy -c "Print :NSServices" "$APP/Contents/Info.plist" | grep -c NSMessage)" = "3"
+/usr/libexec/PlistBuddy -c "Print :CFBundleLocalizations" "$APP/Contents/Info.plist"
+test -f "$APP/Contents/Resources/en.lproj/ServicesMenu.strings"
+test -f "$APP/Contents/Resources/ja.lproj/ServicesMenu.strings"
+echo "OK"
+
+echo "== 7. 対応するmacOS"
 /usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "$APP/Contents/Info.plist"
-lipo -info "$APP/Contents/MacOS/nozoki"
+lipo -info "$APP/Contents/MacOS/ZipPeek"
 
 echo "すべて確認できました"

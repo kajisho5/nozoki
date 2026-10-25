@@ -23,15 +23,18 @@ jobs:
       - name: Xcodeを選ぶ
         run: bash scripts/select-xcode.sh
 
+      - name: 7-Zip を取得（版と指紋を固定）
+        run: bash scripts/fetch-7zip.sh
+
       - name: Xcodeプロジェクトを作ってビルド
         run: |
           set -o pipefail
           brew install xcodegen
           xcodegen generate
-          xcodebuild -project Nozoki.xcodeproj -scheme Nozoki -configuration Release \
+          xcodebuild -project ZipPeek.xcodeproj -scheme ZipPeek -configuration Release \
             -destination 'generic/platform=macOS' -derivedDataPath build \
             CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO build | tail -20
-          bash scripts/check-app.sh build/Build/Products/Release/nozoki.app
+          bash scripts/check-app.sh build/Build/Products/Release/ZipPeek.app
 
       - name: 証明書を読み込む
         if: env.HAS_CERT == 'true'
@@ -53,23 +56,24 @@ jobs:
       - name: 署名する（Developer ID）
         if: env.HAS_CERT == 'true'
         run: |
-          APP=build/Build/Products/Release/nozoki.app
+          APP=build/Build/Products/Release/ZipPeek.app
           ID=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | awk '{print $2}')
           test -n "$ID"
+          codesign --force --options runtime --timestamp --sign "$ID" "$APP/Contents/MacOS/7zz"
           codesign --force --options runtime --timestamp --sign "$ID" \
-            --entitlements NozokiPreview/NozokiPreview.entitlements "$APP/Contents/PlugIns/NozokiPreview.appex"
+            --entitlements ZipPeekPreview/ZipPeekPreview.entitlements "$APP/Contents/PlugIns/ZipPeekPreview.appex"
           codesign --force --options runtime --timestamp --sign "$ID" \
-            --entitlements Nozoki/Nozoki.entitlements "$APP"
+            --entitlements ZipPeek/ZipPeek.entitlements "$APP"
           codesign --verify --deep --strict --verbose=2 "$APP"
 
       - name: dmgを作る
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p dist/stage
-          cp -R build/Build/Products/Release/nozoki.app dist/stage/
+          cp -R build/Build/Products/Release/ZipPeek.app dist/stage/
           ln -s /Applications dist/stage/Applications
-          hdiutil create -volname "nozoki" -srcfolder dist/stage -ov -format UDZO "dist/nozoki-$VERSION.dmg"
-          echo "DMG=dist/nozoki-$VERSION.dmg" >> "$GITHUB_ENV"
+          hdiutil create -volname "ZipPeek" -srcfolder dist/stage -ov -format UDZO "dist/ZipPeek-$VERSION.dmg"
+          echo "DMG=dist/ZipPeek-$VERSION.dmg" >> "$GITHUB_ENV"
 
       - name: Appleの認証（公証）を受ける
         if: env.HAS_CERT == 'true'
@@ -91,17 +95,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ "$HAS_CERT" = "true" ]; then
-            NOTE="Appleの署名・認証済みです。dmgを開いて nozoki を「アプリケーション」にドラッグしてください。"
+            NOTE="Appleの署名・認証済みです。dmgを開いて ZipPeek を「アプリケーション」にドラッグしてください。"
           else
-            NOTE="⚠️ この版はAppleの署名がありません。初回は nozoki を右クリック →「開く」で起動してください。"
+            NOTE="⚠️ この版はAppleの署名がありません。初回は ZipPeek を右クリック →「開く」で起動してください。"
           fi
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            gh release create "$GITHUB_REF_NAME" "$DMG" --title "nozoki $GITHUB_REF_NAME" --notes "$NOTE" --verify-tag
+            gh release create "$GITHUB_REF_NAME" "$DMG" --title "ZipPeek $GITHUB_REF_NAME" --notes "$NOTE" --verify-tag
           else
             echo "タグ以外から動かしたため、リリースは作りません"
           fi
 
       - uses: actions/upload-artifact@v7
         with:
-          name: nozoki-dmg
+          name: ZipPeek-dmg
           path: dist/*.dmg

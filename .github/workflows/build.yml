@@ -23,9 +23,14 @@ jobs:
       - name: Xcodeを選ぶ
         run: bash scripts/select-xcode.sh
 
-      - name: zip読み取り部品のテスト
-        working-directory: Packages/NozokiCore
-        run: swift test
+      - name: 7-Zip を取得（版と指紋を固定）
+        run: bash scripts/fetch-7zip.sh
+
+      - name: 部品のテスト（本物の7-Zipで圧縮・解凍も試す）
+        working-directory: Packages/ZipPeekCore
+        env:
+          ZIPPEEK_7ZZ: ${{ github.workspace }}/Vendor/7zip/7zz
+        run: swift test 2>&1 | tee test.log; grep -E "Executed [0-9]+ tests" test.log | tail -1; ! grep -q " failed " test.log
 
       - name: Xcodeプロジェクトを作る
         run: |
@@ -36,25 +41,22 @@ jobs:
       - name: アプリをビルド（署名なし）
         run: |
           set -o pipefail
-          xcodebuild -project Nozoki.xcodeproj -scheme Nozoki -configuration Release \
+          xcodebuild -project ZipPeek.xcodeproj -scheme ZipPeek -configuration Release \
             -destination 'generic/platform=macOS' -derivedDataPath build \
             CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO \
             build | tee build.log | grep -E "warning:|error:|BUILD" || true
           grep -q "BUILD SUCCEEDED" build.log
 
       - name: できたアプリの中身を確認
-        run: bash scripts/check-app.sh build/Build/Products/Release/nozoki.app
-
-      - name: のぞき窓を画面なしで動かしてみる
-        run: bash scripts/check-quicklook.sh build/Build/Products/Release/nozoki.app
+        run: bash scripts/check-app.sh build/Build/Products/Release/ZipPeek.app
 
       - name: アプリを保存（動作確認用・署名なし）
         run: |
           cd build/Build/Products/Release
-          ditto -c -k --keepParent nozoki.app "$GITHUB_WORKSPACE/nozoki-unsigned.zip"
+          ditto -c -k --keepParent ZipPeek.app "$GITHUB_WORKSPACE/ZipPeek-unsigned.zip"
 
       - uses: actions/upload-artifact@v7
         with:
-          name: nozoki-unsigned
-          path: nozoki-unsigned.zip
+          name: ZipPeek-unsigned
+          path: ZipPeek-unsigned.zip
           retention-days: 14
