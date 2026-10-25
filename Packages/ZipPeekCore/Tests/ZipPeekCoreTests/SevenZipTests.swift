@@ -410,5 +410,20 @@ final class SevenZipIntegrationTests: XCTestCase {
         }
     }
     #endif
+
+    /// どの Mac でも .tar.zst を読めるか（作るのは OS の libarchive 次第。読みは必ず要る）
+    func testReadZstdFixture() throws {
+        // Linux の libarchive で作った小さな .tar.zst（中身：架空/memo.txt = 「架空のメモ」）
+        let fixture = Data(base64Encoded: "KLUv/QBYjQYAoscaIqApHWBU5fc2O0p10PfKb6Z2Si4j94PG2FvKLWXC+4OZLgON5jGa91C8JyJdtIe3kzb6z5z+N9cAhoUtndjb+qMECm0dMmn+yKyGSLhEVkb6XO1WrNK25vf/MbvVf4w4JpCFRGEYYTGBW4MoICAjmSAzHv23gghgvp+6GACr2pAboBhVE/YRIFqFC7oA3vDAY1fJgIloSoD9IAWPWMHAGNAFYFUjcgMYwxK2B/a5sFkFH4QDwHgo+qEwwOZhyzGYoHsMXvgdGp1F6zphAks=")!
+        let url = dir.appendingPathComponent("fixture.tar.zst")
+        try fixture.write(to: url)
+        let listing = ArchiveListing.build(raw: try LibArchive.entries(url))
+        XCTAssertEqual(listing.allFiles.map(\.path), ["架空/memo.txt"])
+        let dest = dir.appendingPathComponent("zst-out")
+        try FileManager.default.createDirectory(at: dest, withIntermediateDirectories: true)
+        let made = try ops.extractAll(url, into: dest, password: nil)
+        XCTAssertEqual(made.map(\.lastPathComponent), ["架空"])
+        XCTAssertEqual(try content(made[0].appendingPathComponent("memo.txt")), "架空のメモ\n")
+    }
 }
 

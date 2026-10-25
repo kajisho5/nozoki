@@ -116,7 +116,16 @@ public enum ArchiveEdit {
             else if n.hasPrefix(f + "/") { pairs += [e, target + n.dropFirst(f.count)] }
         }
         guard !pairs.isEmpty else { throw Failure.itemMissing }
+        func names() throws -> [String] { try sevenZip.list(archive, password: nil).compactMap { $0.archivePath }.sorted() }
+        let before = try names()
         try sevenZip.run(["rn", "-sccUTF-8", "-bsp1", "-bso0", "-bse2", archive.standardizedFileURL.path] + pairs, password: nil)
+        // 7-Zip は名前が合わないと何もせず成功で終わる。Mac では名前の形（濁点が分かれた NFD）の違いで合わないことがあるので、
+        // 変わっていなければ、分けた形でもう一度試す
+        if try names() == before {
+            let nfd = pairs.map { $0.decomposedStringWithCanonicalMapping }
+            try sevenZip.run(["rn", "-sccUTF-8", "-bsp1", "-bso0", "-bse2", archive.standardizedFileURL.path] + nfd, password: nil)
+            if try names() == before { throw Failure.itemMissing }
+        }
         if archive.pathExtension.lowercased() == "zip" { try normalizeZipNames(archive) }
     }
 
