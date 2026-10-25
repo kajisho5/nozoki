@@ -14,7 +14,8 @@ Press Space in Finder to see what's in a ZIP, take out just the file you need, a
   <a href="https://github.com/kajisho5/zippeek/releases/latest"><b>Download</b></a> ·
   <a href="https://kajisho5.github.io/zippeek/">Website</a> ·
   <a href="#faq">FAQ</a> ·
-  <a href="README.ja.md">日本語</a>
+  <a href="README.ja.md">日本語</a> ·
+  <a href="https://github.com/sponsors/kajisho5">♡ Sponsor</a>
 </p>
 
 <p align="center">
@@ -36,6 +37,7 @@ Press Space in Finder to see what's in a ZIP, take out just the file you need, a
 - [Privacy](#privacy)
 - [FAQ](#faq)
 - [Development](#development)
+- [Support ZipPeek](#support-zippeek)
 - [License and credits](#license-and-credits)
 
 ## Why ZipPeek
@@ -170,6 +172,10 @@ open ZipPeek.xcodeproj
 | `scripts/` | 7-Zip download, bundle checks, screenshots |
 
 Tests: `cd Packages/ZipPeekCore && ZIPPEEK_7ZZ=../../Vendor/7zip/7zz swift test`
+
+## Support ZipPeek
+
+ZipPeek is free and will stay free. If it saves you time, please consider supporting its development on **[GitHub Sponsors](https://github.com/sponsors/kajisho5)** — monthly or one-time, any amount helps. Starring the repo and telling a friend helps too.
 
 ## License and credits
 

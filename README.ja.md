@@ -14,7 +14,8 @@ Finderでスペースキーを押せばzipの中身が見えて、必要な1フ�
   <a href="https://github.com/kajisho5/zippeek/releases/latest"><b>ダウンロード</b></a> ·
   <a href="https://kajisho5.github.io/zippeek/ja/">配布ページ</a> ·
   <a href="#よくある質問">よくある質問</a> ·
-  <a href="README.md">English</a>
+  <a href="README.md">English</a> ·
+  <a href="https://github.com/sponsors/kajisho5">♡ 寄付する</a>
 </p>
 
 <p align="center">
@@ -35,6 +36,7 @@ Finderでスペースキーを押せばzipの中身が見えて、必要な1フ�
 - [プライバシー](#プライバシー)
 - [よくある質問](#よくある質問)
 - [開発](#開発)
+- [寄付のお願い](#寄付のお願い)
 - [ライセンス](#ライセンス)
 
 ## ZipPeekでできること
@@ -144,6 +146,10 @@ ZipPeekはすべてMacの中だけで動きます。アカウントも利用状�
 ## 開発
 
 画面は Apple の [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines)（HIG）に従います。ぶつかったときはHIGを優先し、例外にする場合は理由を書きます。開発の詳しい説明は [English の README](README.md#development) にあります。
+
+## 寄付のお願い
+
+ZipPeek は無料で、これからも無料です。役に立ったら、**[GitHub Sponsors](https://github.com/sponsors/kajisho5)** で開発を応援してもらえるとうれしいです。毎月でも1回だけでも、金額は自由です。リポジトリへのスター（★）や、知り合いに教えてもらうのも大きな応援になります。
 
 ## ライセンス
 

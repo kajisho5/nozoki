@@ -1453,6 +1453,17 @@
         }
       }
     },
+    "Support ZipPeek (GitHub Sponsors)": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZipPeek に寄付する（GitHub Sponsors）"
+          }
+        }
+      }
+    },
     "Temporarily extract and show the selected file (or press Space)": {
       "extractionState": "manual",
       "localizations": {

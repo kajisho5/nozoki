@@ -2,6 +2,7 @@
 // 確かめていない速さの数字（「◯GBでも◯秒」など）は書かない。
 export const repo = 'https://github.com/kajisho5/zippeek';
 export const site = 'https://kajisho5.github.io/zippeek';
+export const sponsors = 'https://github.com/sponsors/kajisho5';
 
 export const extractFormats = ['zip', '7z', 'rar', 'tar', 'gz', 'bz2', 'xz', 'zst', 'iso', 'lzh', 'cab', 'arj', 'cpio', 'wim', 'xar', 'rpm', 'deb'];
 export const createFormats = ['zip', '7z'];
@@ -88,9 +89,11 @@ const en = {
     ],
   },
   cta: { title: 'Peek before you unpack.', lead: 'Free and open source. macOS 14 or later.', download: 'Download for Mac' },
+  support: { title: 'Support ZipPeek', body: 'ZipPeek is free and will stay free. If it saves you time, please consider sponsoring its development on GitHub — monthly or one-time, any amount helps.', button: 'Sponsor on GitHub' },
   footer: {
     links: [
       { label: 'GitHub', href: repo },
+      { label: 'Sponsor', href: 'https://github.com/sponsors/kajisho5' },
       { label: 'Releases', href: `${repo}/releases` },
       { label: 'README', href: `${repo}#readme` },
       { label: '7-Zip license', href: 'https://www.7-zip.org/license.txt' },
@@ -182,9 +185,11 @@ const ja: Text = {
     ],
   },
   cta: { title: '展開する前に、のぞこう。', lead: '無料・オープンソース。macOS 14 以降。', download: 'Mac版をダウンロード' },
+  support: { title: '寄付のお願い', body: 'ZipPeek は無料で、これからも無料です。役に立ったら、GitHub Sponsors で開発を応援してもらえるとうれしいです。毎月でも1回だけでも、金額は自由です。', button: 'GitHub で寄付する' },
   footer: {
     links: [
       { label: 'GitHub', href: repo },
+      { label: '寄付', href: 'https://github.com/sponsors/kajisho5' },
       { label: 'リリース', href: `${repo}/releases` },
       { label: '説明書（README）', href: `${repo}/blob/main/README.ja.md` },
       { label: '7-Zip のライセンス', href: 'https://www.7-zip.org/license.txt' },

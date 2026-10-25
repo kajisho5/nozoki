@@ -30,6 +30,8 @@ struct ZipPeekApp: App {
             CommandGroup(replacing: .help) {
                 Link(String(localized: "ZipPeek on GitHub"),
                      destination: URL(string: "https://github.com/kajisho5/zippeek")!)
+                Link(String(localized: "Support ZipPeek (GitHub Sponsors)"),
+                     destination: URL(string: "https://github.com/sponsors/kajisho5")!)
                 Link(String(localized: "7-Zip License"),
                      destination: URL(string: "https://www.7-zip.org/license.txt")!)
             }

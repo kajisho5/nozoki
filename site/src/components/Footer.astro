@@ -1,6 +1,6 @@
 ---
 import type { Text } from '../i18n/text';
-import { repo } from '../i18n/text';
+import { repo, sponsors } from '../i18n/text';
 interface Props { t: Text; base: string }
 const { t, base } = Astro.props;
 ---
@@ -12,6 +12,14 @@ const { t, base } = Astro.props;
       <p>{t.cta.lead}</p>
     </div>
     <a class="btn btn-invert" href={`${repo}/releases/latest`}>{t.cta.download}</a>
+  </div>
+  <div class="support" id="support">
+    <span class="heart" aria-hidden="true">♡</span>
+    <div class="support-text">
+      <h2>{t.support.title}</h2>
+      <p class="muted">{t.support.body}</p>
+    </div>
+    <a class="btn btn-ghost" href={sponsors}>{t.support.button}</a>
   </div>
 </section>
 <footer class="wrap site-footer">
