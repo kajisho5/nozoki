@@ -51,7 +51,10 @@ switch args.count > 1 ? args[1] : "" {
 case "trusted":
     print(AXIsProcessTrusted() ? "読み取りの許可あり" : "読み取りの許可なし")
 case "pos":
-    guard let a = app(args[2]), let e = find(a, args[3]), let c = center(e) else { print("見つからない"); exit(1) }
+    // メニューバーの同じ名前の項目に当たらないよう、まず窓の中を探す（手前の窓から）
+    guard let a = app(args[2]) else { print("見つからない"); exit(1) }
+    let wins = (attr(a, kAXWindowsAttribute) as? [AXUIElement]) ?? []
+    guard let e = wins.lazy.compactMap({ find($0, args[3]) }).first ?? find(a, args[3]), let c = center(e) else { print("見つからない"); exit(1) }
     print(Int(c.x), Int(c.y))
 case "click":
     let p = CGPoint(x: Double(args[2])!, y: Double(args[3])!)

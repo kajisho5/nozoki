@@ -137,6 +137,21 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.kajisho5.zippeek.preview
         CODE_SIGN_ENTITLEMENTS: ZipPeekPreview/ZipPeekPreview.entitlements
         SKIP_INSTALL: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    # サンドボックスの中の部品は、アプリ本体の中の 7zz を使えない。部品の中にも置き、
+    # 「サンドボックスを受け継ぐ」設定で署名する（部品そのものの署名はこの後に Xcode が行う）
+    postBuildScripts:
+      - name: Embed 7-Zip for Quick Look
+        basedOnDependencyAnalysis: false
+        script: |
+          src="$SRCROOT/Vendor/7zip/7zz"
+          if [ ! -f "$src" ]; then echo "warning: Vendor/7zip/7zz がありません（scripts/fetch-7zip.sh）"; exit 0; fi
+          dst="$TARGET_BUILD_DIR/$EXECUTABLE_FOLDER_PATH/7zz"
+          cp -f "$src" "$dst"
+          chmod 755 "$dst"
+          id="${EXPANDED_CODE_SIGN_IDENTITY:-}"
+          [ -n "$id" ] || id="-"
+          codesign --force --options runtime --entitlements "$SRCROOT/ZipPeekPreview/7zz-helper.entitlements" --sign "$id" "$dst"
     info:
       path: ZipPeekPreview/Info.plist
       properties:

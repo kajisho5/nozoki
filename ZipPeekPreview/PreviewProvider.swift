@@ -34,10 +34,7 @@ final class PreviewProvider: QLPreviewProvider, QLPreviewingController {
         return reply
     }
 
-    /// アプリ本体に同梱の 7zz（ZipPeek.app/Contents/MacOS/7zz）。この拡張は ZipPeek.app/Contents/PlugIns/ の中にある
-    static func sevenZip() -> SevenZip? {
-        let contents = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
-        let exe = contents.appendingPathComponent("MacOS/7zz")
-        return FileManager.default.isExecutableFile(atPath: exe.path) ? SevenZip(executable: exe) : SevenZip.bundled()
-    }
+    /// この部品の中に置いた 7zz（ZipPeekPreview.appex/Contents/MacOS/7zz）。
+    /// サンドボックスの中からはアプリ本体の 7zz を使えないので、部品専用に「サンドボックスを受け継ぐ」署名をしたものを使う
+    static func sevenZip() -> SevenZip? { SevenZip.bundled() }
 }
