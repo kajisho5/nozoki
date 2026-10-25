@@ -53,7 +53,7 @@ struct CompressFilesIntent: AppIntent {
     static let title: LocalizedStringResource = "Compress Files"
     static let description = IntentDescription("Compresses files and folders into one archive next to the first item.")
 
-    @Parameter(title: "Files", supportedContentTypes: [.item])
+    @Parameter(title: "Files", supportedTypeIdentifiers: ["public.item"])
     var files: [IntentFile]
 
     @Parameter(title: "Format", default: .zip)
@@ -82,7 +82,7 @@ struct ExtractArchiveIntent: AppIntent {
     static let title: LocalizedStringResource = "Extract Archive"
     static let description = IntentDescription("Extracts an archive next to it and returns what was extracted.")
 
-    @Parameter(title: "Archive", supportedContentTypes: [.item])
+    @Parameter(title: "Archive", supportedTypeIdentifiers: ["public.item"])
     var archive: IntentFile
 
     static var parameterSummary: some ParameterSummary { Summary("Extract \(\.$archive)") }
@@ -104,7 +104,7 @@ struct ListArchiveContentsIntent: AppIntent {
     static let title: LocalizedStringResource = "Get Contents of Archive"
     static let description = IntentDescription("Lists the files inside an archive without extracting it.")
 
-    @Parameter(title: "Archive", supportedContentTypes: [.item])
+    @Parameter(title: "Archive", supportedTypeIdentifiers: ["public.item"])
     var archive: IntentFile
 
     static var parameterSummary: some ParameterSummary { Summary("Get contents of \(\.$archive)") }
@@ -130,7 +130,7 @@ struct CheckArchiveIntent: AppIntent {
     static let title: LocalizedStringResource = "Check Archive for Damage"
     static let description = IntentDescription("Reads every file in the archive and reports whether it’s damaged. Nothing is extracted.")
 
-    @Parameter(title: "Archive", supportedContentTypes: [.item])
+    @Parameter(title: "Archive", supportedTypeIdentifiers: ["public.item"])
     var archive: IntentFile
 
     static var parameterSummary: some ParameterSummary { Summary("Check \(\.$archive) for damage") }
