@@ -9,26 +9,30 @@ python3 scripts/make-sample-zips.py samples > /dev/null
 ID=com.kajisho5.zippeek
 BIN="$APP/Contents/MacOS/ZipPeek"
 
-shot() { sleep "${2:-4}"; screencapture -x "$OUT/$1.png" && echo "撮影: $1"; }
+shot() { sleep "${2:-4}"; screencapture -x -m "$OUT/$1.png" && echo "撮影: $1"; }
 quit() { osascript -e 'tell application id "com.kajisho5.zippeek" to quit' 2>/dev/null; sleep 1; pkill -x ZipPeek; sleep 1; }
 reset() { defaults delete $ID 2>/dev/null; defaults write $ID onArchiveDrop -string browse; }
 
 echo "== 画面の大きさ"; system_profiler SPDisplaysDataType | grep -i resolution || true
-# 高精細（Retina と同じ2倍）の表示にできれば切り替える。写真がくっきりする
-if brew install displayplacer > /dev/null 2>&1; then
+# 高精細（2倍表示）の仮想ディスプレイを作り、そこを主画面にして撮る。写真がくっきりする
+brew install displayplacer > /dev/null 2>&1 || true
+if clang -fobjc-arc -framework Foundation -framework CoreGraphics scripts/hidpi-display.m -o /tmp/hidpi-display 2> "$OUT/hidpi-build.log"; then
+  /tmp/hidpi-display > /tmp/hidpi-id.txt 2> "$OUT/hidpi-run.log" &
+  sleep 4
   displayplacer list > "$OUT/displays.txt" 2>&1 || true
-  SID=$(awk '/Persistent screen id:/ {print $4; exit}' "$OUT/displays.txt")
-  # 2倍表示のモードのうち、横 1280〜1440 のものを選ぶ
-  RES=$(grep -E 'scaling:on' "$OUT/displays.txt" | grep -oE 'res:[0-9]+x[0-9]+' | sed 's/res://' \
-        | awk -Fx '$1>=1280 && $1<=1440 {print $1*$2, $0}' | sort -n | tail -1 | cut -d' ' -f2)
-  if [ -n "$SID" ] && [ -n "$RES" ]; then
-    displayplacer "id:$SID res:$RES scaling:on" && echo "2倍表示に切り替え: $RES" || echo "切り替えに失敗"
+  VID=$(awk '/Persistent screen id:/ {id=$4} /Type: .*virtual|ZipPeek/ {print id; exit}' "$OUT/displays.txt")
+  [ -n "$VID" ] || VID=$(awk '/Persistent screen id:/ {id=$4} /Scaling: on/ {print id; exit}' "$OUT/displays.txt")
+  PID_MAIN=$(awk '/Persistent screen id:/ {print $4; exit}' "$OUT/displays.txt")
+  echo "仮想ディスプレイ: ${VID:-見つからない}"
+  if [ -n "$VID" ] && [ "$VID" != "$PID_MAIN" ]; then
+    # 仮想ディスプレイを主画面（原点）にし、元の画面はその右に置く
+    displayplacer "id:$VID res:1280x800 scaling:on origin:(0,0) degree:0" "id:$PID_MAIN origin:(1280,0) degree:0" \
+      && echo "主画面を仮想ディスプレイに" || echo "配置の変更に失敗"
     sleep 3
-  else
-    echo "2倍表示のモードが無い"
+    displayplacer list > "$OUT/displays-after.txt" 2>&1 || true
   fi
-  system_profiler SPDisplaysDataType | grep -iE "resolution|retina|ui looks like" || true
 fi
+system_profiler SPDisplaysDataType | grep -iE "resolution|retina|ui looks like|main display" || true
 
 for LANG_CODE in ja en; do
   for LOOK in light dark; do
