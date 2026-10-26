@@ -69,9 +69,15 @@ jobs:
           shot settings-1
           $T pressafter com.apple.systempreferences "ZipPeek" AXButton; sleep 3
           shot settings-2
-          SW=$($T pressafter com.apple.systempreferences "FSKit Modules" AXCheckBox pos); echo "スイッチ: $SW"
-          [ -n "$SW" ] && [ "$SW" != "見つからない" ] && $T click $SW
-          sleep 4; shot settings-3
+          V() { $T pressafter com.apple.systempreferences "FSKit Modules" AXCheckBox value; }
+          SW=$($T pressafter com.apple.systempreferences "FSKit Modules" AXCheckBox pos); echo "スイッチ: $SW"; V
+          osascript -e 'tell application "System Settings" to activate'; sleep 1
+          echo "1) クリック"; [ -n "$SW" ] && [ "$SW" != "見つからない" ] && $T click $SW; sleep 3; V
+          echo "2) もう一度クリック"; $T click $SW; sleep 3; V
+          echo "3) 部品を押す"; $T pressafter com.apple.systempreferences "FSKit Modules" AXCheckBox; sleep 3; V
+          echo "4) 値を直接"; $T pressafter com.apple.systempreferences "FSKit Modules" AXCheckBox on; sleep 3; V
+          echo "5) 選んでスペース"; $T pressafter com.apple.systempreferences "FSKit Modules" AXCheckBox focus; $T key 49; sleep 3; V
+          sleep 1; shot settings-3
           $T allow; sleep 2; shot settings-4
           $T dump com.apple.systempreferences > "$OUT/ax-settings.txt" 2>&1
           $T press com.apple.systempreferences "Done" "完了"; sleep 1

@@ -161,6 +161,18 @@ case "pressafter":
             if args.count > 5, args[5] == "pos", let c = center(e) {
                 print(Int(c.x), Int(c.y)); done = true; break
             }
+            if args.count > 5, args[5] == "value" {
+                print("値: \(attr(e, kAXValueAttribute).map { "\($0)" } ?? "なし")"); done = true; break
+            }
+            if args.count > 5, args[5] == "on" {
+                AXUIElementSetAttributeValue(e, kAXFocusedAttribute as CFString, kCFBooleanTrue)
+                let r = AXUIElementSetAttributeValue(e, kAXValueAttribute as CFString, 1 as CFNumber)
+                print(r == .success ? "値を 1 にした" : "値を変えられなかった（\(r.rawValue)）"); done = true; break
+            }
+            if args.count > 5, args[5] == "focus" {
+                let r = AXUIElementSetAttributeValue(e, kAXFocusedAttribute as CFString, kCFBooleanTrue)
+                print(r == .success ? "選んだ" : "選べなかった"); done = true; break
+            }
             let r = AXUIElementPerformAction(e, kAXPressAction as CFString)
             print(r == .success ? "押した（\(args[3]) の後ろの \(args[4])）" : "押せなかった")
             done = true
