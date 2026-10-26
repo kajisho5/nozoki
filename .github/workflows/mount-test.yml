@@ -1,0 +1,95 @@
+name: mount-test
+
+# 試し：圧縮ファイルを「ドライブとしてつなぐ」部品（ZipPeekMount, FSKit）を、本番と同じ署名・公証で作り、
+# まっさらな Mac で本当につなげるか確かめる。リリースはしない。try-mount ブランチに反映したときだけ動く
+on:
+  push:
+    branches: [try-mount]
+
+permissions:
+  contents: read
+
+jobs:
+  mac:
+    uses: kajisho5/runway/.github/workflows/mac-notarize.yml@main
+    with:
+      name: ZipPeek
+      version: mount-test
+      runner: macos-26
+      build: >-
+        bash scripts/fetch-7zip.sh
+        && python3 scripts/enable-mount.py
+        && brew install xcodegen
+        && xcodegen generate
+        && xcodebuild -project ZipPeek.xcodeproj -scheme ZipPeek -configuration Release
+        -destination 'generic/platform=macOS' -derivedDataPath build
+        CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO build | tail -20
+        && test -d build/Build/Products/Release/ZipPeek.app/Contents/Extensions/ZipPeekMount.appex
+      products: build/Build/Products/Release/ZipPeek.app
+      entitlements: ZipPeek/ZipPeek.entitlements
+      app_link: true
+      # FSKit の権限の名前は Apple の一覧で確かめられなかったので、候補を順に試す
+      profiles: |
+        ZipPeekMount.appex|com.kajisho5.zippeek.mount|FSKIT_MODULE,FS_KIT_MODULE,FSKIT
+    secrets: inherit
+
+  try:
+    needs: mac
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: try-mount
+      - uses: actions/download-artifact@v7
+        with:
+          name: ZipPeek-notarized
+          path: dist
+      - name: 入れて、設定でオンにして、つなぐ
+        run: |
+          set -u
+          OUT=mount-out; mkdir -p "$OUT"
+          T="swift scripts/ui-test.swift"
+          shot() { sleep "${2:-2}"; screencapture -x "$OUT/$1.png"; }
+          dmg=$(ls dist/*.dmg)
+          mnt=$(mktemp -d); hdiutil attach -nobrowse -readonly -mountpoint "$mnt" "$dmg" > /dev/null
+          sudo ditto "$mnt/ZipPeek.app" /Applications/ZipPeek.app; hdiutil detach "$mnt" > /dev/null
+          app=/Applications/ZipPeek.app; ext="$app/Contents/Extensions/ZipPeekMount.appex"
+          {
+            echo "== 署名"; codesign -dvv "$ext" 2>&1 | grep -E "Authority|TeamIdentifier|Identifier"
+            codesign -d --entitlements - "$ext" 2>&1
+            spctl -a -t exec -vv "$app" 2>&1
+            echo "== プロファイル"; security cms -D -i "$ext/Contents/embedded.provisionprofile" 2>&1 | head -60
+          } > "$OUT/sign.txt"
+          open "$app"; sleep 6; osascript -e 'tell application id "com.kajisho5.zippeek" to quit'; sleep 2
+          /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$app"
+          pluginkit -m -A -v -p com.apple.fskit.fsmodule > "$OUT/pluginkit.txt" 2>&1
+          $T trusted
+          open "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"; sleep 8
+          shot settings-1
+          $T pressafter com.apple.systempreferences "ZipPeek" AXButton; sleep 3
+          shot settings-2
+          SW=$($T pressafter com.apple.systempreferences "FSKit Modules" AXCheckBox pos); echo "スイッチ: $SW"
+          [ -n "$SW" ] && [ "$SW" != "見つからない" ] && $T click $SW
+          sleep 4; shot settings-3
+          $T allow; sleep 2; shot settings-4
+          $T dump com.apple.systempreferences > "$OUT/ax-settings.txt" 2>&1
+          $T press com.apple.systempreferences "Done" "完了"; sleep 1
+          {
+            echo "== つなぐ"
+            python3 scripts/make-sample-zips.py samples > /dev/null
+            rm -rf ~/zp-mnt; mkdir -p ~/zp-mnt; cp samples/sample-mac.zip ~/zp-mount-src.zip
+            mount -t zippeek ~/zp-mount-src.zip ~/zp-mnt; echo "終了コード $?"
+            mount | grep -i zippeek
+            ls -laR ~/zp-mnt | head -40
+            cat ~/zp-mnt/撮影メモ.txt
+            umount ~/zp-mnt
+          } > "$OUT/mount.txt" 2>&1
+          cat "$OUT/sign.txt" "$OUT/mount.txt"
+          log show --last 5m --style compact --predicate 'process CONTAINS "ZipPeekMount" OR process CONTAINS "fskit" OR eventMessage CONTAINS "zippeek.mount"' > "$OUT/log.txt" 2>&1 || true
+          if grep -q "架空" "$OUT/mount.txt"; then echo "合格: ドライブとしてつないで中身を読めた"; else echo "未達: つなげなかった"; fi
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: mount-test
+          path: mount-out
