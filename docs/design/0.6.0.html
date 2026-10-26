@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZipPeek 0.6 設計</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d1f23;--sub:#666b75;--line:#e3e5ea;--blue:#1f6bf0;--green:#1f9d55;--red:#d93b3b;--amber:#c98a00}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16181c;--card:#202329;--ink:#eceef2;--sub:#a3a8b2;--line:#33373f}}
+:root[data-theme="dark"]{--bg:#16181c;--card:#202329;--ink:#eceef2;--sub:#a3a8b2;--line:#33373f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 -apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:980px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:26px;margin:.2em 0}h2{font-size:20px;margin:2em 0 .5em;border-top:1px solid var(--line);padding-top:1.2em}h3{font-size:16px;margin:1.4em 0 .3em}
+.sub{color:var(--sub)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:.6em 0;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--card)}
+code,pre{font:12.5px/1.5 ui-monospace,Menlo,monospace}pre{background:var(--card);border:1px solid var(--line);padding:10px;overflow-x:auto;border-radius:8px}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin:12px 0}
+.fig svg{width:100%;height:auto;display:block}
+.tag{display:inline-block;font-size:12px;padding:0 6px;border-radius:4px;background:#e8f0fe;color:#1f4fb0}
+.warn{border-left:4px solid var(--amber);padding:6px 12px;background:var(--card)}
+</style>
+</head>
+<body><main>
+<h1>ZipPeek 0.6 設計書</h1>
+<p class="sub">追加する4機能：①中まで見つかる検索　②2つを比べる　③選んだものだけ送る　④お片付け<br>この段階では作っていません。デザイン（下の図）を確認してもらってから作ります。</p>
+
+<h2>1. 要件</h2>
+<table>
+<tr><th>機能</th><th>できること</th><th>入口</th></tr>
+<tr><td>①中まで見つかる検索</td><td>Mac の検索（Spotlight・Finder の検索窓）で、圧縮ファイルの<b>中のファイル名</b>を打つと、その圧縮ファイルが見つかる。解凍は不要。</td><td>入れるだけ（設定なし）</td></tr>
+<tr><td>②2つを比べる</td><td>圧縮ファイル同士、または圧縮ファイルとフォルダを比べて、「増えた・消えた・変わった・同じ」を一覧で見せる。差分だけを取り出せる。</td><td>メニュー「ファイル → 2つを比べる…」(⌘⇧D)、中身の窓の「その他 → ほかと比べる…」、2つまとめて Dock アイコンにドロップ</td></tr>
+<tr><td>③選んだものだけ送る</td><td>中身の窓で選んだファイルだけを新しい zip にして、AirDrop・メール・メッセージなどへ送る。保存するだけも選べる。</td><td>右クリック／「その他 → 選んだものを送る…」</td></tr>
+<tr><td>④お片付け</td><td>選んだフォルダ（最初はダウンロード）から、<b>解凍済みの圧縮ファイル</b>と<b>同じものが2つある圧縮ファイル</b>を見つけ、選んでゴミ箱へ入れる（ゴミ箱から戻せる）。</td><td>メニュー「ファイル → お片付け…」</td></tr>
+</table>
+<p class="warn">「取り出したあと元の圧縮ファイルをゴミ箱へ」はすでに設定にあるので、④は「あとからまとめて片付ける」機能にします。</p>
+
+<h2>2. 技術選定</h2>
+<p>アプリ本体は今のまま（Swift＋SwiftUI、Xcode 26.6、Swift 6.3）。新しい外部ライブラリは使いません。②③④は今ある部品（目次の読み取り・取り出し・圧縮）の組み合わせで作れます。比べる必要があるのは①の作り方だけです。</p>
+<h3>①の作り方の比較</h3>
+<table>
+<tr><th></th><th>A. 検索用の取り込み部品（.mdimporter、C言語）</th><th>B. 新しい取り込み部品（CSImportExtension）</th><th>C. アプリが自分で登録（CSSearchableIndex）</th></tr>
+<tr><td>動作の軽さ</td><td>◎ Mac の検索が必要なときだけ呼ぶ</td><td>◎</td><td>△ アプリがフォルダを見張り続ける</td></tr>
+<tr><td>配布サイズ</td><td>◎ 数十 KB</td><td>◎</td><td>◎</td></tr>
+<tr><td>作りやすさ</td><td>○ 古い形式だが単純</td><td>—</td><td>△ 見張る場所の許可・更新が面倒</td></tr>
+<tr><td>対応OS</td><td>◎ macOS 14〜26 すべて</td><td>× <b>Mac では動かない</b>と公式に明記</td><td>○</td></tr>
+<tr><td>将来性</td><td>○ Mac ではこれが今も正式な方法</td><td>×</td><td>○</td></tr>
+<tr><td>AIでの書きやすさ</td><td>○</td><td>—</td><td>○</td></tr>
+<tr><td>見つかるもの</td><td>どこに置いた圧縮ファイルでも</td><td>—</td><td>見張っている場所だけ</td></tr>
+</table>
+<p><b>おすすめ：A</b>。Apple の資料に「Mac で独自のファイルを検索に載せるには、取り込み部品（Spotlight importer plugin）を作る」とあり、B は「Mac では機能しない」と書かれているためです。中身の読み取りには Mac に最初から入っている libarchive を使います（Quick Look と同じ方法で、もう実績があります）。</p>
+<p class="sub">根拠：<a href="https://developer.apple.com/documentation/corespotlight/csimportextension">CSImportExtension（Apple）</a>／<a href="https://developer.apple.com/library/archive/documentation/Carbon/Conceptual/MDImporters/MDImporters.html">Spotlight Importer Programming Guide（Apple）</a>／<a href="https://developer.apple.com/forums/thread/805925">Apple 開発者フォーラム（Mac は .mdimporter、と DTS 回答）</a></p>
+<p class="warn">わかっている制限（事実）：検索で出てくるのは<b>圧縮ファイルそのもの</b>です。中の1ファイルずつを検索結果に並べる仕組みは、Mac の検索にはありません（上のフォーラムの Apple 回答）。出てきた圧縮ファイルを開くと、ZipPeek の中身の窓が開きます。<br>Apple 以外のツールが zip に同じ部品を入れている場合、どちらが使われるかは Mac が決めます（未確認）。</p>
+
+<h2>3. 画面構成</h2>
+<table>
+<tr><th>画面</th><th>種類</th><th>中身</th></tr>
+<tr><td>比べる窓</td><td>新しい窓（サイズ変更可、最小 640×420）</td><td>上：左右の名前と入れ替えボタン／要約のチップ（増えた・消えた・変わった・同じ）／絞り込み。中：一覧（状態・名前・左のサイズ・右のサイズ）。下：状態の文字＋「差分を取り出す」「一覧をコピー」</td></tr>
+<tr><td>相手を選ぶ画面</td><td>ファイル選択パネル</td><td>圧縮ファイルかフォルダを1つ選ぶ（⌘⇧D のときは2つ）</td></tr>
+<tr><td>送るボタン</td><td>中身の窓の右クリック・「その他」</td><td>押すと zip を作り（進み具合は今の取り出しカプセルと同じ）、できたら Mac 標準の共有メニュー（AirDrop・メール・メッセージ…）を出す。「zip として保存…」も並べる</td></tr>
+<tr><td>お片付けの窓</td><td>新しい窓</td><td>上：調べる場所（変更ボタン）。中：見つかったものを2つのグループで一覧（チェックつき、理由の文字つき）。下：合計サイズ＋「選んだものをゴミ箱へ」</td></tr>
+</table>
+
+<h2>4. 部品の分け方</h2>
+<pre>ZipPeekCore（アプリと切り離した中身の処理。Linux でもテストする）
+  ArchiveDiff       … 2つの一覧を比べて、増えた・消えた・変わった・同じに分ける
+  FolderListing     … フォルダを「圧縮ファイルの目次」と同じ形で読む
+  CRC32             … 中身が同じかの確認（zip の目次にある数字と同じ方式）
+  CleanupScanner    … フォルダから「解凍済み」「同じものが2つ」を探す
+  ArchiveOperations … 既存。選んだものだけで新しい zip を作る処理を足す（packSelection）
+
+ZipPeek（アプリ）
+  CompareView / CompareModel  … 比べる窓
+  CleanupView / CleanupModel  … お片付けの窓
+  ShareSelection              … 送る（zip を作る → 共有メニュー）
+  WindowManager               … 窓を開く入口を足す
+  ArchiveView                 … 「その他」と右クリックに項目を足す
+
+ZipPeekSpotlight（新しい部品・C言語）
+  GetMetadataForFile.c … 圧縮ファイルの中の名前を検索用の本文（kMDItemTextContent）に入れる
+  main.c / Info.plist  … Mac に「zip・7z・tar…はこの部品で読む」と伝える</pre>
+
+<h2>5. 状態管理</h2>
+<table>
+<tr><th>モデル</th><th>持っている状態</th></tr>
+<tr><td>CompareModel</td><td>left・right（場所）／phase（読み込み中・比較中・完了・失敗）／result（[DiffRow]）／filter（すべて・違いだけ・増えた・消えた・変わった）／進み具合／取り出し中か</td></tr>
+<tr><td>CleanupModel</td><td>folder／phase（調べ中・完了）／found（[CleanupItem]）／checked（選んだもの）／合計サイズ</td></tr>
+<tr><td>ArchiveModel（既存）</td><td>sharing（送る zip を作っている途中か）を足すだけ</td></tr>
+</table>
+
+<h2>6. データ構造</h2>
+<pre>enum DiffStatus { added, removed, changed, same, probablySame }
+struct DiffRow { path: String; status: DiffStatus; leftSize: Int64?; rightSize: Int64?; isFolder: Bool }
+struct DiffSummary { added, removed, changed, same: Int }
+
+// 変わったかの決め方
+// 1) 大きさが違う → 変わった
+// 2) 両方に CRC（zip・7z の目次にある確認用の数字）がある → 数字で判断
+// 3) フォルダ側は、大きさが同じときだけ CRC を計算する
+// 4) どちらにも CRC がない形式（tar など） → 大きさと日付が同じなら「たぶん同じ」
+// 名前は Mac と Windows の文字の違い（濁点の扱いなど）をそろえ、.DS_Store・__MACOSX は比べない
+
+enum CleanupReason { extracted(folder: URL), duplicate(of: URL) }
+struct CleanupItem { url: URL; size: Int64; reason: CleanupReason }
+// 解凍済み：横に同じ名前のフォルダがあり、比べて「消えた」「変わった」が 0
+// 同じもの：大きさが同じで、SHA-256（ファイルの指紋）も同じ。新しいほうを候補にする</pre>
+
+<h2>7. フォルダ構成（足すもの）</h2>
+<pre>Packages/ZipPeekCore/Sources/ZipPeekCore/
+  ArchiveDiff.swift  FolderListing.swift  CRC32.swift  CleanupScanner.swift
+Packages/ZipPeekCore/Tests/ZipPeekCoreTests/
+  ArchiveDiffTests.swift  CleanupScannerTests.swift
+ZipPeek/Views/  CompareView.swift  CleanupView.swift
+ZipPeek/Models/ CompareModel.swift  CleanupModel.swift
+ZipPeek/App/    ShareSelection.swift
+ZipPeekSpotlight/  GetMetadataForFile.c  main.c  Info.plist
+  （アプリの Contents/Library/Spotlight/ZipPeek.mdimporter に入る）</pre>
+
+<h2>8. 確かめ方（GitHub Actions の Mac で）</h2>
+<ul>
+<li>比べる・お片付け：中身の処理を Linux と Mac の両方で自動テスト。画面は今の自動操作テストに「比べる窓を開いて、要約の数が合っているか」「お片付けで候補が出るか」を足す</li>
+<li>送る：zip ができて共有メニューが出るところまで（AirDrop で実際に送るところは、テスト用の Mac では確かめられない）</li>
+<li>検索：<code>mdimport</code> で部品が呼ばれ、中の名前が入るかを見る。そのうえで <code>mdfind</code> で検索して見つかるか（テスト用の Mac で検索の索引が止まっていたら、ここは未確認として報告）</li>
+</ul>
+
+<h2>9. 画面デザイン</h2>
+<p class="sub">サンプルの名前はすべて架空です。</p>
+
+<h3>② 比べる窓</h3>
+<div class="fig">
+<svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'Hiragino Sans',sans-serif">
+<defs><filter id="s" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity=".18"/></filter></defs>
+<rect width="960" height="600" fill="#e9ebef"/>
+<rect x="20" y="16" width="920" height="568" rx="16" fill="#fff" filter="url(#s)"/>
+<circle cx="46" cy="42" r="7" fill="#ff5f57"/><circle cx="68" cy="42" r="7" fill="#febc2e"/><circle cx="90" cy="42" r="7" fill="#28c840"/>
+<text x="480" y="47" text-anchor="middle" font-size="14" font-weight="600" fill="#1d1f23">比べる</text>
+<!-- left/right -->
+<rect x="40" y="70" width="400" height="56" rx="10" fill="#f3f4f6"/>
+<text x="56" y="92" font-size="11" fill="#8a8f98">左（前）</text>
+<rect x="56" y="100" width="14" height="16" rx="2" fill="#9aa3ae"/>
+<text x="78" y="113" font-size="14" font-weight="600" fill="#1d1f23">納品データ_v1.zip</text>
+<circle cx="480" cy="98" r="18" fill="#fff" stroke="#d6d9df"/>
+<path d="M471 93h18l-5-5M489 103h-18l5 5" stroke="#4a4f57" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="520" y="70" width="400" height="56" rx="10" fill="#f3f4f6"/>
+<text x="536" y="92" font-size="11" fill="#8a8f98">右（後）</text>
+<rect x="536" y="100" width="14" height="16" rx="2" fill="#9aa3ae"/>
+<text x="558" y="113" font-size="14" font-weight="600" fill="#1d1f23">納品データ_v2.zip</text>
+<!-- chips -->
+<g font-size="13">
+<rect x="40" y="142" width="104" height="30" rx="15" fill="#e6f5ec"/><circle cx="58" cy="157" r="5" fill="#1f9d55"/><text x="70" y="162" fill="#17663a">増えた 3</text>
+<rect x="152" y="142" width="104" height="30" rx="15" fill="#fde9e9"/><circle cx="170" cy="157" r="5" fill="#d93b3b"/><text x="182" y="162" fill="#8f2323">消えた 1</text>
+<rect x="264" y="142" width="116" height="30" rx="15" fill="#fff4d6"/><circle cx="282" cy="157" r="5" fill="#c98a00"/><text x="294" y="162" fill="#7a5400">変わった 2</text>
+<rect x="388" y="142" width="96" height="30" rx="15" fill="#f0f1f3"/><circle cx="406" cy="157" r="5" fill="#9aa0a8"/><text x="418" y="162" fill="#555a62">同じ 24</text>
+</g>
+<!-- filter segmented -->
+<rect x="640" y="142" width="280" height="30" rx="8" fill="#eef0f3"/>
+<rect x="643" y="145" width="132" height="24" rx="6" fill="#fff" stroke="#e0e2e6"/>
+<text x="709" y="162" font-size="12.5" text-anchor="middle" fill="#1d1f23" font-weight="600">違いだけ</text>
+<text x="846" y="162" font-size="12.5" text-anchor="middle" fill="#666b75">すべて</text>
+<!-- table header -->
+<line x1="40" y1="190" x2="920" y2="190" stroke="#eceef1"/>
+<g font-size="12" fill="#666b75"><text x="60" y="210">状態</text><text x="150" y="210">名前</text><text x="700" y="210" text-anchor="end">左のサイズ</text><text x="900" y="210" text-anchor="end">右のサイズ</text></g>
+<line x1="40" y1="220" x2="920" y2="220" stroke="#e3e5ea"/>
+<!-- rows -->
+<g font-size="13.5" fill="#1d1f23">
+<rect x="40" y="226" width="880" height="40" rx="6" fill="#fff"/>
+<rect x="52" y="236" width="72" height="20" rx="10" fill="#e6f5ec"/><text x="88" y="251" text-anchor="middle" font-size="11.5" fill="#17663a">増えた</text>
+<text x="150" y="251">CAM_B / C0007.MP4</text><text x="700" y="251" text-anchor="end" fill="#b0b4bb">—</text><text x="900" y="251" text-anchor="end">1.2 GB</text>
+<rect x="40" y="268" width="880" height="40" rx="6" fill="#f6f7f9"/>
+<rect x="52" y="278" width="72" height="20" rx="10" fill="#e6f5ec"/><text x="88" y="293" text-anchor="middle" font-size="11.5" fill="#17663a">増えた</text>
+<text x="150" y="293">CAM_B / C0008.MP4</text><text x="700" y="293" text-anchor="end" fill="#b0b4bb">—</text><text x="900" y="293" text-anchor="end">860 MB</text>
+<rect x="52" y="320" width="72" height="20" rx="10" fill="#e6f5ec"/><text x="88" y="335" text-anchor="middle" font-size="11.5" fill="#17663a">増えた</text>
+<text x="150" y="335">差し替えメモ.txt</text><text x="700" y="335" text-anchor="end" fill="#b0b4bb">—</text><text x="900" y="335" text-anchor="end">2 KB</text>
+<rect x="40" y="352" width="880" height="40" rx="6" fill="#f6f7f9"/>
+<rect x="52" y="362" width="72" height="20" rx="10" fill="#fff4d6"/><text x="88" y="377" text-anchor="middle" font-size="11.5" fill="#7a5400">変わった</text>
+<text x="150" y="377">AUDIO / MIX_final.wav</text><text x="700" y="377" text-anchor="end">412 MB</text><text x="900" y="377" text-anchor="end">418 MB</text>
+<rect x="52" y="404" width="72" height="20" rx="10" fill="#fff4d6"/><text x="88" y="419" text-anchor="middle" font-size="11.5" fill="#7a5400">変わった</text>
+<text x="150" y="419">テロップ.psd</text><text x="700" y="419" text-anchor="end">38 MB</text><text x="900" y="419" text-anchor="end">38 MB</text>
+<text x="250" y="419" font-size="11.5" fill="#8a8f98">大きさは同じ・中身が違う</text>
+<rect x="40" y="436" width="880" height="40" rx="6" fill="#f6f7f9"/>
+<rect x="52" y="446" width="72" height="20" rx="10" fill="#fde9e9"/><text x="88" y="461" text-anchor="middle" font-size="11.5" fill="#8f2323">消えた</text>
+<text x="150" y="461" fill="#8a8f98" text-decoration="line-through">AUDIO / MIX_v3.wav</text><text x="700" y="461" text-anchor="end">405 MB</text><text x="900" y="461" text-anchor="end" fill="#b0b4bb">—</text>
+</g>
+<!-- footer -->
+<line x1="20" y1="520" x2="940" y2="520" stroke="#eceef1"/>
+<text x="44" y="556" font-size="12.5" fill="#666b75">30 ファイルを比べました ・ 0.4 秒 ・ 違いは 6 件</text>
+<rect x="608" y="536" width="136" height="32" rx="8" fill="#fff" stroke="#d6d9df"/><text x="676" y="557" text-anchor="middle" font-size="13" fill="#1d1f23">一覧をコピー</text>
+<rect x="756" y="536" width="164" height="32" rx="8" fill="#1f6bf0"/><text x="838" y="557" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">↓ 差分を取り出す</text>
+</svg>
+<p class="sub">要約のチップを押すと、その種類だけに絞り込み。「差分を取り出す」は、右側の「増えた」「変わった」ファイルだけを、フォルダ構成のまま取り出します。左右の入れ替えは真ん中の矢印。</p>
+</div>
+
+<h3>③ 選んだものだけ送る</h3>
+<div class="fig">
+<svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'Hiragino Sans',sans-serif">
+<defs><filter id="s2" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity=".18"/></filter></defs>
+<rect width="960" height="560" fill="#e9ebef"/>
+<rect x="20" y="16" width="920" height="528" rx="16" fill="#fff" filter="url(#s2)"/>
+<rect x="20" y="16" width="200" height="528" rx="16" fill="#f3f4f6"/><rect x="200" y="16" width="20" height="528" fill="#f3f4f6"/>
+<circle cx="46" cy="42" r="7" fill="#ff5f57"/><circle cx="68" cy="42" r="7" fill="#febc2e"/><circle cx="90" cy="42" r="7" fill="#28c840"/>
+<g font-size="13" fill="#1d1f23"><rect x="32" y="80" width="176" height="30" rx="7" fill="#e2e4e8"/><text x="48" y="100">すべて</text><text x="196" y="100" text-anchor="end" fill="#888">12</text>
+<text x="48" y="134">CAM_A</text><text x="48" y="166">資料</text></g>
+<text x="240" y="44" font-size="15" font-weight="600" fill="#1d1f23">撮影素材_サンプル.zip</text>
+<text x="240" y="62" font-size="11.5" fill="#888">すべて ・ 12 項目</text>
+<rect x="700" y="28" width="40" height="32" rx="16" fill="#f3f4f6"/><circle cx="712" cy="44" r="2" fill="#555"/><circle cx="720" cy="44" r="2" fill="#555"/><circle cx="728" cy="44" r="2" fill="#555"/>
+<rect x="750" y="28" width="168" height="32" rx="16" fill="#1f6bf0"/><text x="834" y="49" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">↓ 取り出す</text>
+<g font-size="12" fill="#666b75"><text x="250" y="96">名前</text><text x="760" y="96" text-anchor="end">サイズ</text><text x="900" y="96" text-anchor="end">更新日</text></g>
+<line x1="240" y1="106" x2="920" y2="106" stroke="#e3e5ea"/>
+<g font-size="13.5" fill="#1d1f23">
+<rect x="240" y="112" width="680" height="34" rx="6" fill="#1f6bf0"/><text x="270" y="134" fill="#fff">香盤表_架空イベント.pdf</text><text x="760" y="134" text-anchor="end" fill="#fff">220 KB</text><text x="900" y="134" text-anchor="end" fill="#fff">9/12 14:02</text>
+<rect x="240" y="148" width="680" height="34" rx="6" fill="#1f6bf0"/><text x="270" y="170" fill="#fff">ロゴ_仮.png</text><text x="760" y="170" text-anchor="end" fill="#fff">1.1 MB</text><text x="900" y="170" text-anchor="end" fill="#fff">9/12 14:02</text>
+<text x="270" y="206">C0001.MP4</text><text x="760" y="206" text-anchor="end">2.4 GB</text><text x="900" y="206" text-anchor="end">9/12 14:02</text>
+<rect x="240" y="220" width="680" height="34" rx="6" fill="#f6f7f9"/><text x="270" y="242">C0002.MP4</text><text x="760" y="242" text-anchor="end">1.9 GB</text><text x="900" y="242" text-anchor="end">9/12 14:02</text>
+</g>
+<!-- context menu -->
+<rect x="420" y="160" width="250" height="250" rx="10" fill="#fbfbfc" stroke="#dcdfe4" filter="url(#s2)"/>
+<g font-size="13" fill="#1d1f23">
+<text x="438" y="186">取り出す…</text><text x="438" y="214">プレビュー</text><text x="438" y="242">既定のアプリで開く</text>
+<line x1="432" y1="256" x2="658" y2="256" stroke="#e3e5ea"/>
+<rect x="428" y="264" width="234" height="28" rx="6" fill="#1f6bf0"/><text x="438" y="283" fill="#fff" font-weight="600">選んだ 2 つを送る…</text>
+<text x="438" y="312">選んだ 2 つを zip として保存…</text>
+<line x1="432" y1="326" x2="658" y2="326" stroke="#e3e5ea"/>
+<text x="438" y="350">名前を変える…</text><text x="438" y="378" fill="#b0b4bb">削除</text>
+</g>
+<!-- share popover -->
+<path d="M680 278 l-12 -10 v20z" fill="#fbfbfc"/>
+<rect x="680" y="230" width="230" height="260" rx="12" fill="#fbfbfc" stroke="#dcdfe4" filter="url(#s2)"/>
+<rect x="696" y="246" width="34" height="40" rx="4" fill="#9aa3ae"/><text x="713" y="270" text-anchor="middle" font-size="9" fill="#fff">ZIP</text>
+<text x="740" y="262" font-size="12.5" font-weight="600" fill="#1d1f23">撮影素材_サンプル_選択.zip</text>
+<text x="740" y="280" font-size="11.5" fill="#888">2 ファイル ・ 1.3 MB</text>
+<line x1="692" y1="300" x2="898" y2="300" stroke="#e3e5ea"/>
+<g font-size="13" fill="#1d1f23">
+<circle cx="710" cy="326" r="11" fill="#2aa7f5"/><text x="732" y="331">AirDrop</text>
+<circle cx="710" cy="360" r="11" fill="#3a8ef6"/><text x="732" y="365">メール</text>
+<circle cx="710" cy="394" r="11" fill="#2fc55a"/><text x="732" y="399">メッセージ</text>
+<circle cx="710" cy="428" r="11" fill="#c4c8ce"/><text x="732" y="433">そのほか…</text>
+<line x1="692" y1="448" x2="898" y2="448" stroke="#e3e5ea"/>
+<text x="702" y="474" font-size="11.5" fill="#666b75">✓ Windows でも文字化けしない名前</text>
+</g>
+</svg>
+<p class="sub">送る zip の名前は「元の名前_選択.zip」。名前の付け方と Mac 専用の隠しファイルを外すかどうかは、今の圧縮の設定に従います。共有メニューは Mac 標準のもの（中身は Mac 側の設定で変わります）。</p>
+</div>
+
+<h3>④ お片付けの窓</h3>
+<div class="fig">
+<svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'Hiragino Sans',sans-serif">
+<defs><filter id="s3" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity=".18"/></filter></defs>
+<rect width="960" height="600" fill="#e9ebef"/>
+<rect x="20" y="16" width="920" height="568" rx="16" fill="#fff" filter="url(#s3)"/>
+<circle cx="46" cy="42" r="7" fill="#ff5f57"/><circle cx="68" cy="42" r="7" fill="#febc2e"/><circle cx="90" cy="42" r="7" fill="#28c840"/>
+<text x="480" y="47" text-anchor="middle" font-size="14" font-weight="600" fill="#1d1f23">お片付け</text>
+<rect x="40" y="70" width="880" height="48" rx="10" fill="#f3f4f6"/>
+<path d="M58 86h10l3 3h13v14h-26z" fill="#5aa9f0"/>
+<text x="96" y="99" font-size="14" font-weight="600" fill="#1d1f23">ダウンロード</text>
+<text x="200" y="99" font-size="12" fill="#888">圧縮ファイル 41 個を調べました</text>
+<rect x="808" y="80" width="98" height="28" rx="7" fill="#fff" stroke="#d6d9df"/><text x="857" y="99" text-anchor="middle" font-size="12.5" fill="#1d1f23">場所を変える</text>
+<!-- group 1 -->
+<text x="44" y="150" font-size="13" font-weight="700" fill="#1d1f23">解凍済み</text><text x="112" y="150" font-size="12" fill="#888">横に同じ中身のフォルダがあります</text>
+<g font-size="13.5" fill="#1d1f23">
+<rect x="40" y="160" width="880" height="44" rx="8" fill="#f6f7f9"/>
+<rect x="54" y="173" width="18" height="18" rx="4" fill="#1f6bf0"/><path d="M58 182l4 4 7-8" stroke="#fff" stroke-width="2" fill="none"/>
+<rect x="86" y="170" width="16" height="22" rx="2" fill="#9aa3ae"/>
+<text x="114" y="182">架空フェス_素材.zip</text><text x="114" y="198" font-size="11.5" fill="#888">→ フォルダ「架空フェス_素材」に全部あります</text><text x="900" y="188" text-anchor="end">3.8 GB</text>
+<rect x="54" y="221" width="18" height="18" rx="4" fill="#1f6bf0"/><path d="M58 230l4 4 7-8" stroke="#fff" stroke-width="2" fill="none"/>
+<rect x="86" y="218" width="16" height="22" rx="2" fill="#9aa3ae"/>
+<text x="114" y="230">サンプル商会_写真.zip</text><text x="114" y="246" font-size="11.5" fill="#888">→ フォルダ「サンプル商会_写真」に全部あります</text><text x="900" y="236" text-anchor="end">640 MB</text>
+<rect x="40" y="256" width="880" height="44" rx="8" fill="#f6f7f9"/>
+<rect x="54" y="269" width="18" height="18" rx="4" fill="#fff" stroke="#c4c8ce"/>
+<rect x="86" y="266" width="16" height="22" rx="2" fill="#9aa3ae"/>
+<text x="114" y="278">テスト用データ.zip</text><text x="114" y="294" font-size="11.5" fill="#c98a00">→ フォルダはあるが 2 ファイル足りません（残すのがおすすめ）</text><text x="900" y="284" text-anchor="end">12 MB</text>
+</g>
+<!-- group 2 -->
+<text x="44" y="336" font-size="13" font-weight="700" fill="#1d1f23">同じものが 2 つ</text><text x="150" y="336" font-size="12" fill="#888">中身が 1 バイトも違わない圧縮ファイルです</text>
+<g font-size="13.5" fill="#1d1f23">
+<rect x="40" y="346" width="880" height="44" rx="8" fill="#f6f7f9"/>
+<rect x="54" y="359" width="18" height="18" rx="4" fill="#1f6bf0"/><path d="M58 368l4 4 7-8" stroke="#fff" stroke-width="2" fill="none"/>
+<rect x="86" y="356" width="16" height="22" rx="2" fill="#9aa3ae"/>
+<text x="114" y="368">見積書_架空 (1).zip</text><text x="114" y="384" font-size="11.5" fill="#888">→「見積書_架空.zip」と同じ</text><text x="900" y="374" text-anchor="end">2 MB</text>
+<rect x="54" y="407" width="18" height="18" rx="4" fill="#1f6bf0"/><path d="M58 416l4 4 7-8" stroke="#fff" stroke-width="2" fill="none"/>
+<rect x="86" y="404" width="16" height="22" rx="2" fill="#9aa3ae"/>
+<text x="114" y="416">BGM_仮 (2).zip</text><text x="114" y="432" font-size="11.5" fill="#888">→「BGM_仮.zip」と同じ</text><text x="900" y="422" text-anchor="end">88 MB</text>
+</g>
+<line x1="20" y1="520" x2="940" y2="520" stroke="#eceef1"/>
+<text x="44" y="550" font-size="13" fill="#1d1f23">4 個を選択 ・ <tspan font-weight="700">4.5 GB</tspan> 空きます</text>
+<text x="44" y="568" font-size="11.5" fill="#888">ゴミ箱に入れるだけなので、あとから戻せます</text>
+<rect x="716" y="536" width="204" height="32" rx="8" fill="#1f6bf0"/><text x="818" y="557" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">選んだものをゴミ箱へ</text>
+</svg>
+<p class="sub">確実なものだけ最初からチェックを入れます。フォルダが一部足りないものはチェックなし＋黄色の注意。行をダブルクリックすると Finder で場所を見せます。</p>
+</div>
+
+<h3>① 中まで見つかる検索（Mac の検索画面での見え方）</h3>
+<div class="fig">
+<svg viewBox="0 0 960 420" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'Hiragino Sans',sans-serif">
+<defs><filter id="s4" x="-5%" y="-10%" width="110%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-opacity=".22"/></filter>
+<linearGradient id="wall" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9db7d9"/><stop offset="1" stop-color="#c9b7d8"/></linearGradient></defs>
+<rect width="960" height="420" fill="url(#wall)"/>
+<rect x="190" y="50" width="580" height="320" rx="22" fill="#f7f8fa" fill-opacity=".96" filter="url(#s4)"/>
+<circle cx="226" cy="88" r="10" fill="none" stroke="#6b7079" stroke-width="2.4"/><path d="M233 95l8 8" stroke="#6b7079" stroke-width="2.4" stroke-linecap="round"/>
+<text x="254" y="96" font-size="22" fill="#1d1f23">香盤表</text>
+<line x1="190" y1="122" x2="770" y2="122" stroke="#e1e3e8"/>
+<text x="214" y="148" font-size="11.5" font-weight="600" fill="#8a8f98">書類</text>
+<rect x="204" y="158" width="552" height="54" rx="10" fill="#1f6bf0"/>
+<rect x="220" y="168" width="26" height="34" rx="3" fill="#dfe6f3"/><text x="233" y="190" text-anchor="middle" font-size="8" fill="#1f6bf0" font-weight="700">ZIP</text>
+<text x="260" y="182" font-size="14.5" font-weight="600" fill="#fff">架空イベント_資料一式.zip</text>
+<text x="260" y="201" font-size="11.5" fill="#dce7ff">ZIP アーカイブ ・ ダウンロード</text>
+<rect x="220" y="226" width="26" height="34" rx="3" fill="#e9532f"/>
+<text x="260" y="242" font-size="14.5" fill="#1d1f23">香盤表_メモ.pdf</text>
+<text x="260" y="258" font-size="11.5" fill="#8a8f98">書類</text>
+<text x="214" y="300" font-size="11.5" fill="#8a8f98">↑ 中のファイル名で、zip 自体が見つかります。開くと ZipPeek の中身の窓が開きます。</text>
+<text x="214" y="322" font-size="11.5" fill="#8a8f98">※ どの名前で当たったかは表示されません（検索結果の見た目は Mac が決めます）。</text>
+</svg>
+</div>
+
+<h2>10. わかっていないこと・あとで確かめること</h2>
+<ul>
+<li>検索：テスト用の Mac で検索の索引が動いているか（止まっていたら、実際に検索で見つかるところは未確認のまま出します）</li>
+<li>検索：中の名前が多すぎる zip（数十万ファイル）でどこまで入れるか → 先頭から一定量（例：1 MB 分の名前）で打ち切る予定</li>
+<li>送る：AirDrop で実際に届くところは、テスト用の Mac では試せない</li>
+<li>比べる：tar など確認用の数字（CRC）を持たない形式は「たぶん同じ」になる</li>
+</ul>
+</main></body></html>
