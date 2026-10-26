@@ -28,9 +28,9 @@ jobs:
       products: build/Build/Products/Release/ZipPeek.app
       entitlements: ZipPeek/ZipPeek.entitlements
       app_link: true
-      # FSKit の権限の名前は Apple の一覧で確かめられなかったので、候補を順に試す
+      # FSKit の権限は App Store Connect API では有効にできないので、Apple Developer の Identifiers で有効にしてある
       profiles: |
-        ZipPeekMount.appex|com.kajisho5.zippeek.mount|FSKIT_MODULE,FS_KIT_MODULE,FSKIT
+        ZipPeekMount.appex|com.kajisho5.zippeek.mount|
     secrets: inherit
 
   try:
