@@ -158,6 +158,9 @@ case "pressafter":
             continue
         }
         if (attr(e, kAXRoleAttribute) as? String) == args[4] {
+            if args.count > 5, args[5] == "pos", let c = center(e) {
+                print(Int(c.x), Int(c.y)); done = true; break
+            }
             let r = AXUIElementPerformAction(e, kAXPressAction as CFString)
             print(r == .success ? "押した（\(args[3]) の後ろの \(args[4])）" : "押せなかった")
             done = true

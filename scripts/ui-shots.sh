@@ -302,7 +302,13 @@ $T dump com.apple.systempreferences > "$OUT/ax-settings-1.txt" 2>&1
 $T pressafter com.apple.systempreferences "ZipPeek" AXButton | tee -a "$LOG"; sleep 3
 shot "fskit-settings-2" 1
 $T dump com.apple.systempreferences > "$OUT/ax-settings-2.txt" 2>&1
-$T pressafter com.apple.systempreferences "ZipPeek" AXCheckBox | tee -a "$LOG"; sleep 2
+# スイッチは本物のクリックでないと切り替わらないので、位置を調べてクリックする
+SW=$($T pressafter com.apple.systempreferences "FSKit Modules" AXCheckBox pos); echo "ファイルシステム拡張のスイッチ: $SW" | tee -a "$LOG"
+# shellcheck disable=SC2086
+[ -n "$SW" ] && [ "$SW" != "見つからない" ] && $T click $SW
+sleep 3
+$T allow | tee -a "$LOG"   # 確認が出たら許可
+sleep 2
 shot "fskit-settings-3" 1
 $T dump com.apple.systempreferences > "$OUT/ax-settings-3.txt" 2>&1
 $T press com.apple.systempreferences "Done" "完了" | tee -a "$LOG"; sleep 1
