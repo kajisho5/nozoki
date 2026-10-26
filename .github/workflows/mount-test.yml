@@ -85,7 +85,9 @@ jobs:
             echo "== つなぐ"
             python3 scripts/make-sample-zips.py samples > /dev/null
             rm -rf ~/zp-mnt; mkdir -p ~/zp-mnt; cp samples/sample-mac.zip ~/zp-mount-src.zip
-            mount -t zippeek ~/zp-mount-src.zip ~/zp-mnt; echo "終了コード $?"
+            G="$HOME/Library/Group Containers/group.com.apple.fskit.settings"
+            echo "== FSKit の設定ファイル"; ls -la "$G" 2>&1; for f in "$G"/*.plist; do echo "-- $f"; plutil -p "$f" 2>&1; done
+            mount -F -t zippeek ~/zp-mount-src.zip ~/zp-mnt; echo "終了コード $?"
             mount | grep -i zippeek
             ls -laR ~/zp-mnt | head -40
             cat ~/zp-mnt/撮影メモ.txt
