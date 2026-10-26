@@ -87,6 +87,11 @@ jobs:
             rm -rf ~/zp-mnt; mkdir -p ~/zp-mnt; cp samples/sample-mac.zip ~/zp-mount-src.zip
             G="$HOME/Library/Group Containers/group.com.apple.fskit.settings"
             echo "== FSKit の設定ファイル"; ls -la "$G" 2>&1; for f in "$G"/*.plist; do echo "-- $f"; plutil -p "$f" 2>&1; done
+            # テスト用の Mac ではスイッチを自動で切り替えられない（本物の操作しか受け付けない）ので、
+            # 試験のときだけ、FSKit が覚えている「オンの部品」の一覧に足す（使う人の Mac ではシステム設定でオンにしてもらう）
+            plutil -insert 0 -string com.kajisho5.zippeek.mount "$G/enabledModules.plist" && echo "一覧に足した"
+            plutil -p "$G/enabledModules.plist"
+            killall -9 fskit_agent extensionkitservice 2>/dev/null; sleep 3
             mount -F -t zippeek ~/zp-mount-src.zip ~/zp-mnt; echo "終了コード $?"
             mount | grep -i zippeek
             ls -laR ~/zp-mnt | head -40
