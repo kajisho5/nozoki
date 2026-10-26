@@ -13,6 +13,7 @@
 //   swift scripts/ui-test.swift has <bundle id> <文字>…      窓のどこかにその文字を含む表示があるか
 //   swift scripts/ui-test.swift dump <bundle id>              手前の窓の部品の一覧（調べる用）
 //   swift scripts/ui-test.swift set <bundle id> <文字> <名前>…  入力欄（名前のどれか）に文字を入れる
+//   swift scripts/ui-test.swift pressafter <bundle id> <文字> <役割>  その文字の表示の後ろにある、その役割の部品を押す
 //   swift scripts/ui-test.swift allow                       ほかのアプリの確認（ローカルネットワーク等）で「許可」を押す
 import AppKit
 import ApplicationServices
@@ -140,6 +141,30 @@ case "set":
     AXUIElementSetAttributeValue(e, kAXFocusedAttribute as CFString, kCFBooleanTrue)
     let r = AXUIElementSetAttributeValue(e, kAXValueAttribute as CFString, args[3] as CFString)
     print(r == .success ? "入れた" : "入れられなかった")
+case "pressafter":
+    guard let a = app(args[2]) else { print("起動していない"); exit(1) }
+    var flat: [AXUIElement] = []
+    func collect(_ e: AXUIElement, _ depth: Int) {
+        if depth > 14 { return }
+        flat.append(e)
+        for c in (attr(e, kAXChildrenAttribute) as? [AXUIElement]) ?? [] { collect(c, depth + 1) }
+    }
+    for w in (attr(a, kAXWindowsAttribute) as? [AXUIElement]) ?? [] { collect(w, 0) }
+    var seen = false
+    var done = false
+    for e in flat {
+        if !seen {
+            for key in [kAXTitleAttribute, kAXValueAttribute, kAXDescriptionAttribute] where (attr(e, key) as? String) == args[3] { seen = true }
+            continue
+        }
+        if (attr(e, kAXRoleAttribute) as? String) == args[4] {
+            let r = AXUIElementPerformAction(e, kAXPressAction as CFString)
+            print(r == .success ? "押した（\(args[3]) の後ろの \(args[4])）" : "押せなかった")
+            done = true
+            break
+        }
+    }
+    if !done { print("見つからない") }
 case "dump":
     guard let a = app(args[2]), let w = (attr(a, kAXWindowsAttribute) as? [AXUIElement])?.first else { print("窓が無い"); exit(1) }
     func walk(_ e: AXUIElement, _ depth: Int) {

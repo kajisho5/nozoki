@@ -298,9 +298,14 @@ F="$OUT/fskit.txt"
 open "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"; sleep 6
 shot "fskit-settings-1" 1
 $T dump com.apple.systempreferences > "$OUT/ax-settings-1.txt" 2>&1
-$T press com.apple.systempreferences "File System Extensions" "ファイルシステム拡張" | tee -a "$LOG"; sleep 3
+# 「機能拡張」の一覧で ZipPeek の行の ⓘ を押し、出てきた画面でファイルシステム拡張をオンにする
+$T pressafter com.apple.systempreferences "ZipPeek" AXButton | tee -a "$LOG"; sleep 3
 shot "fskit-settings-2" 1
 $T dump com.apple.systempreferences > "$OUT/ax-settings-2.txt" 2>&1
+$T pressafter com.apple.systempreferences "ZipPeek" AXCheckBox | tee -a "$LOG"; sleep 2
+shot "fskit-settings-3" 1
+$T dump com.apple.systempreferences > "$OUT/ax-settings-3.txt" 2>&1
+$T press com.apple.systempreferences "Done" "完了" | tee -a "$LOG"; sleep 1
 {
   echo "== 部品の登録"
   pluginkit -m -A -v -p com.apple.fskit.fsmodule 2>&1
