@@ -1,11 +1,10 @@
-# ZipPeekMount（試作・未同梱）
+# ZipPeekMount
 
 圧縮ファイルを Finder にドライブとしてつなぐ部品（Apple の FSKit、macOS 26 以降）。読み取り専用。
-アプリにはまだ入れていない。理由：
+中のファイルは、開かれたときにそのファイルだけ取り出す。
 
-- FSKit の部品には Apple の特別な権限（com.apple.developer.fskit.fsmodule）が要り、配布用の署名（Developer ID）では
-  その権限を書いた「プロファイル」を部品に埋め込む必要がある。今の署名の仕組み（runway）はプロファイルを扱っていない。
-- 本物の Mac（GitHub のテスト機）で、署名なしの試作をシステム設定でオンにしようとしたが、スイッチが切り替わらなかった
-  （「Module com.kajisho5.zippeek.mount is disabled!」）。
-
-入れるときは `python3 scripts/enable-mount.py` を実行してから `xcodegen generate`（project.yml に部品を足す）。
+- アプリの「その他」→「ドライブとして開く」は `/sbin/mount -F -t zippeek <圧縮ファイル> <つなぐ場所>` を実行する。
+- Apple の決まりで、使う人が最初に一度「システム設定 → 一般 → ログイン項目と機能拡張 → ZipPeek の ⓘ → FSKit Modules」をオンにする。
+- 配布版の署名には Developer ID 用プロファイルが要る（runway の mac-notarize の `profiles` 入力で自動で作って埋め込む）。
+  権限（FSKit Module）は App Store Connect API では有効にできないので、Apple Developer の Identifiers で
+  com.kajisho5.zippeek.mount に有効にしてある。

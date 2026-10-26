@@ -2805,6 +2805,83 @@
           }
         }
       }
+    },
+    "Open as Drive": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ドライブとして開く"
+          }
+        }
+      }
+    },
+    "Opening as a drive needs macOS 26 or later.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ドライブとして開くには macOS 26 以降が必要です。"
+          }
+        }
+      }
+    },
+    "Turn on ZipPeek’s file system extension first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先に ZipPeek のファイルシステム拡張をオンにしてください。"
+          }
+        }
+      }
+    },
+    "Couldn’t open it as a drive.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ドライブとして開けませんでした。"
+          }
+        }
+      }
+    },
+    "Turn On “Open as Drive”": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「ドライブとして開く」をオンにする"
+          }
+        }
+      }
+    },
+    "macOS asks you to allow ZipPeek’s file system extension once. In System Settings, open General → Login Items & Extensions, click ⓘ next to ZipPeek, and turn on FSKit Modules. Then try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最初に一度だけ、ZipPeek のファイルシステム拡張を許可する必要があります。「システム設定」→「一般」→「ログイン項目と機能拡張」で、ZipPeek の横の ⓘ を押し、「FSKit Modules」をオンにしてから、もう一度試してください。"
+          }
+        }
+      }
+    },
+    "Couldn’t Open as a Drive": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ドライブとして開けませんでした"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

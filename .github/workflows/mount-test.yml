@@ -18,7 +18,6 @@ jobs:
       runner: macos-26
       build: >-
         bash scripts/fetch-7zip.sh
-        && python3 scripts/enable-mount.py
         && brew install xcodegen
         && xcodegen generate
         && xcodebuild -project ZipPeek.xcodeproj -scheme ZipPeek -configuration Release
@@ -98,9 +97,22 @@ jobs:
             cat ~/zp-mnt/撮影メモ.txt
             umount ~/zp-mnt
           } > "$OUT/mount.txt" 2>&1
-          cat "$OUT/sign.txt" "$OUT/mount.txt"
+          # アプリの「その他」→「ドライブとして開く」でも、つないで Finder で開けるか
+          {
+            echo "== アプリから"
+            cp samples/sample-mac.zip ~/Desktop/drive-test.zip
+            open -a "$app" ~/Desktop/drive-test.zip; sleep 6
+            $T move com.kajisho5.zippeek 0 40 900 600
+            $T press com.kajisho5.zippeek "More" "その他"; sleep 1
+            $T press com.kajisho5.zippeek "Open as Drive" "ドライブとして開く"; sleep 8
+            mount | grep -i "drive-test"
+            ls ~/Library/Application\ Support/ZipPeek/Drives/drive-test 2>&1
+          } > "$OUT/app-mount.txt" 2>&1
+          shot app-mount 1
+          cat "$OUT/sign.txt" "$OUT/mount.txt" "$OUT/app-mount.txt"
           log show --last 5m --style compact --predicate 'process CONTAINS "ZipPeekMount" OR process CONTAINS "fskit" OR eventMessage CONTAINS "zippeek.mount"' > "$OUT/log.txt" 2>&1 || true
           if grep -q "架空" "$OUT/mount.txt"; then echo "合格: ドライブとしてつないで中身を読めた"; else echo "未達: つなげなかった"; fi
+          if grep -q "撮影メモ.txt" "$OUT/app-mount.txt"; then echo "合格: アプリの「ドライブとして開く」でつないだ"; else echo "未達: アプリからつなげなかった"; fi
       - uses: actions/upload-artifact@v7
         if: always()
         with:

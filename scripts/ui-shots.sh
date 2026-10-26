@@ -291,46 +291,7 @@ if [ -n "$R" ] && [ "$R" != "見つからない" ]; then
 fi
 quit
 
-# 11) 試し：ドライブとしてつなぐ部品（ZipPeekMount）は、入っているときだけ試す
-if [ -d "$APP/Contents/Extensions/ZipPeekMount.appex" ]; then
-F="$OUT/fskit.txt"
-# FSKit の部品は「システム設定 → 一般 → ログイン項目と機能拡張 → ファイルシステム拡張」で使う人が一度オンにする。
-# その画面を開いて、部品の一覧を記録する（自動でオンにする手順を探すため）
-open "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"; sleep 6
-shot "fskit-settings-1" 1
-$T dump com.apple.systempreferences > "$OUT/ax-settings-1.txt" 2>&1
-# 「機能拡張」の一覧で ZipPeek の行の ⓘ を押し、出てきた画面でファイルシステム拡張をオンにする
-$T pressafter com.apple.systempreferences "ZipPeek" AXButton | tee -a "$LOG"; sleep 3
-shot "fskit-settings-2" 1
-$T dump com.apple.systempreferences > "$OUT/ax-settings-2.txt" 2>&1
-# スイッチは本物のクリックでないと切り替わらないので、位置を調べてクリックする
-SW=$($T pressafter com.apple.systempreferences "FSKit Modules" AXCheckBox pos); echo "ファイルシステム拡張のスイッチ: $SW" | tee -a "$LOG"
-# shellcheck disable=SC2086
-[ -n "$SW" ] && [ "$SW" != "見つからない" ] && $T click $SW
-sleep 3
-$T allow | tee -a "$LOG"   # 確認が出たら許可
-sleep 2
-shot "fskit-settings-3" 1
-$T dump com.apple.systempreferences > "$OUT/ax-settings-3.txt" 2>&1
-$T press com.apple.systempreferences "Done" "完了" | tee -a "$LOG"; sleep 1
-{
-  echo "== 部品の登録"
-  pluginkit -m -A -v -p com.apple.fskit.fsmodule 2>&1
-  pluginkit -e use -i com.kajisho5.zippeek.mount 2>&1 && echo "有効にした"
-  pluginkit -m -A -v -i com.kajisho5.zippeek.mount 2>&1
-  codesign -d --entitlements - "$APP/Contents/Extensions/ZipPeekMount.appex" 2>&1
-  echo "== つなぐ"
-  rm -rf ~/zp-mnt && mkdir -p ~/zp-mnt && cp samples/sample-mac.zip ~/zp-mount-src.zip
-  mount -t zippeek ~/zp-mount-src.zip ~/zp-mnt 2>&1; echo "終了コード $?"
-  mount | grep -i zippeek
-  ls -laR ~/zp-mnt 2>&1 | head -40
-  cat ~/zp-mnt/撮影メモ.txt 2>&1 | head -5
-  umount ~/zp-mnt 2>&1
-} > "$F" 2>&1
-if grep -q "架空" "$F"; then echo "合格: ドライブとしてつないで中身を読めた" | tee -a "$LOG"; else echo "未達: ドライブとしてつなげなかった（記録は fskit.txt）" | tee -a "$LOG"; fi
-log show --last 4m --style compact --predicate 'process CONTAINS "ZipPeekMount" OR process == "fskitd" OR process == "fskit_agent" OR eventMessage CONTAINS "zippeek.mount"' > "$OUT/fskit-log.txt" 2>&1 || true
-
-fi
+# 11) ドライブとして開く（FSKit）は、署名つきでないと動かないので release.yml の確かめ（verify）で試す
 
 # 落ちたときの記録（あれば）
 mkdir -p "$OUT/crash"

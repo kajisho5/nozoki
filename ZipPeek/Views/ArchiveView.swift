@@ -178,6 +178,11 @@ private struct MoreMenu: View {
                 .disabled(one == nil || one?.isFolder == true || model.extraction != nil)
             Button(String(localized: "Rename…")) { model.requestRename() }
                 .disabled(!model.canRename)
+            if DriveMount.isAvailable {
+                Divider()
+                Button(String(localized: "Open as Drive")) { DriveMount.openAsDrive(model.url) }
+                    .disabled(model.isRemote)
+            }
             Divider()
             Button(String(localized: "Check for Damage")) { model.verify() }
                 .disabled(model.isRemote || model.verifying || model.extraction != nil || model.editing != nil)
