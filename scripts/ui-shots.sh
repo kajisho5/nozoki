@@ -293,6 +293,14 @@ quit
 
 # 11) 試し：圧縮ファイルをドライブとしてつなぐ（FSKit。macOS 26 以降）
 F="$OUT/fskit.txt"
+# FSKit の部品は「システム設定 → 一般 → ログイン項目と機能拡張 → ファイルシステム拡張」で使う人が一度オンにする。
+# その画面を開いて、部品の一覧を記録する（自動でオンにする手順を探すため）
+open "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"; sleep 6
+shot "fskit-settings-1" 1
+$T dump com.apple.systempreferences > "$OUT/ax-settings-1.txt" 2>&1
+$T press com.apple.systempreferences "File System Extensions" "ファイルシステム拡張" | tee -a "$LOG"; sleep 3
+shot "fskit-settings-2" 1
+$T dump com.apple.systempreferences > "$OUT/ax-settings-2.txt" 2>&1
 {
   echo "== 部品の登録"
   pluginkit -m -A -v -p com.apple.fskit.fsmodule 2>&1
