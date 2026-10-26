@@ -291,7 +291,8 @@ if [ -n "$R" ] && [ "$R" != "見つからない" ]; then
 fi
 quit
 
-# 11) 試し：圧縮ファイルをドライブとしてつなぐ（FSKit。macOS 26 以降）
+# 11) 試し：ドライブとしてつなぐ部品（ZipPeekMount）は、入っているときだけ試す
+if [ -d "$APP/Contents/Extensions/ZipPeekMount.appex" ]; then
 F="$OUT/fskit.txt"
 # FSKit の部品は「システム設定 → 一般 → ログイン項目と機能拡張 → ファイルシステム拡張」で使う人が一度オンにする。
 # その画面を開いて、部品の一覧を記録する（自動でオンにする手順を探すため）
@@ -328,6 +329,8 @@ $T press com.apple.systempreferences "Done" "完了" | tee -a "$LOG"; sleep 1
 } > "$F" 2>&1
 if grep -q "架空" "$F"; then echo "合格: ドライブとしてつないで中身を読めた" | tee -a "$LOG"; else echo "未達: ドライブとしてつなげなかった（記録は fskit.txt）" | tee -a "$LOG"; fi
 log show --last 4m --style compact --predicate 'process CONTAINS "ZipPeekMount" OR process == "fskitd" OR process == "fskit_agent" OR eventMessage CONTAINS "zippeek.mount"' > "$OUT/fskit-log.txt" 2>&1 || true
+
+fi
 
 # 落ちたときの記録（あれば）
 mkdir -p "$OUT/crash"
