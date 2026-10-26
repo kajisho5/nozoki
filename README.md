@@ -57,6 +57,7 @@ It also covers the everyday side: drop files on the Dock icon to compress, drop 
 | **Right-click in Finder** | *Compress with ZipPeek*, *Extract with ZipPeek* and *Look Inside with ZipPeek*. |
 | **No garbled names** | Japanese file names in ZIPs made on Windows (Shift_JIS) are detected and shown correctly. ZIPs you make store names the way Windows expects (accented and kana characters stay whole, not split into parts), and you can also make ZIPs for older Japanese Windows. |
 | **Many formats** | Extract zip, 7z, rar, tar, gz, bz2, xz, zst, iso, lzh, cab and more. Create zip and 7z. Powered by the bundled 7-Zip. |
+| **Open as a drive** | On macOS 26 or later, **More → Open as Drive** puts the archive in Finder like a USB drive. Any app can open the files inside directly — nothing is extracted until a file is opened. (Turn it on once in System Settings, see below.) |
 | **Peek at a link** | Paste a link to a ZIP on the web (**File → Look Inside a Link…**). ZipPeek reads only the table of contents and downloads just the files you take out. |
 | **Check for damage** | **More → Check for Damage** reads every file without extracting and shows the archive's SHA-256. Apps you extract from a downloaded archive keep the Mac's download safety check. |
 | **Work inside archives** | Open a ZIP inside a ZIP, rename items, or open a file in its app and save it back into the archive. |
@@ -95,6 +96,10 @@ Requirements: macOS 14 Sonoma or later, Apple silicon or Intel.
 **Add or remove files** (zip and 7z)
 - Drag files into the ZipPeek window, or click **Add Files…**. They go into the folder you're viewing.
 - Select items and press **Delete**, or right-click → **Delete from Archive…**.
+
+**Open an archive as a drive** (macOS 26 or later)
+- In the ZipPeek window, choose **More → Open as Drive**. The archive opens in Finder like a drive; eject it in Finder when you're done.
+- The first time, macOS asks you to allow it: **System Settings → General → Login Items & Extensions**, click ⓘ next to ZipPeek, and turn on **FSKit Modules**.
 
 **Look inside a ZIP on the web**
 - **File → Look Inside a Link…** (⇧⌘L), paste the link, and click **Look Inside**. Extract or drag files out as usual — only those files are downloaded.
@@ -158,6 +163,9 @@ macOS asks you to approve new Quick Look extensions once. ZipPeek's settings sho
 
 **Does the Space-key preview work for 7z and rar?**
 Yes, from version 0.3: zip, 7z, rar and tar (including .tar.gz). Other formats open in the ZipPeek window (right-click → Look Inside with ZipPeek).
+
+**Can I open an archive like a USB drive?**
+Yes, from version 0.5 on macOS 26 or later: **More → Open as Drive**. It's read-only, and a file is taken out only when something opens it. You need to turn on ZipPeek's file system extension once in **System Settings → General → Login Items & Extensions → ZipPeek ⓘ → FSKit Modules** (an Apple requirement).
 
 **Can I look inside a ZIP on the web without downloading it?**
 Yes, from version 0.4. Use **File → Look Inside a Link…**. ZipPeek reads only the table of contents and downloads just the files you take out. This works when the server allows reading part of a file (most do); otherwise ZipPeek tells you.
